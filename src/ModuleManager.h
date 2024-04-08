@@ -17,10 +17,10 @@ public:
     ~ModuleManager();
 
     bool addModule(ModulePtr module);
-    bool removeModule(std::string name);
+    bool removeModule(std::string title);
 
-    ModulePtr   getModule(std::string name);
-    bool        findModule(std::string name);
+    ModulePtr   getModule(std::string title) const;
+    bool        containsModule(std::string title) const;
 
     std::pair<int, StringVector> loadModules();
 
