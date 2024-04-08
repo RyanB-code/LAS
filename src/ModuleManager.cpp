@@ -49,7 +49,6 @@ std::pair<int, StringVector> ModuleManager::loadModules(std::string directory){
         throw std::filesystem::filesystem_error("Directory for modules does not exist", qualifiedDirectory, std::error_code());
     }
 
-    int moduleReadErrors { 0 }; // Count Modules that could not be created successfully 
 	for(auto const& file : std::filesystem::directory_iterator(qualifiedDirectory)){
         // Check if file contains substring
         std::string fileName {file.path()};
