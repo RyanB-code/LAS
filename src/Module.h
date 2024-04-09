@@ -5,9 +5,12 @@
 #include <memory>
 #include <string>
 
+typedef bool(*loadFunction)(const Settings&, ModuleInfo&);      // Function pointer for LASM_load()
+typedef void(*voidNoParams)();                                  // Function pointer LASM_run() and LASM_cleanup()
+
 class Module{
 public:
-    Module(std::string setTitle, std::string setShortTitle, LoggerPtr setLogger, Settings setSettings);
+    Module(LoggerPtr setLogger, loadFunction setLoad, voidNoParams setRun, voidNoParams setCleanup);
     ~Module();
 
     std::string     getTitle()          const;
@@ -17,6 +20,10 @@ public:
 
     void            setShown(bool setShown);
 
+    bool load(const Settings& settings);
+    void run();
+    void cleanup();
+
 private:
     std::string title{};
     std::string shortTitle{};
@@ -25,6 +32,10 @@ private:
 
     LoggerPtr logger{};
     Settings settings{};
+    
+    loadFunction loadPtr{};
+    voidNoParams runPtr{};
+    voidNoParams cleanupPtr{};
     
 };
 
