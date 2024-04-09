@@ -3,21 +3,20 @@
 #include "Logger.h"
 #include "Module.h"
 #include "TextManipulations.h"
+#include "Settings.h"
 
 #include <string>
 #include <memory>
 #include <unordered_map>
 #include <vector>
 #include <filesystem>
-
-#include <iostream>
+#include <dlfcn.h>
 
 using StringVector = std::vector<std::string>;
 
-
 class ModuleManager final {
 public:
-    ModuleManager(std::shared_ptr<Logger> setLogger);
+    ModuleManager(LoggerPtr setLogger, SettingsPtr setSettings);
     ~ModuleManager();
 
     bool addModule(ModulePtr module);
@@ -33,6 +32,9 @@ private:
     std::unordered_map<std::string, ModulePtr> modules{};
 
     std::shared_ptr<Logger> logger;
-
-
+    std::shared_ptr<Settings> settings;
 };
+
+namespace LASCore{
+    ModulePtr bindFiletoModule(std::string path, LoggerPtr logger);
+}
