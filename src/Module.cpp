@@ -1,10 +1,10 @@
 #include "Module.h"
 
-Module::Module(std::string setTitle, std::string setShortTitle, LoggerPtr setLogger, Settings setSettings) :
-        title       {setTitle},
-        shortTitle  {setShortTitle},
+Module::Module(LoggerPtr setLogger, loadFunction setLoad, voidNoParams setRun, voidNoParams setCleanup) :
         logger      {setLogger},
-        settings    {setSettings}
+        loadPtr     {setLoad},
+        runPtr      {setRun},
+        cleanupPtr  {setCleanup}
 {
 
 }
@@ -27,4 +27,28 @@ const Settings& Module::getSettings() const{
 
 void Module::setShown(bool setShown) {
     shown = setShown;
+}
+
+bool Module::load(const Settings& settings){
+    if(!loadPtr)
+        return false;
+    
+    // Call the module's LASM_load(), and return false if something failed on their side
+    ModuleInfo info{"New Module", "Null"};
+
+    if(!loadPtr(settings, info))
+        return false;
+
+    title = info.title;
+    shortTitle = info.shortTitle;
+
+    return true;
+}
+void Module::run(){
+    if(runPtr)
+        runPtr();
+}
+void Module::cleanup(){
+    if(cleanupPtr)
+        cleanupPtr();
 }
