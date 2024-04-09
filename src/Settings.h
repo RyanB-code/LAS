@@ -3,6 +3,7 @@
 #include <string>
 #include <cstdint>
 
+
 struct Settings{
     uint8_t         fontSize        {};
     int8_t          hourOffset      {};
@@ -13,3 +14,5 @@ struct ModuleInfo{
     std::string title       {};
     std::string shortTitle  {};
 };
+
+using SettingsPtr = std::shared_ptr<Settings>;
