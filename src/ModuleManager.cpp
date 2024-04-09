@@ -1,6 +1,11 @@
 #include "ModuleManager.h"
 
-ModuleManager::ModuleManager(std::shared_ptr<Logger> setLogger){
+#include <iostream>
+
+ModuleManager::ModuleManager(std::shared_ptr<Logger> setLogger, SettingsPtr setSettings) :
+    logger {setLogger},
+    settings {setSettings}
+{
 
 }
 ModuleManager::~ModuleManager(){
@@ -39,9 +44,9 @@ bool ModuleManager::containsModule(std::string title) const{
 }
 std::pair<int, StringVector> ModuleManager::loadModules(std::string directory){
     std::pair<int, StringVector> returnVariable {0 , StringVector{}};   // Initialize return variable
-    directory = TextManipulations::ensureSlash(directory);      // Ensure slash at the end
-    const std::filesystem::path qualifiedDirectory{directory};  // Path with slashes
-    std::string moduleNameSuffix {"LASModule_"};                // Every module name must have this key present to be added
+    directory = TextManipulations::ensureSlash(directory);              // Ensure slash at the end
+    const std::filesystem::path qualifiedDirectory{directory};          // Path with slashes
+    std::string moduleNameSuffix {"LASModule_"};                        // Every module name must have this key present to be added
 
 
     // Throw exception if the directory doesn't exist
@@ -50,18 +55,62 @@ std::pair<int, StringVector> ModuleManager::loadModules(std::string directory){
     }
 
 	for(auto const& file : std::filesystem::directory_iterator(qualifiedDirectory)){
-        // Check if file contains substring
+        bool failedToLoad{false};
+
+        // Ensure file contains substring to know that it's an LASModule
         std::string fileName {file.path()};
         if(fileName.find(moduleNameSuffix) != fileName.npos){
-            // Attempt to make Module and bind functions
-            // PICK UP HERE
+            ModulePtr moduleBuffer {LASCore::bindFiletoModule(fileName, logger)}; // Creates Module buffer
+
+            if(moduleBuffer){
+                // Load module information
+                if(moduleBuffer->load(*settings.get())){
+                    if(!addModule(moduleBuffer))
+                        failedToLoad = true;
+                }
+                else
+                    failedToLoad = true;
+                
+            }
+            else
+                failedToLoad = true;
         }
         else{
-            // Add to list of unable to load, both name and number
+           failedToLoad = true;
+        }
+
+        if(failedToLoad){
             ++returnVariable.first;
             returnVariable.second.push_back(fileName);
         }
 	}
 
     return returnVariable;
+}
+
+// MARK: LASCore Namespace 
+namespace LASCore{
+    ModulePtr bindFiletoModule(std::string path, LoggerPtr logger){
+        typedef bool(*loadFunction)(const Settings&, ModuleInfo&);      // Function pointer for LASM_load()
+        typedef void(*voidNoParams)();                                  // Function pointer LASM_run() and LASM_cleanup()
+
+        void* lib {dlopen(path.c_str(), RTLD_LAZY)};    // Map the shared object file
+
+        // Do not continue if library could not be opened
+        if(!lib){
+            return nullptr;
+        }
+
+        // Bind the API funcions
+        loadFunction load       {reinterpret_cast<loadFunction>(dlsym(lib, "LASM_load"))};
+        voidNoParams run        {reinterpret_cast<voidNoParams>(dlsym(lib, "LASM_run"))};
+        voidNoParams cleanup    {reinterpret_cast<voidNoParams>(dlsym(lib, "LASM_cleanup"))};
+
+        // Do not continue if binding failed
+        if(!load || !run || !cleanup){
+            return nullptr;
+        }
+
+        return std::make_shared<Module>(logger, load, run, cleanup);       
+    }
 }
