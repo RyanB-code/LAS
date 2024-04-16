@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Logger.h"
+#include "Logging.h"
 #include "Module.h"
 #include "TextManipulations.h"
 #include "Settings.h"
