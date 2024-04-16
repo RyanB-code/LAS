@@ -1,5 +1,5 @@
 #pragma once
-#include "Logger.h"
+#include "Logging.h"
 #include "Settings.h"
 
 #include <memory>
