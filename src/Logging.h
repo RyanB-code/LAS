@@ -7,17 +7,18 @@
 #include <chrono>
 #include <cstdarg>
 
-struct Settings;
+class LogSettings;
 class Logger;
 
-using LoggerPtr = std::shared_ptr<Logger>;
+using LoggerPtr         = std::shared_ptr<Logger>;
 using LogSettingsPtr    = std::shared_ptr<LogSettings>;
 using Timepoint         = std::chrono::time_point<std::chrono::system_clock>;
 using StringVector      = std::vector<std::string>;
 
 
 
-struct LogSettings {
+class LogSettings {     // Made a class to inherit type usage abilities
+public:
     bool showTime               { true };
     bool showTags               { true };
     bool showMsg                { true };
