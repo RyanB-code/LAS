@@ -35,6 +35,8 @@ private:
     std::shared_ptr<Settings> settings;
 };
 
+using ModuleManagerPtr = std::shared_ptr<ModuleManager>;
+
 namespace LASCore{
     ModulePtr bindFiletoModule(std::string path, LoggerPtr logger);
 }
