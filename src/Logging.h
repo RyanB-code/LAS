@@ -1,11 +1,16 @@
 #pragma once
 
+#include "TextManipulations.h"
+
 #include <memory>
 #include <cstdint>
 #include <string>
 #include <source_location>
 #include <chrono>
 #include <cstdarg>
+#include <filesystem>
+#include <fstream>
+#include <format>
 
 class LogSettings;
 class Logger;
@@ -33,7 +38,7 @@ public:
 
 class Log {
 public:
-    Log (std::string setMsg, std::string setTag, std::source_location setLocation);
+    Log (std::string setMsg, std::string setTag, std::source_location setLocation, Timepoint setTimestamp);
     ~Log();
 
     std::string             getMsg()        const;
@@ -54,7 +59,7 @@ private:
 class LogOutput {
 public:
     LogOutput ();
-    virtual ~LogOutput ( );
+    virtual ~LogOutput ();
 
     virtual bool log (const Log& log, const LogSettings& logSettings) const = 0;
     uint8_t getID() const;
@@ -68,7 +73,7 @@ public:
     Logger(LogSettingsPtr setLogSettings);
     ~Logger();
 
-    Log& log(std::string setMsg, const StringVector& setTag, std::source_location setLocation = std::source_location::current()) const;
+    void log(std::string setMsg, const StringVector& setTag, std::source_location setLocation = std::source_location::current()) const;
 
     bool addOutput (std::shared_ptr<LogOutput> output);
     bool removeOutput (uint8_t ID);
@@ -79,4 +84,17 @@ private:
     LogSettingsPtr logSettings;
     std::vector<std::shared_ptr<LogOutput>> outputs;
 
+};
+
+class LogToFile final : public LogOutput{
+public:
+    LogToFile();
+    ~LogToFile();
+
+    std::string getPath() const;
+    bool setPath(std::string setPath);      // Sets the path to the file, will not create file
+
+    bool log (const Log& log, const LogSettings& logSettings) const override;
+private:
+    std::string path;
 };
