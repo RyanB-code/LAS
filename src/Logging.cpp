@@ -1,8 +1,10 @@
 #include "Logging.h"
 
-Log::Log(std::string setMsg, std::string setTag, std::source_location setLocation)
+// MARK: Log
+Log::Log(std::string setMsg, std::string setTag, std::source_location setLocation, Timepoint setTimestamp)
     :   msg {setMsg},
-        location{setLocation}
+        location{setLocation},
+        timestamp {setTimestamp}
 {
     tags.push_back(setTag);
 }
@@ -27,9 +29,7 @@ Log& Log::addTag(std::string tag){
 }
 
 
-
-
-
+// MARK: LogOutput
 
 LogOutput::LogOutput() {
     static uint8_t givenIDs {0};
@@ -44,7 +44,7 @@ uint8_t LogOutput::getID () const {
 }
 
 
-
+// MARK: Logger
 
 Logger::Logger(LogSettingsPtr setLogSettings) : logSettings {setLogSettings} {
 
@@ -52,30 +52,32 @@ Logger::Logger(LogSettingsPtr setLogSettings) : logSettings {setLogSettings} {
 Logger::~Logger(){
 
 }
-Log& Logger::log(std::string setMsg, const StringVector& setTag, std::source_location setLocation) const{
-    // I know its bad to copy but I didnt want to deal with a LogPtr and all that jazz
+void Logger::log(std::string setMsg, const StringVector& setTag, std::source_location setLocation) const{
 
-
+    // For a log with no tags
     if(setTag.empty()){
-        Log log{setMsg, "N/A", setLocation};
+        Log log{setMsg, "N/A", setLocation, std::chrono::system_clock::now()+std::chrono::hours(logSettings->timeOffset)};
 
+        // Iterate through LogOutputs and output the log
         for(std::vector<std::shared_ptr<LogOutput>>::const_iterator it {outputs.cbegin()}; it != outputs.cend(); ++it){
-        it->get()->log(log, *logSettings);
-    }
+            it->get()->log(log, *logSettings);
+        }
     }
     else{
-        Log log{setMsg, setTag[0], setLocation};
+        Log log{setMsg, setTag[0], setLocation, std::chrono::system_clock::now()+std::chrono::hours(logSettings->timeOffset)};
 
         // Start at one since setTag[0] is already added
         for(int i {1}; i < setTag.size(); ++i){
             log.addTag(setTag[i]);
         }
-
+        
+        // Iterate through LogOutputs and output the log
         for(std::vector<std::shared_ptr<LogOutput>>::const_iterator it {outputs.cbegin()}; it != outputs.cend(); ++it){
-        it->get()->log(log, *logSettings);
-    }
+            it->get()->log(log, *logSettings);
+        }
     }
 
+    return;
 }
 bool Logger::addOutput (std::shared_ptr<LogOutput> output){
     for(const auto& out : outputs){
@@ -86,8 +88,14 @@ bool Logger::addOutput (std::shared_ptr<LogOutput> output){
         }
         else{
             outputs.push_back(output);
-            return false;
+            return true;
         }
+    }
+
+    // If there are no outputs, just add the parameter
+    if(outputs.empty()){
+        outputs.push_back(output);
+        return true;
     }
 }
 bool Logger::removeOutput (uint8_t ID){
@@ -104,3 +112,80 @@ bool Logger::removeOutput (uint8_t ID){
 const LogSettings& Logger::getLogSettings () const{
     return *logSettings;
 }
+
+// MARK: LogToFile
+
+LogToFile::LogToFile()
+{
+
+}
+LogToFile::~LogToFile(){
+
+}
+bool LogToFile::setPath(std::string setPath){
+    if(std::filesystem::exists(setPath)){
+        path = setPath;
+        return true;
+    }
+    else
+        return false;
+}
+std::string LogToFile::getPath() const {
+    return path;
+}
+bool LogToFile::log(const Log& log, const LogSettings& logSettings) const {
+    using namespace TextManipulations::Logging;
+
+    if(!std::filesystem::exists(path))
+        return false;
+
+
+    std::ostringstream os{};    // Buffer to store formatted log
+
+    if (logSettings.showTime)
+        os << '[' << printTime(log.getTimestamp()) << "]  ";
+
+    if (logSettings.showTags) {
+        // Iterate through tags for the log and display each tag
+        for (const std::string& t : log.getTags()) {
+            os << '[' << std::setw(logSettings.textBoxWidth_tag) << std::left;
+
+            // No Centering if too long
+            if (t.size() >= logSettings.textBoxWidth_tag)
+                os << t;
+
+            else {
+                os << std::format("{:^{}}", t, logSettings.textBoxWidth_tag);
+            }
+            os << "]  ";           
+        }
+    }
+    if (logSettings.showMsg) {
+        std::string msg {log.getMsg()};
+
+
+        // If the msg is under the max size, print normally
+        if (msg.length() < logSettings.textBoxWidth_msg)
+            os << std::setw(logSettings.textBoxWidth_msg) << std::left << msg;
+
+
+        // If the msg is long, add spacing between next msg for readability
+        else if (msg.length() >= logSettings.textBoxWidth_msg) {
+            os << msg;
+            if (logSettings.showLocation)
+                os << std::endl << " > ";
+        }
+    }
+    if (logSettings.showLocation)
+        os << printLocation(log.getLocation());
+
+    // Indent
+    os << std::endl;
+
+    std::ofstream file {path, std::ios_base::app};
+    file << os.str();
+    file.close();
+
+    return true;
+}
+
