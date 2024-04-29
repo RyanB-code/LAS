@@ -19,6 +19,7 @@ using LoggerPtr         = std::shared_ptr<Logger>;
 using LogSettingsPtr    = std::shared_ptr<LogSettings>;
 using Timepoint         = std::chrono::time_point<std::chrono::system_clock>;
 using StringVector      = std::vector<std::string>;
+using Tags              = std::vector<std::string>;
 
 
 
