@@ -23,11 +23,14 @@ public:
 
     bool init();
     bool refresh();
+    void shutdown();
 
 private:
     bool initGLFW();
     bool initImgui();
-    bool initOpenGL();
 
     const Logger& logger;
+
+    GLFWwindow* window;
+    std::string windowTitle { "Life Application Suite" };
 };
