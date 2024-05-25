@@ -67,7 +67,7 @@ void Logger::log(std::string setMsg, const StringVector& setTag, std::source_loc
         Log log{setMsg, setTag[0], setLocation, std::chrono::system_clock::now()+std::chrono::hours(logSettings->timeOffset)};
 
         // Start at one since setTag[0] is already added
-        for(int i {1}; i < setTag.size(); ++i){
+        for(int i {1}; i < static_cast<int>(setTag.size()); ++i){
             log.addTag(setTag[i]);
         }
         
@@ -97,6 +97,8 @@ bool Logger::addOutput (std::shared_ptr<LogOutput> output){
         outputs.push_back(output);
         return true;
     }
+    
+    return false;
 }
 bool Logger::removeOutput (uint8_t ID){
     for(std::vector<std::shared_ptr<LogOutput>>::iterator it {outputs.begin()}; it != outputs.end();){
