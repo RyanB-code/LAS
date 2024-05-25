@@ -1,4 +1,5 @@
 #include "Logging.h"
+#include "ModuleManager.h"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
@@ -18,7 +19,7 @@ using DisplayManagerPtr = std::shared_ptr<DisplayManager>;
 
 class DisplayManager{
 public:
-    DisplayManager(const Logger& setLogger);
+    DisplayManager(const Logger& setLogger, ModuleManagerPtr setModuleManager);
     ~DisplayManager();
 
     bool init();
@@ -30,7 +31,13 @@ private:
     bool initImgui();
 
     const Logger& logger;
+    ModuleManagerPtr moduleManager;
 
     GLFWwindow* window;
     std::string windowTitle { "Life Application Suite" };
 };
+
+
+namespace LAS_Display{
+    void setupWindow(std::string title);
+}

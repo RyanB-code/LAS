@@ -1,7 +1,8 @@
 #include "Display.h"
 
-DisplayManager::DisplayManager(const Logger& setLogger)
-    : logger {setLogger}
+DisplayManager::DisplayManager(const Logger& setLogger, ModuleManagerPtr setModuleManager)
+    :   logger {setLogger},
+        moduleManager {setModuleManager}
 {
 
 }
@@ -27,7 +28,12 @@ bool DisplayManager::refresh(){
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        ImGui::ShowDemoWindow(); // Show demo window! :)
+
+        // My rendering here
+        // SUDOCODE
+        // 1. Iterate over modules and refresh
+        LAS_Display::setupWindow(windowTitle);
+
 
         glClear(GL_COLOR_BUFFER_BIT);       // Does all the rendering
 
@@ -52,6 +58,11 @@ bool DisplayManager::initGLFW(){
         logger.log("Could not initialize GLFW.", Tags{"GLFW", "ERROR"});
         return false;
     }
+
+    // Hints before createWindow
+    glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
+    glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
+
     
     // Creates the window in windowed mode
     window = glfwCreateWindow(640, 480, windowTitle.c_str(), NULL, NULL);
@@ -63,6 +74,7 @@ bool DisplayManager::initGLFW(){
     }
 
     glfwMakeContextCurrent(window);
+    
 
     return true;
 }
@@ -87,7 +99,29 @@ bool DisplayManager::initImgui(){
     return true;
     
 }
-bool DisplayManager::initOpenGL(){
-    return false;
-    
+
+// MARK: LAS Display Namespace
+namespace LAS_Display{
+    void setupWindow(std::string title){
+        static bool shown {true};
+
+        ImGui::Begin(title.c_str(), &shown, ImGuiWindowFlags_MenuBar);
+
+        if(ImGui::BeginMainMenuBar()){
+            if(ImGui::BeginMenu("Testing")){
+                ImGui::EndMenu();
+            }
+            ImGui::EndMainMenuBar();
+        }
+
+        // Menu Bar Setup
+        if(ImGui::BeginMenuBar()){
+            if(ImGui::BeginMenu("Test")){
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenuBar();
+        }
+
+        ImGui::End();
+    }
 }
