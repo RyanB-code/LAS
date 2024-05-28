@@ -5,15 +5,13 @@
 
 
 int main(int argc, char **argv){
-
-    std::vector<std::string>args {argv, argv + argc};
+    // For handling commands
+    // std::vector<std::string>args {argv, argv + argc};
 
     Framework framework { };
     if(framework.setup()){
         framework.run();
     }
 
-
-    std::cout << "end\n";
     return 0;
 }
