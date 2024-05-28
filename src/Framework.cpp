@@ -49,8 +49,10 @@ bool Framework::setup(){
     */
 
     // Ensure filesystem is in place
-    std::string parentDir {LAS::getParentDir()};
-    if(!LAS::ensureDirectory(parentDir + "logs/") || !LAS::ensureDirectory(parentDir + "modules/")){
+    std::string parentDir   {LAS::getParentDir()};
+    std::string logDir      {parentDir + "logs/"};
+    std::string modulesDir  {parentDir + "modules/"};
+    if(!LAS::ensureDirectory(logDir) || !LAS::ensureDirectory(modulesDir)){
         std::cerr << "Could not create filesystem\n";
         return false;
     }
@@ -61,10 +63,20 @@ bool Framework::setup(){
         logger = std::make_shared<Logger>(Logger{logSettings});             // Sets local logger member variable
         
         LogToFile logToFile{};
+        logToFile.setPath(LAS::createLogFile(logDir));
 
+        // Check to ensure log file is good
+        if(logToFile.getPath().empty()){
+            std::cerr << "Could not create instance log file\n";
+            return false;
+        }
+
+        // If all is good, add LogToFile to logger
+        logger->addOutput(std::make_shared<LogToFile>(logToFile));
     }
     if(!moduleManager){
-
+        logger->log("Test Log", Tags{"FUCKY WUCKY"});
+        logger->log("Test Log2", Tags{"FUCKY SUCKY"});
     }
     if(!displayManager){
 
@@ -183,6 +195,17 @@ namespace LAS{
             std::ofstream file(path);
             return std::filesystem::exists(path);
         }
+    }
+    std::string createLogFile(std::string parentDir){
+        std::chrono::zoned_time now { std::chrono::current_zone(), std::chrono::system_clock::now() };
+
+        using namespace TextManipulations::Logging;   // for PrintTime()
+        std::string fileName {parentDir + std::format("{} {:%m %Y}", printTime(now), now)};  // Outputs in format HH:MM:SS DD MM YYYY as 19:56::23 28 05 2024
+
+        if(!ensureFile(fileName))
+            return "";
+        else
+            return fileName;
     }
     std::string getParentDir(){
         #ifdef __linux__
