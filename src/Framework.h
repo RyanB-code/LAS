@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <string>
 #include <queue>
+#include <chrono>
 
 class Framework final{
 public:
@@ -49,5 +50,6 @@ namespace LAS {
     bool ensureDirectory    (std::string path);
     bool ensureFile         (std::string path);
 
+    std::string createLogFile   (std::string parentDir);
     std::string getParentDir();
 }
