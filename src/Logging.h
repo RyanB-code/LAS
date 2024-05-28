@@ -30,7 +30,6 @@ public:
     bool showMsg                { true };
     bool showLocation           { true };
 
-    int8_t timeOffset           { -7 };
     uint8_t textBoxWidth_tag    { 5 };   
     uint8_t textBoxWidth_msg    { 30 };
 
