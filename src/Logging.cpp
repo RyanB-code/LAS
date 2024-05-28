@@ -54,9 +54,12 @@ Logger::~Logger(){
 }
 void Logger::log(std::string setMsg, const StringVector& setTag, std::source_location setLocation) const{
 
+    // Gets Time
+    const std::chrono::zoned_time time { std::chrono::current_zone(), std::chrono::system_clock::now() };
+
     // For a log with no tags
     if(setTag.empty()){
-        Log log{setMsg, "N/A", setLocation, std::chrono::system_clock::now()+std::chrono::hours(logSettings->timeOffset)};
+        Log log{setMsg, "N/A", setLocation, time};
 
         // Iterate through LogOutputs and output the log
         for(std::vector<std::shared_ptr<LogOutput>>::const_iterator it {outputs.cbegin()}; it != outputs.cend(); ++it){
@@ -64,7 +67,7 @@ void Logger::log(std::string setMsg, const StringVector& setTag, std::source_loc
         }
     }
     else{
-        Log log{setMsg, setTag[0], setLocation, std::chrono::system_clock::now()+std::chrono::hours(logSettings->timeOffset)};
+        Log log{setMsg, setTag[0], setLocation, time};
 
         // Start at one since setTag[0] is already added
         for(int i {1}; i < static_cast<int>(setTag.size()); ++i){
