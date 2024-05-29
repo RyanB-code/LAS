@@ -21,7 +21,7 @@ std::string Module::getShortTitle() const{
 bool Module::getShown() const{
     return shown;
 }
-const Settings& Module::getSettings() const{
+const ModuleSettings& Module::getSettings() const{
     return settings;
 }
 
@@ -29,7 +29,7 @@ void Module::setShown(bool setShown) {
     shown = setShown;
 }
 
-bool Module::load(const Settings& settings){
+bool Module::load(const ModuleSettings& settings){
     if(!loadPtr)
         return false;
     
