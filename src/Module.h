@@ -1,11 +1,11 @@
 #pragma once
 #include "Logging.h"
-#include "Settings.h"
+#include "ModuleSettings.h"
 
 #include <memory>
 #include <string>
 
-typedef bool(*loadFunction)(const Settings&, ModuleInfo&);      // Function pointer for LASM_load()
+typedef bool(*loadFunction)(const ModuleSettings&, ModuleInfo&);      // Function pointer for LASM_load()
 typedef void(*voidNoParams)();                                  // Function pointer LASM_run() and LASM_cleanup()
 
 class Module{
@@ -16,11 +16,11 @@ public:
     std::string     getTitle()          const;
     std::string     getShortTitle()     const;
     bool            getShown()          const;
-    const Settings& getSettings()       const;
+    const ModuleSettings& getSettings()       const;
 
     void            setShown(bool setShown);
 
-    bool load(const Settings& settings);
+    bool load(const ModuleSettings& settings);
     void run();
     void cleanup();
 
@@ -31,7 +31,7 @@ private:
     bool shown{false};
 
     LoggerPtr logger{};
-    Settings settings{};
+    ModuleSettings settings{};
     
     loadFunction loadPtr{};
     voidNoParams runPtr{};
