@@ -75,11 +75,25 @@ bool Framework::setup(){
         logger->addOutput(std::make_shared<LogToFile>(logToFile));
     }
     if(!moduleManager){
-        logger->log("Test Log", Tags{"FUCKY WUCKY"});
-        logger->log("Test Log2", Tags{"FUCKY SUCKY"});
+        ModuleSettingsPtr moduleSettings { new ModuleSettings { modulesDir }};
+        moduleManager = std::make_shared<ModuleManager>(  ModuleManager{logger, moduleSettings});
+
+        try{
+            std::pair<int, StringVector> modulesThatFailedToLoad {moduleManager->loadModules(modulesDir)}; 
+            std::ostringstream msg;
+            msg << "There were [" << modulesThatFailedToLoad.first << "] Modules that could not be loaded: ";
+            for(const auto& s : modulesThatFailedToLoad.second){
+                msg << "[" << s << "] ";
+            }
+            logger->log(msg.str(), Tags{"Module Manager"});
+        }
+        catch(std::filesystem::filesystem_error& e){
+            logger->log("Could not find Module directory [" + modulesDir + "] to load Modules", Tags{"Module Manager", "Filesystem Error"});
+            return false;
+        }
     }
     if(!displayManager){
-
+        
     }
 
     setupCommands();
