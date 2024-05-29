@@ -2,11 +2,10 @@
 
 #include <string>
 #include <cstdint>
+#include <memory>
 
 
-struct Settings{
-    uint8_t         fontSize        {};
-    int8_t          hourOffset      {};
+struct ModuleSettings{
     std::string     directory       {};
 };
 
@@ -15,4 +14,4 @@ struct ModuleInfo{
     std::string shortTitle  {};
 };
 
-using SettingsPtr = std::shared_ptr<Settings>;
+using ModuleSettingsPtr = std::shared_ptr<ModuleSettings>;
