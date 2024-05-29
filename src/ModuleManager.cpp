@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-ModuleManager::ModuleManager(std::shared_ptr<Logger> setLogger, SettingsPtr setSettings) :
+ModuleManager::ModuleManager(std::shared_ptr<Logger> setLogger, ModuleSettingsPtr setSettings) :
     logger {setLogger},
     settings {setSettings}
 {
@@ -91,7 +91,7 @@ std::pair<int, StringVector> ModuleManager::loadModules(std::string directory){
 // MARK: LASCore Namespace 
 namespace LASCore{
     ModulePtr bindFiletoModule(std::string path, LoggerPtr logger){
-        typedef bool(*loadFunction)(const Settings&, ModuleInfo&);      // Function pointer for LASM_load()
+        typedef bool(*loadFunction)(const ModuleSettings&, ModuleInfo&);      // Function pointer for LASM_load()
         typedef void(*voidNoParams)();                                  // Function pointer LASM_run() and LASM_cleanup()
 
         void* lib {dlopen(path.c_str(), RTLD_LAZY)};    // Map the shared object file
