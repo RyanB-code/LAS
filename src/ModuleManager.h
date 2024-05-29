@@ -3,7 +3,7 @@
 #include "Logging.h"
 #include "Module.h"
 #include "TextManipulations.h"
-#include "Settings.h"
+#include "ModuleSettings.h"
 
 #include <string>
 #include <memory>
@@ -16,7 +16,7 @@ using StringVector = std::vector<std::string>;
 
 class ModuleManager final {
 public:
-    ModuleManager(LoggerPtr setLogger, SettingsPtr setSettings);
+    ModuleManager(LoggerPtr setLogger, ModuleSettingsPtr setSettings);
     ~ModuleManager();
 
     bool addModule(ModulePtr module);
@@ -25,14 +25,15 @@ public:
     ModulePtr   getModule(std::string title) const;
     bool        containsModule(std::string title) const;
 
+    [[nodiscard]]
     std::pair<int, StringVector> loadModules(std::string directory);
 
 private:
 
     std::unordered_map<std::string, ModulePtr> modules{};
 
-    std::shared_ptr<Logger> logger;
-    std::shared_ptr<Settings> settings;
+    LoggerPtr logger;
+    ModuleSettingsPtr settings;
 };
 
 using ModuleManagerPtr = std::shared_ptr<ModuleManager>;
