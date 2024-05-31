@@ -32,6 +32,11 @@ private:
     bool initGLFW();
     bool initImgui();
 
+
+    // Drawing window
+    void setupWindow(std::string title) const;
+    void drawModules() const;
+
     const Logger& logger;
     ModuleManagerPtr moduleManager;
 
@@ -39,7 +44,3 @@ private:
     std::string windowTitle { "Life Application Suite" };
 };
 
-
-namespace LAS_Display{
-    void setupWindow(std::string title);
-}

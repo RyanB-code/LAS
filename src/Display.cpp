@@ -19,9 +19,7 @@ bool DisplayManager::init(){
     return true;    
 }
 bool DisplayManager::refresh(){
-    
-    // Loop until wndow closes
-    while(!glfwWindowShouldClose(window)){
+    if(!glfwWindowShouldClose(window)){
         glfwPollEvents();                   // Poll for and process events
 
         // Starts the Imgui frame
@@ -32,7 +30,8 @@ bool DisplayManager::refresh(){
         // My rendering here
         // SUDOCODE
         // 1. Iterate over modules and refresh
-        LAS_Display::setupWindow(windowTitle);
+        setupWindow(windowTitle);
+        drawModules();
 
 
         glClear(GL_COLOR_BUFFER_BIT);       // Does all the rendering
@@ -40,10 +39,12 @@ bool DisplayManager::refresh(){
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        glfwSwapBuffers(window);      // Swaps front and back buffers
+        glfwSwapBuffers(window);            // Swaps front and back buffers
     }
+    else
+        return true;    // If the window should close, return true
 
-    return true;
+    return false;
 }
 void DisplayManager::shutdown(){
     ImGui_ImplOpenGL3_Shutdown();
@@ -99,29 +100,22 @@ bool DisplayManager::initImgui(){
     return true;
     
 }
-
-// MARK: LAS Display Namespace
-namespace LAS_Display{
-    void setupWindow(std::string title){
-        static bool shown {true};
-
-        ImGui::Begin(title.c_str(), &shown, ImGuiWindowFlags_MenuBar);
-
-        if(ImGui::BeginMainMenuBar()){
-            if(ImGui::BeginMenu("Testing")){
-                ImGui::EndMenu();
+void DisplayManager::setupWindow(std::string title) const{
+    if(ImGui::BeginMainMenuBar()){        
+        if(ImGui::BeginMenu("Modules")){
+            for(auto s : moduleManager->getModuleNames()){
+                if(ImGui::MenuItem(s.c_str(), NULL, &moduleManager->getModule(s)->show()));
             }
-            ImGui::EndMainMenuBar();
+            ImGui::EndMenu();
         }
-
-        // Menu Bar Setup
-        if(ImGui::BeginMenuBar()){
-            if(ImGui::BeginMenu("Test")){
-                ImGui::EndMenu();
-            }
-            ImGui::EndMenuBar();
+        ImGui::EndMainMenuBar();
+    }
+}
+void DisplayManager::drawModules() const {
+    for(auto s : moduleManager->getModuleNames()){
+        if(moduleManager->getModule(s)->show()){
+            ImGui::Begin(s.c_str(), &moduleManager->getModule(s)->show());
+            ImGui::End();
         }
-
-        ImGui::End();
     }
 }
