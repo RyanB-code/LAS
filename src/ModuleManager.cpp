@@ -87,6 +87,13 @@ std::pair<int, StringVector> ModuleManager::loadModules(std::string directory){
 
     return returnVariable;
 }
+const StringVector ModuleManager::getModuleNames() const{
+    StringVector names;
+    for(auto module : modules){
+        names.push_back(module.second->getTitle());
+    }
+    return names;
+}
 
 // MARK: LASCore Namespace 
 namespace LASCore{
