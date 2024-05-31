@@ -37,16 +37,6 @@ bool Framework::setup(){
         return -1;
     #endif
 
-    /*
-        Order of Operations:
-        1. Initialize application pieces to their default state
-            (Module Manager, Logger, DisplayManager)
-        2. Read .las-rc file
-            - Parse commands
-        3. Handle the commands
-        4. 
-    
-    */
 
     // Ensure filesystem is in place
     std::string parentDir   {LAS::getParentDir()};
@@ -57,7 +47,7 @@ bool Framework::setup(){
         return false;
     }
 
-    // Default Setup
+    // Default Setup of Logger
     if(!logger){
         LogSettingsPtr logSettings {new LogSettings{}};                     // Uses default settings values
         logger = std::make_shared<Logger>(Logger{logSettings});             // Sets local logger member variable
@@ -74,6 +64,8 @@ bool Framework::setup(){
         // If all is good, add LogToFile to logger
         logger->addOutput(std::make_shared<LogToFile>(logToFile));
     }
+    // After logging is setup, use logger for messages
+
     if(!moduleManager){
         ModuleSettingsPtr moduleSettings { new ModuleSettings { modulesDir }};
         moduleManager = std::make_shared<ModuleManager>(  ModuleManager{logger, moduleSettings});
@@ -93,19 +85,30 @@ bool Framework::setup(){
         }
     }
     if(!displayManager){
-        
+        displayManager = std::make_shared<DisplayManager>(*logger.get(), moduleManager);
+        if(!displayManager->init()){
+            logger->log("Error setting up necessary display libraries", Tags{"Display Manager"});
+            return false;
+        }
     }
 
     setupCommands();
     if(!readSetupFile(settingsPath)){
-        std::cerr << "Error reading settings file\n";
+        logger->log("Error reading settings file at [" + settingsPath + "]", Tags{"Filesystem Error"});
+        return false;
     }
     handleCommandQueue();
+
     
-    return false;
+    return true;
 }
 void Framework::run(){
 
+    // If refresh() returns true, that means an glfwShouldWindowClose() was called
+    while(!displayManager->refresh()){
+
+    }
+    return;
 }
 
 // MARK: PRIVATE FUNCTIONS
