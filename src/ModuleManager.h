@@ -24,6 +24,7 @@ public:
 
     ModulePtr   getModule(std::string title) const;
     bool        containsModule(std::string title) const;
+    const StringVector getModuleNames() const;
 
     [[nodiscard]]
     std::pair<int, StringVector> loadModules(std::string directory);
