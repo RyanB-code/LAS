@@ -12,6 +12,10 @@ int main(int argc, char **argv){
     if(framework.setup()){
         framework.run();
     }
+    else{
+        std::cerr << "Application could not be setup.\n";
+        return -1;
+    }
 
     return 0;
 }
