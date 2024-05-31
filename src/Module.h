@@ -15,10 +15,8 @@ public:
 
     std::string     getTitle()          const;
     std::string     getShortTitle()     const;
-    bool            getShown()          const;
+    bool&           show();
     const ModuleSettings& getSettings()       const;
-
-    void            setShown(bool setShown);
 
     bool load(const ModuleSettings& settings);
     void run();

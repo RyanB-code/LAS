@@ -18,16 +18,18 @@ std::string Module::getTitle() const{
 std::string Module::getShortTitle() const{
     return shortTitle;
 }
-bool Module::getShown() const{
+bool& Module::show(){
+
+    if(shown){
+        run();
+    }
+
     return shown;
 }
 const ModuleSettings& Module::getSettings() const{
     return settings;
 }
 
-void Module::setShown(bool setShown) {
-    shown = setShown;
-}
 
 bool Module::load(const ModuleSettings& settings){
     if(!loadPtr)
