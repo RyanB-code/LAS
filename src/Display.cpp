@@ -69,7 +69,7 @@ bool DisplayManager::initGLFW(){
     window = glfwCreateWindow(640, 480, windowTitle.c_str(), NULL, NULL);
 
     if(!window){
-        logger.log("Could not obtain window contect", Tags{"GLFW", "ERROR"});
+        logger.log("Could not obtain window context", Tags{"GLFW", "ERROR"});
         glfwTerminate();
         return false;
     }
@@ -112,10 +112,8 @@ void DisplayManager::setupWindow(std::string title) const{
     }
 }
 void DisplayManager::drawModules() const {
-    for(auto s : moduleManager->getModuleNames()){
-        if(moduleManager->getModule(s)->show()){
-            ImGui::Begin(s.c_str(), &moduleManager->getModule(s)->show());
-            ImGui::End();
-        }
+    for(auto name : moduleManager->getModuleNames()){
+        auto module {moduleManager->getModule(name)};
+        module->show();
     }
 }
