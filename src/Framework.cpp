@@ -18,42 +18,25 @@ Framework::~Framework(){
 // MARK: PUBLIC FUNCTIONS
 bool Framework::setup(){
 
-    // If linux, check the home directory
-    #ifdef __linux__
+    if(!LAS::FrameworkSetup::setupFilesystem(filePaths)){
+        std::cerr << "Could not setup filesystem\n";
+        return false;
+    }
 
-        #ifdef DEBUG
-            std::string directory {"/mnt/NAS/1-Project-Related/Project-Source-Directories/LAS/LAS-Test/"};
-            std::string settingsPath {directory + ".las-rc"};
-        #endif
-        #ifndef DEBUG
-            std::string home {getenv("HOME")};
-            std::string settingsPath { home + "/.las-rc"};
-        #endif
-    #endif
+    setupCommands();
 
-    // If windows, right now say its not supported
-     #ifdef _Win32
-        std::cerr << "Windows is not currently supported.\nApplication aborted.\n";
-        return -1;
-    #endif
-
-
-    // Ensure filesystem is in place
-    std::string parentDir   {LAS::getParentDir()};
-    std::string logDir      {parentDir + "logs/"};
-    std::string modulesDir  {parentDir + "modules/"};
-    if(!LAS::ensureDirectory(logDir) || !LAS::ensureDirectory(modulesDir)){
-        std::cerr << "Could not create filesystem\n";
+    if(!readSetupFile(filePaths.settingsPath)){
+        logger->log("Error reading settings file at [" + filePaths.settingsPath + "]", Tags{"Filesystem Error"});
         return false;
     }
 
     // Default Setup of Logger
     if(!logger){
-        LogSettingsPtr logSettings {new LogSettings{}};                     // Uses default settings values
-        logger = std::make_shared<Logger>(Logger{logSettings});             // Sets local logger member variable
-        
-        LogToFile logToFile{};
-        logToFile.setPath(LAS::createLogFile(logDir));
+        LogSettingsPtr  logSettings {new LogSettings{}};                            // Uses default settings values
+        LogToFile       logToFile    {};
+
+        logger = std::make_shared<Logger>(Logger{logSettings});                     // Sets local logger member variable
+        logToFile.setPath(LAS::FrameworkSetup::createLogFile(filePaths.logDir));
 
         // Check to ensure log file is good
         if(logToFile.getPath().empty()){
@@ -64,11 +47,13 @@ bool Framework::setup(){
         // If all is good, add LogToFile to logger
         logger->addOutput(std::make_shared<LogToFile>(logToFile));
     }
+
+    // --------------------------------------------------
     // After logging is setup, use logger for messages
+    // --------------------------------------------------
 
     if(!moduleManager){
-        ModuleSettingsPtr moduleSettings { new ModuleSettings { modulesDir }};
-        moduleManager = std::make_shared<ModuleManager>(  ModuleManager{logger, moduleSettings});
+        moduleManager = std::make_shared<ModuleManager>( ModuleManager{*logger});
     }
     if(!displayManager){
         displayManager = std::make_shared<DisplayManager>(*logger.get(), moduleManager);
@@ -78,15 +63,10 @@ bool Framework::setup(){
         }
     }
 
-    setupCommands();
-    if(!readSetupFile(settingsPath)){
-        logger->log("Error reading settings file at [" + settingsPath + "]", Tags{"Filesystem Error"});
-        return false;
-    }
     handleCommandQueue();
 
     // After all is setup, load modules
-    if(!loadModules(modulesDir)){
+    if(!loadModules(filePaths.moduleDir)){
         logger->log("Error loading modules.", Tags{"Module Loader"});
         return false;
     }
@@ -100,14 +80,19 @@ void Framework::run(){
     while(!displayManager->refresh()){
 
     }
+
     return;
 }
-
 // MARK: PRIVATE FUNCTIONS
 void Framework::setupCommands(){
-   std::unique_ptr<TestCommand> testCommand {new TestCommand()};
 
-   addCommand(std::move(testCommand));
+    // Instantiate commands
+    std::unique_ptr<TestCommand> testCommand {new TestCommand()};
+
+    // Add to known commands
+    if(!addCommand(std::move(testCommand))){
+        std::cerr << "Command [" + testCommand->getKey() << "] could not be added.\n";
+    }
 }
 bool Framework::addCommand(std::unique_ptr<Command> command){
     if(commands.contains(command->getKey())){
@@ -119,7 +104,47 @@ bool Framework::addCommand(std::unique_ptr<Command> command){
     }
     return false;
 }
-bool Framework::readSetupFile(std::string path){
+bool Framework::handleCommandQueue(){\
+
+    // This just prints each command entry riught now
+    std::cout << "From Framework::handleCommandQueue():\n";
+    for (/*Nothing*/; !commandQueue.empty(); commandQueue.pop())
+        std::cout << "\t" << commandQueue.front() << '\n';
+    std::cout << "\n";
+    /* This is for inputting quoted buffer
+    while (inputStream >> std::quoted(buffer)) {    // Separate by quotes or spaces
+            arguments.push_back(buffer);                // Add to argument list
+        }
+    */
+
+    return false;
+}
+bool Framework::loadModules(const std::string& modulesDirectory) {
+
+    if(!ImGui::GetCurrentContext()){
+        logger->log("No ImGuiContext found", Tags{"Module Loader", "ERROR"});
+        return false;
+    }
+
+    try{
+        std::pair<int, StringVector> modulesThatFailedToLoad {moduleManager->loadModules(modulesDirectory, *ImGui::GetCurrentContext())}; 
+
+        // This is just for logging what failed to load
+        std::ostringstream msg;
+        msg << "There were [" << modulesThatFailedToLoad.first << "] Modules that could not be loaded: ";
+        for(const auto& s : modulesThatFailedToLoad.second){
+            msg << "[" << s << "] ";
+        }
+        logger->log(msg.str(), Tags{"Module Manager"});
+
+        return true;
+    }
+    catch(std::filesystem::filesystem_error& e){
+        logger->log("Could not find module directory [" + std::string{e.path1()} + "] to load Modules", Tags{"Module Loader", "Filesystem Error"});
+        return false;
+    }
+}
+bool Framework::readSetupFile(const std::string& path){
 
      if(std::filesystem::exists(path)){
         std::ifstream settingsFile {path}; 
@@ -132,7 +157,7 @@ bool Framework::readSetupFile(std::string path){
             inputStream << line;
             std::string buffer {inputStream.str()};
 
-            // Filter out comments and newlines, add the rest
+            // Filter out comments and newlines, add the rest to commandQueue
             if(!buffer.starts_with("#") && !buffer.starts_with('\n') && !buffer.empty())
                 commandQueue.push(buffer);
         }
@@ -153,44 +178,6 @@ bool Framework::readSetupFile(std::string path){
 
     return false;
 }
-bool Framework::handleCommandQueue(){
-
-    std::cout << "Commands: \n";
-    for (; !commandQueue.empty(); commandQueue.pop())
-        std::cout << commandQueue.front() << '\n';
-    std::cout << "\nEnd commands. End size: " << commandQueue.size() << "\n";
-
-    /* This is for inputting quoted buffer
-    while (inputStream >> std::quoted(buffer)) {    // Separate by quotes or spaces
-            arguments.push_back(buffer);                // Add to argument list
-        }
-    */
-    
-    
-    return false;
-}
-bool Framework::loadModules(std::string modulesDirectory) {
-    if(!ImGui::GetCurrentContext()){
-        logger->log("No ImGuiContext found", Tags{"Module Loader"});
-        return false;
-    }
-
-
-    try{
-        std::pair<int, StringVector> modulesThatFailedToLoad {moduleManager->loadModules(modulesDirectory, *ImGui::GetCurrentContext())}; 
-        std::ostringstream msg;
-        msg << "There were [" << modulesThatFailedToLoad.first << "] Modules that could not be loaded: ";
-        for(const auto& s : modulesThatFailedToLoad.second){
-            msg << "[" << s << "] ";
-        }
-        logger->log(msg.str(), Tags{"Module Manager"});
-        return true;
-    }
-    catch(std::filesystem::filesystem_error& e){
-        logger->log("Could not find Module directory [" + modulesDirectory + "] to load Modules", Tags{"Module Manager", "Filesystem Error"});
-        return false;
-    }
-}
 
 
 // MARK: TEST COMMAND
@@ -208,26 +195,9 @@ bool TestCommand::execute() const {
     return true;    
 }
 
-// MARK: LAS Namespace
-namespace LAS{
-    bool ensureDirectory (std::string path){
-        if(std::filesystem::exists(path)){
-            return true;
-        }
-        else{
-            return std::filesystem::create_directories(path);
-        }
-    }
-    bool ensureFile     (std::string path){
-        if(std::filesystem::exists(path)){
-            return true;
-        }
-        else{
-            std::ofstream file(path);
-            return std::filesystem::exists(path);
-        }
-    }
-    std::string createLogFile(std::string parentDir){
+// MARK: LAS::FrameworkSetup Namespace
+namespace LAS::FrameworkSetup{
+    std::string createLogFile(const std::string& parentDir){
         std::chrono::zoned_time now { std::chrono::current_zone(), std::chrono::system_clock::now() };
 
         using namespace TextManipulations::Logging;   // for PrintTime()
@@ -238,7 +208,26 @@ namespace LAS{
         else
             return fileName;
     }
-    std::string getParentDir(){
+    std::string getSettingsPath(){
+            // If linux, check the home directory
+        #ifdef __linux__
+
+            #ifdef DEBUG
+                std::string directory {"/mnt/NAS/1-Project-Related/Project-Source-Directories/LAS/LAS-Test/"};
+                return directory + ".las-rc";
+            #endif
+            #ifndef DEBUG
+                std::string home {getenv("HOME")};
+                return home + "/.las-rc";
+            #endif
+        #endif
+
+        // If windows, right now say its not supported
+        #ifdef _Win32
+            throw std::domain_error{"Windows is not currently supported.\nApplication aborted.\n"};
+        #endif
+    }
+    std::string getExeParentDir(){
         #ifdef __linux__
             std::string exePath {std::filesystem::canonical(std::filesystem::path{"/proc/self/exe"})};
         #endif
@@ -255,4 +244,26 @@ namespace LAS{
         }
         return parentDir;
     }
+    bool setupFilesystem(FilePaths& filePaths){
+        // Ensure filesystem is in place
+        filePaths.parentDir     = LAS::FrameworkSetup::getExeParentDir();
+        filePaths.logDir        = filePaths.parentDir + "logs/";
+        filePaths.moduleDir     = filePaths.parentDir + "modules/";
+
+        // Get the correct directory for the settings file
+        try{
+            filePaths.settingsPath = LAS::FrameworkSetup::getSettingsPath();
+        }
+        catch(std::exception& e){
+            std::cerr << e.what() << "\n";
+            return false;
+        }
+
+        if(!LAS::ensureDirectory(filePaths.logDir) || !LAS::ensureDirectory(filePaths.moduleDir)){
+            return false;
+        }
+
+        return true;
+    }
+
 }

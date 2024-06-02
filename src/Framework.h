@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ModuleManager.h"
+#include "LAS.h"
 #include "Logging.h"
 #include "Display.h"
 #include "Commands.h"
@@ -10,12 +10,21 @@
 #include <string>
 #include <queue>
 #include <chrono>
+#include <exception>
+
+struct FilePaths{
+    std::string settingsPath;
+
+    std::string parentDir;
+    std::string logDir;
+    std::string moduleDir;
+};
 
 class Framework final{
 public:
-    Framework(  LoggerPtr           setLogger=nullptr,
-                ModuleManagerPtr    setModuleManager=nullptr,
-                DisplayManagerPtr   setDisplayManager=nullptr
+    Framework(  LoggerPtr           setLogger           =nullptr,
+                ModuleManagerPtr    setModuleManager    =nullptr,
+                DisplayManagerPtr   setDisplayManager   =nullptr
             );
     ~Framework  ();
 
@@ -23,21 +32,30 @@ public:
     void run();
 
 private:
-    LoggerPtr logger;
-    ModuleManagerPtr moduleManager;
-    DisplayManagerPtr displayManager;
+    LoggerPtr           logger;
+    ModuleManagerPtr    moduleManager;
+    DisplayManagerPtr   displayManager;
+
+    FilePaths           filePaths;
 
     std::unordered_map<std::string, CommandPtr> commands;
-    std::queue<std::string> commandQueue;  
+    std::queue<std::string>                     commandQueue;  
 
-    void setupCommands();
-    bool addCommand(std::unique_ptr<Command> command);
-    bool readSetupFile(std::string path);
+    void setupCommands();                                           // This is where to instantiate commands
+    bool addCommand(std::unique_ptr<Command> command);              // Adds to commands unoredered_map
     bool handleCommandQueue();
 
-    bool loadModules(std::string modulesDirectory);
-
+    bool loadModules        (const std::string& modulesDirectory);
+    bool readSetupFile      (const std::string& path);
 };
+
+namespace LAS::FrameworkSetup{
+    std::string     createLogFile   (const std::string& parentDir);
+    std::string     getSettingsPath ();
+    std::string     getExeParentDir ();
+
+    bool            setupFilesystem (FilePaths& filePaths);
+}
 
 // For testing command functionality
 class TestCommand : public Command{
@@ -47,11 +65,3 @@ public:
 
     bool execute() const override;
 };
-
-namespace LAS {
-    bool ensureDirectory    (std::string path);
-    bool ensureFile         (std::string path);
-
-    std::string createLogFile   (std::string parentDir);
-    std::string getParentDir();
-}
