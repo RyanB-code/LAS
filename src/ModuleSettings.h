@@ -12,6 +12,7 @@ struct ModuleSettings{
 struct ModuleInfo{
     std::string title       {};
     std::string shortTitle  {};
+    bool* shown;
 };
 
 using ModuleSettingsPtr = std::shared_ptr<ModuleSettings>;
