@@ -1,4 +1,4 @@
-#include "TextManipulations.h"
+#include "LAS.h"
 
 namespace TextManipulations{
     std::string ensureSlash(std::string text){
@@ -28,5 +28,26 @@ namespace TextManipulations::Logging{
         os << "[" << location.file_name() << " | " << location.function_name() << " | " << location.line() << "]";
 
         return os.str();
+    }
+}
+
+// MARK: LAS Namespace
+namespace LAS{
+    bool ensureDirectory (const std::string& path){
+        if(std::filesystem::exists(path)){
+            return true;
+        }
+        else{
+            return std::filesystem::create_directories(path);
+        }
+    }
+    bool ensureFile     (const std::string& path){
+        if(std::filesystem::exists(path)){
+            return true;
+        }
+        else{
+            std::ofstream file(path);
+            return std::filesystem::exists(path);
+        }
     }
 }
