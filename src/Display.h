@@ -29,18 +29,18 @@ public:
     void shutdown();
 
 private:
-    bool initGLFW();
-    bool initImgui();
-
-
-    // Drawing window
-    void setupWindow(std::string title) const;
-    void drawModules() const;
-
     const Logger& logger;
     ModuleManagerPtr moduleManager;
 
     GLFWwindow* window;
     std::string windowTitle { "Life Application Suite" };
+
+
+    bool initGLFW();
+    bool initImgui();
+
+    // Drawing window
+    void setupWindow(std::string title) const;
+    void drawModules() const;
 };
 
