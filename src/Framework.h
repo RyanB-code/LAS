@@ -35,6 +35,8 @@ private:
     bool readSetupFile(std::string path);
     bool handleCommandQueue();
 
+    bool loadModules(std::string modulesDirectory);
+
 };
 
 // For testing command functionality

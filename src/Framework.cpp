@@ -69,20 +69,6 @@ bool Framework::setup(){
     if(!moduleManager){
         ModuleSettingsPtr moduleSettings { new ModuleSettings { modulesDir }};
         moduleManager = std::make_shared<ModuleManager>(  ModuleManager{logger, moduleSettings});
-
-        try{
-            std::pair<int, StringVector> modulesThatFailedToLoad {moduleManager->loadModules(modulesDir)}; 
-            std::ostringstream msg;
-            msg << "There were [" << modulesThatFailedToLoad.first << "] Modules that could not be loaded: ";
-            for(const auto& s : modulesThatFailedToLoad.second){
-                msg << "[" << s << "] ";
-            }
-            logger->log(msg.str(), Tags{"Module Manager"});
-        }
-        catch(std::filesystem::filesystem_error& e){
-            logger->log("Could not find Module directory [" + modulesDir + "] to load Modules", Tags{"Module Manager", "Filesystem Error"});
-            return false;
-        }
     }
     if(!displayManager){
         displayManager = std::make_shared<DisplayManager>(*logger.get(), moduleManager);
@@ -98,6 +84,12 @@ bool Framework::setup(){
         return false;
     }
     handleCommandQueue();
+
+    // After all is setup, load modules
+    if(!loadModules(modulesDir)){
+        logger->log("Error loading modules.", Tags{"Module Loader"});
+        return false;
+    }
 
     
     return true;
@@ -177,6 +169,28 @@ bool Framework::handleCommandQueue(){
     
     return false;
 }
+bool Framework::loadModules(std::string modulesDirectory) {
+    if(!ImGui::GetCurrentContext()){
+        logger->log("No ImGuiContext found", Tags{"Module Loader"});
+        return false;
+    }
+
+
+    try{
+        std::pair<int, StringVector> modulesThatFailedToLoad {moduleManager->loadModules(modulesDirectory, *ImGui::GetCurrentContext())}; 
+        std::ostringstream msg;
+        msg << "There were [" << modulesThatFailedToLoad.first << "] Modules that could not be loaded: ";
+        for(const auto& s : modulesThatFailedToLoad.second){
+            msg << "[" << s << "] ";
+        }
+        logger->log(msg.str(), Tags{"Module Manager"});
+        return true;
+    }
+    catch(std::filesystem::filesystem_error& e){
+        logger->log("Could not find Module directory [" + modulesDirectory + "] to load Modules", Tags{"Module Manager", "Filesystem Error"});
+        return false;
+    }
+}
 
 
 // MARK: TEST COMMAND
@@ -217,7 +231,7 @@ namespace LAS{
         std::chrono::zoned_time now { std::chrono::current_zone(), std::chrono::system_clock::now() };
 
         using namespace TextManipulations::Logging;   // for PrintTime()
-        std::string fileName {parentDir + std::format("{} {:%m %Y}", printTime(now), now)};  // Outputs in format HH:MM:SS DD MM YYYY as 19:56::23 28 05 2024
+        std::string fileName {parentDir + std::format("{:%F} {}", now, printTime(now))};  // Outputs in format HH:MM:SS DD MM YYYY as 19:56::23 28 05 2024
 
         if(!ensureFile(fileName))
             return "";
