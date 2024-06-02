@@ -2,9 +2,8 @@
 
 #include <iostream>
 
-ModuleManager::ModuleManager(std::shared_ptr<Logger> setLogger, ModuleSettingsPtr setSettings) :
-    logger {setLogger},
-    settings {setSettings}
+ModuleManager::ModuleManager(const Logger& setLogger) :
+    logger {setLogger}
 {
 
 }
@@ -43,10 +42,11 @@ bool ModuleManager::containsModule(std::string title) const{
     return modules.contains(title);
 }
 std::pair<int, StringVector> ModuleManager::loadModules(std::string directory, ImGuiContext& context){
-    std::pair<int, StringVector> returnVariable {0 , StringVector{}};   // Initialize return variable
+    std::string                     moduleNameSuffix    {"LASModule_"};         // Every module name must have this key present to be added
+    std::pair<int, StringVector>    failedToLoad        {0 , StringVector{}};   // Initialize empty return variable
+
     directory = TextManipulations::ensureSlash(directory);              // Ensure slash at the end
     const std::filesystem::path qualifiedDirectory{directory};          // Path with slashes
-    std::string moduleNameSuffix {"LASModule_"};                        // Every module name must have this key present to be added
 
 
     // Throw exception if the directory doesn't exist
@@ -54,38 +54,41 @@ std::pair<int, StringVector> ModuleManager::loadModules(std::string directory, I
         throw std::filesystem::filesystem_error("Directory for modules does not exist", qualifiedDirectory, std::error_code());
     }
 
-	for(auto const& file : std::filesystem::directory_iterator(qualifiedDirectory)){
-        bool failedToLoad{false};
+    // Create what to pass
+    PassToModule pass {directory, context, logger};
 
+
+    std::vector<ModulePtr> modules;
+	for(auto const& file : std::filesystem::directory_iterator(qualifiedDirectory)){
+        bool failed {false};
         // Ensure file contains substring to know that it's an LASModule
         std::string fileName {file.path()};
         if(fileName.find(moduleNameSuffix) != fileName.npos){
-            ModulePtr moduleBuffer {LASCore::bindFiletoModule(fileName, logger, context)}; // Creates Module buffer
-
+            ModulePtr moduleBuffer {LAS::Modules::bindFiletoModule(fileName, logger, context)}; // Creates Module buffer
+        
             if(moduleBuffer){
-                // Load module information
-                if(moduleBuffer->load(*settings.get(), context)){
-                    if(!addModule(moduleBuffer))
-                        failedToLoad = true;
+        
+                if(moduleBuffer->load(pass)){       // Pass info across DLL boundary
+                    if(!addModule(moduleBuffer))    // Add to known modules
+                        failed = true;
                 }
                 else
-                    failedToLoad = true;
-                
+                    failed = true;
             }
             else
-                failedToLoad = true;
+                failed = true;
         }
         else{
-           failedToLoad = true;
+           failed = true;
         }
 
-        if(failedToLoad){
-            ++returnVariable.first;
-            returnVariable.second.push_back(fileName);
+        if(failed){
+            ++failedToLoad.first;
+            failedToLoad.second.push_back(fileName);
         }
 	}
 
-    return returnVariable;
+    return failedToLoad;
 }
 const StringVector ModuleManager::getModuleNames() const{
     StringVector names;
@@ -96,17 +99,12 @@ const StringVector ModuleManager::getModuleNames() const{
 }
 
 // MARK: LASCore Namespace 
-namespace LASCore{
-    ModulePtr bindFiletoModule(std::string path, LoggerPtr logger, ImGuiContext& context){
-        typedef bool(*loadFunction)(const ModuleSettings&, ModuleInfo&, ImGuiContext&);      // Function pointer for LASM_load()
-        typedef void(*voidNoParams)();                                                      // Function pointer LASM_run() and LASM_cleanup()
-
+namespace LAS::Modules{
+    ModulePtr bindFiletoModule(std::string path, const Logger& logger, ImGuiContext& context){
         void* lib {dlopen(path.c_str(), RTLD_LAZY)};    // Map the shared object file
 
-        // Do not continue if library could not be opened
-        if(!lib){
-            return nullptr;
-        }
+        if(!lib)
+            return nullptr;     // Do not continue if library could not be opened
 
         // Bind the API funcions
         loadFunction load       {reinterpret_cast<loadFunction>(dlsym(lib, "LASM_load"))};
@@ -114,9 +112,8 @@ namespace LASCore{
         voidNoParams cleanup    {reinterpret_cast<voidNoParams>(dlsym(lib, "LASM_cleanup"))};
 
         // Do not continue if binding failed
-        if(!load || !run || !cleanup){
+        if(!load || !run || !cleanup)
             return nullptr;
-        }
 
         return std::make_shared<Module>(logger, load, run, cleanup);       
     }
