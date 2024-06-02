@@ -5,6 +5,8 @@
 #include "TextManipulations.h"
 #include "ModuleSettings.h"
 
+#include <imgui/imgui_internal.h>   // Needed for ImGuiContext passing to Module
+
 #include <string>
 #include <memory>
 #include <unordered_map>
@@ -27,7 +29,7 @@ public:
     const StringVector getModuleNames() const;
 
     [[nodiscard]]
-    std::pair<int, StringVector> loadModules(std::string directory);
+    std::pair<int, StringVector> loadModules(std::string directory, ImGuiContext& context);
 
 private:
 
@@ -40,5 +42,5 @@ private:
 using ModuleManagerPtr = std::shared_ptr<ModuleManager>;
 
 namespace LASCore{
-    ModulePtr bindFiletoModule(std::string path, LoggerPtr logger);
+    ModulePtr bindFiletoModule(std::string path, LoggerPtr logger, ImGuiContext& context);
 }

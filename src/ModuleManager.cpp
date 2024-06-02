@@ -42,7 +42,7 @@ ModulePtr ModuleManager::getModule(std::string title) const{
 bool ModuleManager::containsModule(std::string title) const{
     return modules.contains(title);
 }
-std::pair<int, StringVector> ModuleManager::loadModules(std::string directory){
+std::pair<int, StringVector> ModuleManager::loadModules(std::string directory, ImGuiContext& context){
     std::pair<int, StringVector> returnVariable {0 , StringVector{}};   // Initialize return variable
     directory = TextManipulations::ensureSlash(directory);              // Ensure slash at the end
     const std::filesystem::path qualifiedDirectory{directory};          // Path with slashes
@@ -60,11 +60,11 @@ std::pair<int, StringVector> ModuleManager::loadModules(std::string directory){
         // Ensure file contains substring to know that it's an LASModule
         std::string fileName {file.path()};
         if(fileName.find(moduleNameSuffix) != fileName.npos){
-            ModulePtr moduleBuffer {LASCore::bindFiletoModule(fileName, logger)}; // Creates Module buffer
+            ModulePtr moduleBuffer {LASCore::bindFiletoModule(fileName, logger, context)}; // Creates Module buffer
 
             if(moduleBuffer){
                 // Load module information
-                if(moduleBuffer->load(*settings.get())){
+                if(moduleBuffer->load(*settings.get(), context)){
                     if(!addModule(moduleBuffer))
                         failedToLoad = true;
                 }
@@ -97,9 +97,9 @@ const StringVector ModuleManager::getModuleNames() const{
 
 // MARK: LASCore Namespace 
 namespace LASCore{
-    ModulePtr bindFiletoModule(std::string path, LoggerPtr logger){
-        typedef bool(*loadFunction)(const ModuleSettings&, ModuleInfo&);      // Function pointer for LASM_load()
-        typedef void(*voidNoParams)();                                  // Function pointer LASM_run() and LASM_cleanup()
+    ModulePtr bindFiletoModule(std::string path, LoggerPtr logger, ImGuiContext& context){
+        typedef bool(*loadFunction)(const ModuleSettings&, ModuleInfo&, ImGuiContext&);      // Function pointer for LASM_load()
+        typedef void(*voidNoParams)();                                                      // Function pointer LASM_run() and LASM_cleanup()
 
         void* lib {dlopen(path.c_str(), RTLD_LAZY)};    // Map the shared object file
 
