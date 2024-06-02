@@ -19,6 +19,7 @@ bool DisplayManager::init(){
     return true;    
 }
 bool DisplayManager::refresh(){
+
     if(!glfwWindowShouldClose(window)){
         glfwPollEvents();                   // Poll for and process events
 
@@ -27,9 +28,6 @@ bool DisplayManager::refresh(){
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // My rendering here
-        // SUDOCODE
-        // 1. Iterate over modules and refresh
         setupWindow(windowTitle);
         drawModules();
 
@@ -54,28 +52,29 @@ void DisplayManager::shutdown(){
     glfwTerminate();
 
 }
+
+// MARK: PRIVATE FUNCTIONS
 bool DisplayManager::initGLFW(){
     if(!glfwInit()){
-        logger.log("Could not initialize GLFW.", Tags{"GLFW", "ERROR"});
+        logger.log("Could not initialize GLFW.", Tags{"GLFW Setup", "ERROR"});
         return false;
     }
 
     // Hints before createWindow
-    glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
-    glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
+    glfwWindowHint(GLFW_FOCUSED,    GLFW_TRUE);
+    glfwWindowHint(GLFW_MAXIMIZED,  GLFW_TRUE);
 
     
     // Creates the window in windowed mode
     window = glfwCreateWindow(640, 480, windowTitle.c_str(), NULL, NULL);
 
     if(!window){
-        logger.log("Could not obtain window context", Tags{"GLFW", "ERROR"});
+        logger.log("Could not obtain window context", Tags{"GLFW Setup", "ERROR"});
         glfwTerminate();
         return false;
     }
 
     glfwMakeContextCurrent(window);
-    
 
     return true;
 }
@@ -93,7 +92,7 @@ bool DisplayManager::initImgui(){
     if(!ImGui_ImplGlfw_InitForOpenGL(window, true) ||
             !ImGui_ImplOpenGL3_Init() )
     {
-        logger.log("Could not initialize ImGui with OpenGL/GLFW", Tags{"ImGui", "ERROR"});
+        logger.log("Could not initialize ImGui with OpenGL/GLFW", Tags{"ImGui Setup", "ERROR"});
         return false;
     }
     
