@@ -2,11 +2,14 @@
 #include "Logging.h"
 #include "ModuleSettings.h"
 
+#include <imgui/imgui_internal.h>   // Needed for ImGuiContext passing to Module
+
+
 #include <memory>
 #include <string>
 
-typedef bool(*loadFunction)(const ModuleSettings&, ModuleInfo&);      // Function pointer for LASM_load()
-typedef void(*voidNoParams)();                                  // Function pointer LASM_run() and LASM_cleanup()
+typedef bool(*loadFunction)(const ModuleSettings&, ModuleInfo&, ImGuiContext&);      // Function pointer for LASM_load()
+typedef void(*voidNoParams)();                                  // Function pointer LASM_cleanup()
 
 class Module{
 public:
@@ -18,7 +21,7 @@ public:
     bool&           show();
     const ModuleSettings& getSettings()       const;
 
-    bool load(const ModuleSettings& settings);
+    bool load(const ModuleSettings& settings, ImGuiContext& context);
     void run();
     void cleanup();
 
@@ -26,7 +29,7 @@ private:
     std::string title{};
     std::string shortTitle{};
 
-    bool shown{false};
+    bool* shown {};
 
     LoggerPtr logger{};
     ModuleSettings settings{};
