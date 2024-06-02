@@ -21,28 +21,30 @@ std::string Module::getShortTitle() const{
 bool& Module::show(){
 
     if(shown){
-        run();
+        if(*shown)
+            run();
     }
-
-    return shown;
+    
+    return *shown;
 }
 const ModuleSettings& Module::getSettings() const{
     return settings;
 }
 
 
-bool Module::load(const ModuleSettings& settings){
+bool Module::load(const ModuleSettings& settings, ImGuiContext& context){
     if(!loadPtr)
         return false;
     
     // Call the module's LASM_load(), and return false if something failed on their side
-    ModuleInfo info{"New Module", "Null"};
+    ModuleInfo info{"New Module", "Null", nullptr};
 
-    if(!loadPtr(settings, info))
+    if(!loadPtr(settings, info, context))
         return false;
 
     title = info.title;
     shortTitle = info.shortTitle;
+    shown = info.shown;
 
     return true;
 }
