@@ -1,6 +1,9 @@
 #include "Module.h"
 
-Module::Module(LoggerPtr setLogger, loadFunction setLoad, voidNoParams setRun, voidNoParams setCleanup) :
+Module::Module( const Logger&               setLogger,
+                LAS::Modules::loadFunction   setLoad, 
+                LAS::Modules::voidNoParams   setRun, 
+                LAS::Modules::voidNoParams   setCleanup) :
         logger      {setLogger},
         loadPtr     {setLoad},
         runPtr      {setRun},
@@ -9,42 +12,45 @@ Module::Module(LoggerPtr setLogger, loadFunction setLoad, voidNoParams setRun, v
 
 }
 Module::~Module(){
-
+    cleanup();
 }
 
 std::string Module::getTitle() const{
-    return title;
+    return moduleInfo.title;
 }
 std::string Module::getShortTitle() const{
-    return shortTitle;
+    return moduleInfo.shortTitle;
 }
 bool& Module::show(){
 
-    if(shown){
-        if(*shown)
+    if(moduleInfo.shown){
+        if(*moduleInfo.shown)
             run();
     }
     
-    return *shown;
+    return *moduleInfo.shown;
 }
-const ModuleSettings& Module::getSettings() const{
-    return settings;
+const ModuleInfo& Module::getInfo() const{
+    return moduleInfo;
 }
 
 
-bool Module::load(const ModuleSettings& settings, ImGuiContext& context){
+bool Module::load(const PassToModule& whatToPass){
     if(!loadPtr)
         return false;
-    
-    // Call the module's LASM_load(), and return false if something failed on their side
-    ModuleInfo info{"New Module", "Null", nullptr};
 
-    if(!loadPtr(settings, info, context))
+    ModuleInfo passedInfo;  // Pass this to the Module across DLL boundaries
+
+    if(!loadPtr(whatToPass, passedInfo))
         return false;
 
-    title = info.title;
-    shortTitle = info.shortTitle;
-    shown = info.shown;
+    if(passedInfo.title.empty() || passedInfo.shortTitle.empty() || !passedInfo.shown)
+        return false;
+
+    // Assign to this module's moduleInfo
+    moduleInfo.title        = passedInfo.title;
+    moduleInfo.shortTitle   = passedInfo.shortTitle;
+    moduleInfo.shown        = passedInfo.shown;
 
     return true;
 }

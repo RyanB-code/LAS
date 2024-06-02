@@ -1,43 +1,54 @@
 #pragma once
 #include "Logging.h"
-#include "ModuleSettings.h"
 
 #include <imgui/imgui_internal.h>   // Needed for ImGuiContext passing to Module
-
-
 #include <memory>
 #include <string>
 
-typedef bool(*loadFunction)(const ModuleSettings&, ModuleInfo&, ImGuiContext&);      // Function pointer for LASM_load()
-typedef void(*voidNoParams)();                                  // Function pointer LASM_cleanup()
+struct ModuleInfo    {
+    std::string     title           {};
+    std::string     shortTitle      {};
+    bool* shown                     {nullptr};
+};
+struct PassToModule     {
+    std::string     directory{};
+    
+    ImGuiContext&   context;
+    const Logger&   logger;
+};
+
+
+namespace LAS::Modules{
+    typedef bool(*loadFunction)(PassToModule, ModuleInfo&);      // Function pointer for LASM_load()
+    typedef void(*voidNoParams)();                              // Function pointer LASM_cleanup()
+};
 
 class Module{
 public:
-    Module(LoggerPtr setLogger, loadFunction setLoad, voidNoParams setRun, voidNoParams setCleanup);
+    Module( const Logger&                setLogger,
+            LAS::Modules::loadFunction   setLoad, 
+            LAS::Modules::voidNoParams   setRun, 
+            LAS::Modules::voidNoParams   setCleanup);
     ~Module();
 
     std::string     getTitle()          const;
     std::string     getShortTitle()     const;
-    bool&           show();
-    const ModuleSettings& getSettings()       const;
+    
+    const ModuleInfo& getInfo()       const;
 
-    bool load(const ModuleSettings& settings, ImGuiContext& context);
-    void run();
-    void cleanup();
+    bool    load(const PassToModule& whatToPass);
+    bool&   show();
+    void    cleanup();
 
 private:
-    std::string title{};
-    std::string shortTitle{};
-
-    bool* shown {};
-
-    LoggerPtr logger{};
-    ModuleSettings settings{};
+    ModuleInfo moduleInfo {};
+    const Logger& logger;
     
-    loadFunction loadPtr{};
-    voidNoParams runPtr{};
-    voidNoParams cleanupPtr{};
-    
+    LAS::Modules::loadFunction loadPtr       {};
+    LAS::Modules::voidNoParams runPtr        {};
+    LAS::Modules::voidNoParams cleanupPtr    {};
+
+    void run();
 };
 
 using ModulePtr = std::shared_ptr<Module>;
