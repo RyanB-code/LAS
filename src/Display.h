@@ -41,6 +41,6 @@ private:
 
     // Drawing window
     void setupWindow(std::string title) const;
-    void drawModules() const;
+    void drawModules()                  const;
 };
 

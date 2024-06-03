@@ -22,7 +22,6 @@ using StringVector      = std::vector<std::string>;
 using Tags              = std::vector<std::string>;
 
 
-
 class LogSettings {     // Made a class to inherit type usage abilities
 public:
     bool showTime               { true };
@@ -32,8 +31,6 @@ public:
 
     uint8_t textBoxWidth_tag    { 5 };   
     uint8_t textBoxWidth_msg    { 30 };
-
-    std::string logFilePath {};
 };
 
 class Log {
@@ -65,7 +62,7 @@ public:
     uint8_t getID() const;
 
 private:
-    uint8_t ID; // Should not even be protected to now allow derived classes access to edit
+    uint8_t ID; // Should not even be protected to not allow derived classes access to edit
 };
 
 class Logger {

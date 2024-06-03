@@ -20,20 +20,19 @@ public:
     ModuleManager(const Logger& setLogger);
     ~ModuleManager();
 
-    bool addModule(ModulePtr module);
-    bool removeModule(std::string title);
+    bool addModule      (ModulePtr module);
+    bool removeModule   (std::string title);
+    bool containsModule (std::string title)   const;
+
 
     ModulePtr           getModule(std::string title)        const;
-    bool                containsModule(std::string title)   const;
     const StringVector  getModuleNames()                    const;
 
     [[nodiscard]]
     std::pair<int, StringVector> loadModules(std::string directory, ImGuiContext& context);
 
 private:
-
     std::unordered_map<std::string, ModulePtr> modules{};
-
     const Logger&       logger;
 };
 
