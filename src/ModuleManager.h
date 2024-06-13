@@ -28,6 +28,9 @@ public:
     ModulePtr           getModule(std::string title)        const;
     const StringVector  getModuleNames()                    const;
 
+    WindowList          getAllWindows()                     const;
+
+
     [[nodiscard]]
     std::pair<int, StringVector> loadModules(std::string directory, ImGuiContext& context);
 

@@ -1,7 +1,9 @@
 #pragma once
 
 #include "Logging.h"
-#include "ModuleManager.h"
+#include "Window.h"
+
+#include <map>
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
@@ -19,18 +21,24 @@ class DisplayManager;
 
 using DisplayManagerPtr = std::shared_ptr<DisplayManager>;
 
+
 class DisplayManager{
 public:
-    DisplayManager(const Logger& setLogger, ModuleManagerPtr setModuleManager);
+    DisplayManager(const Logger& setLogger);
     ~DisplayManager();
 
     bool init();
     bool refresh();
     void shutdown();
 
+    bool addWindow(WindowPtr window);
+    bool removeWindow(uint8_t ID);
+    bool removeWindow(LAS::Window& window);
+
 private:
-    const Logger& logger;
-    ModuleManagerPtr moduleManager;
+    const Logger&       logger;
+
+    std::map<uint8_t, WindowPtr> windows;
 
     GLFWwindow* window;
     std::string windowTitle { "Life Application Suite" };
@@ -39,8 +47,7 @@ private:
     bool initGLFW();
     bool initImgui();
 
-    // Drawing window
-    void setupWindow(std::string title) const;
-    void drawModules()                  const;
+    void drawWindows();
+
 };
 

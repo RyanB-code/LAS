@@ -2,11 +2,9 @@
 
 Module::Module( const Logger&               setLogger,
                 LAS::Modules::loadFunction   setLoad, 
-                LAS::Modules::voidNoParams   setRun, 
                 LAS::Modules::voidNoParams   setCleanup) :
         logger      {setLogger},
         loadPtr     {setLoad},
-        runPtr      {setRun},
         cleanupPtr  {setCleanup}
 {
 
@@ -21,42 +19,23 @@ std::string Module::getTitle() const{
 std::string Module::getShortTitle() const{
     return moduleInfo.shortTitle;
 }
-bool& Module::show(){
-
-    if(moduleInfo.shown){
-        if(*moduleInfo.shown)
-            run();
-    }
-    
-    return *moduleInfo.shown;
-}
 const ModuleInfo& Module::getInfo() const{
     return moduleInfo;
 }
 
 
-bool Module::load(const PassToModule& whatToPass){
+
+bool Module::load(const GiveToModule& whatToPass){
     if(!loadPtr)
         return false;
 
-    ModuleInfo passedInfo;  // Pass this to the Module across DLL boundaries
-
-    if(!loadPtr(whatToPass, passedInfo))
+    if(!loadPtr(whatToPass, moduleInfo))
         return false;
 
-    if(passedInfo.title.empty() || passedInfo.shortTitle.empty() || !passedInfo.shown)
+    if(moduleInfo.title.empty() || moduleInfo.shortTitle.empty())
         return false;
-
-    // Assign to this module's moduleInfo
-    moduleInfo.title        = passedInfo.title;
-    moduleInfo.shortTitle   = passedInfo.shortTitle;
-    moduleInfo.shown        = passedInfo.shown;
 
     return true;
-}
-void Module::run(){
-    if(runPtr)
-        runPtr();
 }
 void Module::cleanup(){
     if(cleanupPtr)
