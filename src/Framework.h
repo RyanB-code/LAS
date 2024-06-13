@@ -3,6 +3,7 @@
 #include "LAS.h"
 #include "Logging.h"
 #include "Display.h"
+#include "ModuleManager.h"
 #include "Commands.h"
 
 #include <iostream>
