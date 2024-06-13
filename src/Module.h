@@ -1,5 +1,6 @@
 #pragma once
 #include "Logging.h"
+#include "Window.h"
 
 #include <imgui/imgui_internal.h>   // Needed for ImGuiContext passing to Module
 #include <memory>
@@ -8,9 +9,9 @@
 struct ModuleInfo    {
     std::string     title           {};
     std::string     shortTitle      {};
-    bool* shown                     {nullptr};
+    WindowPtr       window          {};
 };
-struct PassToModule     {
+struct GiveToModule     {
     std::string     directory{};
     
     ImGuiContext&   context;
@@ -19,7 +20,7 @@ struct PassToModule     {
 
 
 namespace LAS::Modules{
-    typedef bool(*loadFunction)(PassToModule, ModuleInfo&);      // Function pointer for LASM_load()
+    typedef bool(*loadFunction)(GiveToModule, ModuleInfo&);     // Function pointer for LASM_load()
     typedef void(*voidNoParams)();                              // Function pointer LASM_cleanup()
 };
 
@@ -27,7 +28,6 @@ class Module{
 public:
     Module( const Logger&                setLogger,
             LAS::Modules::loadFunction   setLoad, 
-            LAS::Modules::voidNoParams   setRun, 
             LAS::Modules::voidNoParams   setCleanup);
     ~Module();
 
@@ -36,19 +36,16 @@ public:
     
     const ModuleInfo& getInfo()       const;
 
-    bool    load(const PassToModule& whatToPass);
-    bool&   show();
+    bool    load(const GiveToModule& whatToPass);
     void    cleanup();
 
 private:
     ModuleInfo moduleInfo {};
     const Logger& logger;
+
     
     LAS::Modules::loadFunction loadPtr       {};
-    LAS::Modules::voidNoParams runPtr        {};
     LAS::Modules::voidNoParams cleanupPtr    {};
-
-    void run();
 };
 
 using ModulePtr = std::shared_ptr<Module>;

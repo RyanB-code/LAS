@@ -55,8 +55,7 @@ std::pair<int, StringVector> ModuleManager::loadModules(std::string directory, I
     }
 
     // Create what to pass
-    PassToModule pass {directory, context, logger};
-
+    GiveToModule pass {directory, context, logger};
 
     std::vector<ModulePtr> modules;
 	for(auto const& file : std::filesystem::directory_iterator(qualifiedDirectory)){
@@ -74,8 +73,7 @@ std::pair<int, StringVector> ModuleManager::loadModules(std::string directory, I
                 }
                 else
                     failed = true;
-            }
-            else
+            }            else
                 failed = true;
         }
         else{
@@ -97,6 +95,15 @@ const StringVector ModuleManager::getModuleNames() const{
     }
     return names;
 }
+WindowList ModuleManager::getAllWindows()    const{
+    WindowList list;
+
+    for(auto module : modules){
+        list.push_back(module.second->getInfo().window);
+    }
+
+    return list;
+}
 
 // MARK: LASCore Namespace 
 namespace LAS::Modules{
@@ -108,13 +115,12 @@ namespace LAS::Modules{
 
         // Bind the API funcions
         loadFunction load       {reinterpret_cast<loadFunction>(dlsym(lib, "LASM_load"))};
-        voidNoParams run        {reinterpret_cast<voidNoParams>(dlsym(lib, "LASM_run"))};
         voidNoParams cleanup    {reinterpret_cast<voidNoParams>(dlsym(lib, "LASM_cleanup"))};
 
         // Do not continue if binding failed
-        if(!load || !run || !cleanup)
+        if(!load || !cleanup)
             return nullptr;
 
-        return std::make_shared<Module>(logger, load, run, cleanup);       
+        return std::make_shared<Module>(logger, load, cleanup);       
     }
 }

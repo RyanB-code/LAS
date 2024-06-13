@@ -1,8 +1,7 @@
 #include "Display.h"
 
-DisplayManager::DisplayManager(const Logger& setLogger, ModuleManagerPtr setModuleManager)
-    :   logger {setLogger},
-        moduleManager {setModuleManager}
+DisplayManager::DisplayManager(const Logger& setLogger)
+    :   logger {setLogger}
 {
 
 }
@@ -28,8 +27,9 @@ bool DisplayManager::refresh(){
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        setupWindow(windowTitle);
-        drawModules();
+
+        // MY RENDERING CODE HERE
+        drawWindows();
 
 
         glClear(GL_COLOR_BUFFER_BIT);       // Does all the rendering
@@ -49,6 +49,36 @@ void DisplayManager::shutdown(){
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 }
+bool DisplayManager::addWindow(WindowPtr window){
+    if(!window)
+        return false;
+
+    if(windows.contains(window->getID())){
+        return false;
+    }
+    else
+        return windows.emplace(window->getID(), window).second;
+}
+bool DisplayManager::removeWindow(uint8_t ID){
+    if(!windows.contains(ID)){
+        return false;
+    }
+    else{
+        windows.erase(ID);
+        return true;
+    }
+}
+bool DisplayManager::removeWindow(LAS::Window& window){
+    if(!windows.contains(window.getID())){
+        return false;
+    }
+    else{
+        windows.erase(window.getID());
+        return true;
+    }
+}
+
+
 
 // MARK: PRIVATE FUNCTIONS
 bool DisplayManager::initGLFW(){
@@ -96,20 +126,24 @@ bool DisplayManager::initImgui(){
     return true;
     
 }
-void DisplayManager::setupWindow(std::string title) const{
-    if(ImGui::BeginMainMenuBar()){        
-        if(ImGui::BeginMenu("Modules")){
-            for(auto s : moduleManager->getModuleNames()){
-                if(ImGui::MenuItem(s.c_str(), NULL, &moduleManager->getModule(s)->show()));
+void DisplayManager::drawWindows(){
+    if(ImGui::BeginMainMenuBar()){
+
+        if(ImGui::BeginMenu("Windows")){
+
+            for(auto window : windows){
+                if(window.second)
+                    ImGui::MenuItem(window.second->getTitle(), NULL, &window.second->shown);
             }
+
             ImGui::EndMenu();
         }
+
         ImGui::EndMainMenuBar();
     }
-}
-void DisplayManager::drawModules() const {
-    for(auto name : moduleManager->getModuleNames()){
-        auto module {moduleManager->getModule(name)};
-        module->show();
+
+    for(auto window : windows){
+        if(window.second && window.second->shown)
+            window.second->draw();
     }
 }
