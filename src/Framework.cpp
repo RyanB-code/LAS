@@ -56,7 +56,7 @@ bool Framework::setup(){
         moduleManager = std::make_shared<ModuleManager>( ModuleManager{*logger});
     }
     if(!displayManager){
-        displayManager = std::make_shared<DisplayManager>(*logger.get(), moduleManager);
+        displayManager = std::make_shared<DisplayManager>(*logger.get());
         if(!displayManager->init()){
             logger->log("Error setting up necessary display libraries", Tags{"Display Manager"});
             return false;
@@ -65,13 +65,17 @@ bool Framework::setup(){
 
     handleCommandQueue();
 
-    // After all is setup, load modules
+    // After all is setup, load modules into module manager
     if(!loadModules(filePaths.moduleDir)){
         logger->log("Error loading modules.", Tags{"Module Loader"});
         return false;
     }
 
-    
+    // Load Windows from ModuleManager into DisplayManager
+    for(auto window : moduleManager->getAllWindows()){
+        displayManager->addWindow(window);
+    }
+
     return true;
 }
 void Framework::run(){
