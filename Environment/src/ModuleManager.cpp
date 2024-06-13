@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-ModuleManager::ModuleManager(const Logger& setLogger) :
+ModuleManager::ModuleManager(LoggerPtr setLogger) :
     logger {setLogger}
 {
 
@@ -107,7 +107,7 @@ WindowList ModuleManager::getAllWindows()    const{
 
 // MARK: LASCore Namespace 
 namespace LAS::Modules{
-    ModulePtr bindFiletoModule(std::string path, const Logger& logger, ImGuiContext& context){
+    ModulePtr bindFiletoModule(std::string path, LoggerPtr logger, ImGuiContext& context){
         void* lib {dlopen(path.c_str(), RTLD_LAZY)};    // Map the shared object file
 
         if(!lib)

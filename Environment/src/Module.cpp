@@ -1,6 +1,6 @@
 #include "Module.h"
 
-Module::Module( const Logger&               setLogger,
+Module::Module( LoggerPtr                    setLogger,
                 LAS::Modules::loadFunction   setLoad, 
                 LAS::Modules::voidNoParams   setCleanup) :
         logger      {setLogger},
@@ -26,9 +26,6 @@ const ModuleInfo& Module::getInfo() const{
 
 
 bool Module::load(const EnvironmentInfo& whatToPass){
-    if(!loadPtr)
-        return false;
-
     if(!loadPtr(whatToPass, moduleInfo))
         return false;
 
