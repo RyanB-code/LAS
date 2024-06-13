@@ -19,7 +19,7 @@ Framework::~Framework(){
 bool Framework::setup(){
 
     if(!LAS::FrameworkSetup::setupFilesystem(filePaths)){
-        std::cerr << "Could not setup filesystem\n";
+        std::cerr << "Could not setup default filesystem\n";
         return false;
     }
 
@@ -53,7 +53,7 @@ bool Framework::setup(){
     // --------------------------------------------------
 
     if(!moduleManager){
-        moduleManager = std::make_shared<ModuleManager>( ModuleManager{*logger});
+        moduleManager = std::make_shared<ModuleManager>( ModuleManager{logger});
     }
     if(!displayManager){
         displayManager = std::make_shared<DisplayManager>(*logger.get());

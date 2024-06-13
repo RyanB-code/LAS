@@ -17,7 +17,7 @@ struct EnvironmentInfo     {
     std::string     directory{};
     
     ImGuiContext&   context;
-    const Logger&   logger;
+    LoggerPtr       logger;
 };
 
 
@@ -28,7 +28,7 @@ namespace LAS::Modules{
 
 class Module{
 public:
-    Module( const Logger&                setLogger,
+    Module( LoggerPtr                    setLogger,
             LAS::Modules::loadFunction   setLoad, 
             LAS::Modules::voidNoParams   setCleanup);
     ~Module();
@@ -43,7 +43,7 @@ public:
 
 private:
     ModuleInfo moduleInfo {};
-    const Logger& logger;
+    LoggerPtr logger;
 
     
     LAS::Modules::loadFunction loadPtr       {};

@@ -1,8 +1,8 @@
 #pragma once
 
 
-#include "Window.h"
-#include "Logging.h"
+#include <LAS/Window.h>
+#include <LAS/Logging.h>
 
 #include <imgui/imgui.h>
 #include <iostream>
@@ -16,13 +16,13 @@ struct EnvironmentInfo     {
     std::string     directory{};
     
     ImGuiContext&   context;
-    const Logger&   logger;
+    LoggerPtr       logger;
 };
 
 #if __GNUC__ >= 4
     #define MODULE_EXPORT extern "C" __attribute__ ((visibility ("protected")))
 #endif
 
-MODULE_EXPORT bool      LASM_load       (ModuleInfo, EnvironmentInfo&);
+MODULE_EXPORT bool      LASM_load       (EnvironmentInfo, ModuleInfo&);
 MODULE_EXPORT void      LASM_cleanup    ();
 

@@ -18,7 +18,7 @@ using StringVector = std::vector<std::string>;
 
 class ModuleManager final {
 public:
-    ModuleManager(const Logger& setLogger);
+    ModuleManager(LoggerPtr setLogger);
     ~ModuleManager();
 
     bool addModule      (ModulePtr module);
@@ -37,11 +37,11 @@ public:
 
 private:
     std::unordered_map<std::string, ModulePtr> modules{};
-    const Logger&       logger;
+    LoggerPtr logger;
 };
 
 using ModuleManagerPtr = std::shared_ptr<ModuleManager>;
 
 namespace LAS::Modules{
-    ModulePtr bindFiletoModule(std::string path, const Logger& logger, ImGuiContext& context);
+    ModulePtr bindFiletoModule(std::string path, LoggerPtr logger, ImGuiContext& context);
 }
