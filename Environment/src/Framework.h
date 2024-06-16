@@ -49,6 +49,8 @@ private:
     bool handleCommandQueue();
 
     bool loadModules        (const std::string& modulesDirectory);
+
+    StringVector loadModuleCommands (const std::string& moduleName);
     bool readSetupFile      (const std::string& path);
 };
 
