@@ -3,6 +3,7 @@
 
 #include <LAS/Window.h>
 #include <LAS/Logging.h>
+#include <LAS/Commands.h>
 
 #include <imgui/imgui.h>
 #include <iostream>
@@ -11,6 +12,7 @@ struct ModuleInfo    {
     std::string     title           {};
     std::string     shortTitle      {};
     WindowPtr       window          {};
+    std::vector<Command>     commands        {};
 };
 struct EnvironmentInfo     {
     std::string     directory{};
