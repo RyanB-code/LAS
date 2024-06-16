@@ -2,7 +2,7 @@
 
 #include <string>
 #include <memory>
-
+#include <vector>
 
 class Command {
 public:
@@ -18,3 +18,4 @@ private:
 };
 
 using CommandPtr = std::unique_ptr<Command>;
+using CommandList = std::vector<CommandPtr>;

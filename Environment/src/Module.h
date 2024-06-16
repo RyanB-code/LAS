@@ -3,6 +3,7 @@
 
 #include <LAS/Logging.h>
 #include <LAS/Window.h>
+#include <LAS/Commands.h>
 
 #include <imgui/imgui_internal.h>   // Needed for ImGuiContext passing to Module
 #include <memory>
@@ -12,6 +13,8 @@ struct ModuleInfo    {
     std::string     title           {};
     std::string     shortTitle      {};
     WindowPtr       window          {};
+
+    std::vector<Command> commands {};
 };
 struct EnvironmentInfo     {
     std::string     directory{};
@@ -36,7 +39,8 @@ public:
     std::string     getTitle()          const;
     std::string     getShortTitle()     const;
     
-    const ModuleInfo& getInfo()       const;
+    const ModuleInfo&   getInfo()       const;
+    std::vector<Command>&   getCommands();
 
     bool    load(const EnvironmentInfo& whatToPass);
     void    cleanup();
