@@ -2,4 +2,5 @@
 bin
 *.ini
 builds
-libLAS-SDK.so
+Module-SDK/lib/libLAS-SDK.so
+Environment/lib/libLAS-SDK.so
