@@ -22,6 +22,10 @@ std::string Module::getShortTitle() const{
 const ModuleInfo& Module::getInfo() const{
     return moduleInfo;
 }
+std::vector<Command>& Module::getCommands(){
+    return moduleInfo.commands;
+}
+
 
 
 

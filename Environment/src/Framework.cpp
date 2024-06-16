@@ -76,13 +76,20 @@ bool Framework::setup(){
         displayManager->addWindow(window);
     }
 
+    std::cout << "All commands: \n";
+    for(const auto& c : commands){
+        std::cout << c.first << "\n";
+    }
+
     return true;
 }
 void Framework::run(){
 
     // If refresh() returns true, that means an glfwShouldWindowClose() was called
     while(!displayManager->refresh()){
-
+        if(!commandQueue.empty()){
+            handleCommandQueue();
+        }
     }
 
     return;
@@ -115,6 +122,7 @@ bool Framework::handleCommandQueue(){\
     for (/*Nothing*/; !commandQueue.empty(); commandQueue.pop())
         std::cout << "\t" << commandQueue.front() << '\n';
     std::cout << "\n";
+    
     /* This is for inputting quoted buffer
     while (inputStream >> std::quoted(buffer)) {    // Separate by quotes or spaces
             arguments.push_back(buffer);                // Add to argument list
@@ -141,6 +149,19 @@ bool Framework::loadModules(const std::string& modulesDirectory) {
         }
         logger->log(msg.str(), Tags{"Module Manager"});
 
+        // Load Commands
+        StringVector commandsNotLoaded;
+        StringVector moduleNames {moduleManager->getModuleNames()};
+        for(auto name : moduleNames){
+            commandsNotLoaded = loadModuleCommands(name);
+            if(!commandsNotLoaded.empty()){
+                std::ostringstream msg;
+                msg << "[" << commandsNotLoaded.size() << "] commands could not be loaded from Module [" << name << "]";
+                logger->log(msg.str(), Tags{"Framework"});
+                commandsNotLoaded.clear();
+            }
+        }
+
         return true;
     }
     catch(std::filesystem::filesystem_error& e){
@@ -148,6 +169,22 @@ bool Framework::loadModules(const std::string& modulesDirectory) {
         return false;
     }
 }
+StringVector Framework::loadModuleCommands(const std::string& moduleName) {
+    Module& module {*moduleManager->getModule(moduleName)};
+
+    StringVector commandsNotLoaded;
+
+    if(!module.getCommands().empty()){
+        for(auto command : module.getCommands()){
+            if(!addCommand(std::make_unique<Command>(command))){
+                commandsNotLoaded.push_back(command.getKey());
+            }
+        }
+    }
+
+    return commandsNotLoaded;
+}
+
 bool Framework::readSetupFile(const std::string& path){
 
      if(std::filesystem::exists(path)){

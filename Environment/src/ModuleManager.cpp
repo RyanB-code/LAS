@@ -41,7 +41,7 @@ ModulePtr ModuleManager::getModule(std::string title) const{
 bool ModuleManager::containsModule(std::string title) const{
     return modules.contains(title);
 }
-std::pair<int, StringVector> ModuleManager::loadModules(std::string directory, ImGuiContext& context){
+    std::pair<int, StringVector> ModuleManager::loadModules(std::string directory, ImGuiContext& context){
     std::string                     moduleNameSuffix    {"LASModule_"};         // Every module name must have this key present to be added
     std::pair<int, StringVector>    failedToLoad        {0 , StringVector{}};   // Initialize empty return variable
 
