@@ -35,7 +35,8 @@ public:
 
 class Log {
 public:
-    Log (std::string setMsg, std::string setTag, std::source_location setLocation, Timepoint setTimestamp);
+    Log (std::string setMsg, std::string setTag,    std::source_location setLocation, Timepoint setTimestamp);
+    Log (std::string setMsg, Tags setTags,          std::source_location setLocation, Timepoint setTimestamp);
     ~Log();
 
     std::string             getMsg()        const;
@@ -47,9 +48,9 @@ public:
 
 private:
     std::string 			msg;
+    StringVector            tags;
     std::source_location    location;
     Timepoint          	    timestamp;
-    StringVector            tags;
 };
 
 
@@ -58,7 +59,7 @@ public:
     LogOutput ();
     virtual ~LogOutput ();
 
-    virtual bool log (const Log& log, const LogSettings& logSettings) const = 0;
+    virtual bool log (const Log& log, const LogSettings& logSettings) = 0;
     uint8_t getID() const;
 
 private:
@@ -70,7 +71,7 @@ public:
     Logger(LogSettingsPtr setLogSettings);
     ~Logger();
 
-    void log(std::string setMsg, const StringVector& setTag, std::source_location setLocation = std::source_location::current()) const;
+    void log(std::string setMsg, const Tags& setTag, std::source_location setLocation = std::source_location::current()) const;
 
     bool addOutput (std::shared_ptr<LogOutput> output);
     bool removeOutput (uint8_t ID);
