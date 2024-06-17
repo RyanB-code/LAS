@@ -48,9 +48,9 @@ private:
     bool addCommand(std::unique_ptr<Command> command);              // Adds to commands unoredered_map
     bool handleCommandQueue();
 
-    bool loadModules        (const std::string& modulesDirectory);
+    bool            loadModules        (const std::string& modulesDirectory);
+    StringVector    loadModuleCommands (const std::string& moduleName);
 
-    StringVector loadModuleCommands (const std::string& moduleName);
     bool readSetupFile      (const std::string& path);
 };
 
