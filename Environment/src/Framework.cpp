@@ -33,9 +33,9 @@ bool Framework::setup(){
     // Default Setup of Logger
     if(!logger){
         LogSettingsPtr  logSettings {new LogSettings{}};                            // Uses default settings values
-        LogToFile       logToFile    {};
-
         logger = std::make_shared<Logger>(Logger{logSettings});                     // Sets local logger member variable
+
+        LogToFile logToFile{};
         logToFile.setPath(LAS::FrameworkSetup::createLogFile(filePaths.logDir));
 
         // Check to ensure log file is good
@@ -43,9 +43,9 @@ bool Framework::setup(){
             std::cerr << "Could not create instance log file\n";
             return false;
         }
-
-        // If all is good, add LogToFile to logger
+         // If all is good, add LogToFile to logger
         logger->addOutput(std::make_shared<LogToFile>(logToFile));
+
     }
 
     // --------------------------------------------------
@@ -61,6 +61,13 @@ bool Framework::setup(){
             logger->log("Error setting up necessary display libraries", Tags{"Display Manager"});
             return false;
         }
+
+        // Setup display logger
+        LogWindow   logWindow{logger->getLogSettings()};
+        LogToWindow logToWindow{std::make_shared<LogWindow>(logWindow)};
+        logger->addOutput(std::make_shared<LogToWindow>(logToWindow));
+        displayManager->addWindow(logToWindow.getWindow());
+
     }
 
     handleCommandQueue();
@@ -76,10 +83,6 @@ bool Framework::setup(){
         displayManager->addWindow(window);
     }
 
-    std::cout << "All commands: \n";
-    for(const auto& c : commands){
-        std::cout << c.first << "\n";
-    }
 
     return true;
 }
