@@ -1,6 +1,6 @@
 #include "Display.h"
 
-DisplayManager::DisplayManager(const Logger& setLogger)
+DisplayManager::DisplayManager(LoggerPtr setLogger)
     :   logger {setLogger}
 {
 
@@ -83,7 +83,7 @@ bool DisplayManager::removeWindow(LAS::Window& window){
 // MARK: PRIVATE FUNCTIONS
 bool DisplayManager::initGLFW(){
     if(!glfwInit()){
-        logger.log("Could not initialize GLFW.", Tags{"GLFW Setup", "ERROR"});
+        logger->log("Could not initialize GLFW.", Tags{"GLFW Setup", "ERROR"});
         return false;
     }
 
@@ -96,7 +96,7 @@ bool DisplayManager::initGLFW(){
     window = glfwCreateWindow(640, 480, windowTitle.c_str(), NULL, NULL);
 
     if(!window){
-        logger.log("Could not obtain window context", Tags{"GLFW Setup", "ERROR"});
+        logger->log("Could not obtain window context", Tags{"GLFW Setup", "ERROR"});
         glfwTerminate();
         return false;
     }
@@ -119,7 +119,7 @@ bool DisplayManager::initImgui(){
     if(!ImGui_ImplGlfw_InitForOpenGL(window, true) ||
             !ImGui_ImplOpenGL3_Init() )
     {
-        logger.log("Could not initialize ImGui with OpenGL/GLFW", Tags{"ImGui Setup", "ERROR"});
+        logger->log("Could not initialize ImGui with OpenGL/GLFW", Tags{"ImGui Setup", "ERROR"});
         return false;
     }
     
