@@ -59,7 +59,7 @@ public:
     LogOutput ();
     virtual ~LogOutput ();
 
-    virtual bool log (const Log& log, const LogSettings& logSettings) = 0;
+    virtual bool log (const Log& log, const LogSettings& logSettings) const = 0;
     uint8_t getID() const;
 
 private:

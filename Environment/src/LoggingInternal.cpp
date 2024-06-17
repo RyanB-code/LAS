@@ -18,7 +18,7 @@ bool LogToFile::setPath(std::string setPath){
 std::string LogToFile::getPath() const {
     return path;
 }
-bool LogToFile::log(const Log& log, const LogSettings& logSettings)  {
+bool LogToFile::log(const Log& log, const LogSettings& logSettings) const {
     using namespace LAS::TextManip::Logging;
 
     if(!std::filesystem::exists(path))
@@ -147,7 +147,7 @@ LogToWindow::LogToWindow(std::shared_ptr<LogWindow> setWindow)
 LogToWindow::~LogToWindow(){
 
 }
-bool LogToWindow::log(const Log& log, const LogSettings& logSettings)  {
+bool LogToWindow::log(const Log& log, const LogSettings& logSettings) const {
     window->addLog(log);
     return true;
 }
