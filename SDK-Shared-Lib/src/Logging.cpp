@@ -8,6 +8,15 @@ Log::Log(std::string setMsg, std::string setTag, std::source_location setLocatio
 {
     tags.push_back(setTag);
 }
+Log::Log(std::string setMsg, Tags setTags, std::source_location setLocation, Timepoint setTimestamp)
+     :   msg {setMsg},
+         tags {setTags},         
+         location{setLocation},
+         timestamp {setTimestamp}
+{
+
+}
+
 Log::~Log(){
 
 }
@@ -52,7 +61,7 @@ Logger::Logger(LogSettingsPtr setLogSettings) : logSettings {setLogSettings} {
 Logger::~Logger(){
 
 }
-void Logger::log(std::string setMsg, const StringVector& setTag, std::source_location setLocation) const{
+void Logger::log(std::string setMsg, const Tags& setTag, std::source_location setLocation) const{
 
     if(outputs.empty()){
         return;
@@ -71,13 +80,8 @@ void Logger::log(std::string setMsg, const StringVector& setTag, std::source_loc
         }
     }
     else{
-        Log log{setMsg, setTag[0], setLocation, time};
+        Log log{setMsg, setTag, setLocation, time};
 
-        // Start at one since setTag[0] is already added
-        for(int i {1}; i < static_cast<int>(setTag.size()); ++i){
-            log.addTag(setTag[i]);
-        }
-        
         // Iterate through LogOutputs and output the log
         for(std::vector<std::shared_ptr<LogOutput>>::const_iterator it {outputs.cbegin()}; it != outputs.cend(); ++it){
             it->get()->log(log, *logSettings);
