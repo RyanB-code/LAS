@@ -56,7 +56,7 @@ bool Framework::setup(){
         moduleManager = std::make_shared<ModuleManager>( ModuleManager{logger});
     }
     if(!displayManager){
-        displayManager = std::make_shared<DisplayManager>(*logger.get());
+        displayManager = std::make_shared<DisplayManager>(logger);
         if(!displayManager->init()){
             logger->log("Error setting up necessary display libraries", Tags{"Display Manager"});
             return false;

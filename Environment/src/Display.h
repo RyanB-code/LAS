@@ -25,7 +25,7 @@ using DisplayManagerPtr = std::shared_ptr<DisplayManager>;
 
 class DisplayManager{
 public:
-    DisplayManager(const Logger& setLogger);
+    DisplayManager(LoggerPtr setLogger);
     ~DisplayManager();
 
     bool init();
@@ -37,7 +37,7 @@ public:
     bool removeWindow(LAS::Window& window);
 
 private:
-    const Logger&       logger;
+    LoggerPtr      logger;
 
     std::map<uint8_t, WindowPtr> windows;
 
