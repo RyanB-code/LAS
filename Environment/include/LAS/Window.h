@@ -14,7 +14,7 @@ namespace LAS{
     class Window {
         public:
             Window(std::string setTitle);
-            ~Window();
+            virtual ~Window();
 
             bool shown { false };
 
