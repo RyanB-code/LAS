@@ -7,7 +7,7 @@
 class Command {
 public:
     explicit Command (std::string setKey, std::string setDescription);
-    ~Command ();
+    virtual ~Command ();
 
     std::string getKey          () const;
     std::string getDescription  () const;
