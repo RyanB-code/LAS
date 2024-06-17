@@ -4,22 +4,10 @@
 #include <LAS/Window.h>
 #include <LAS/Logging.h>
 #include <LAS/Commands.h>
+#include <LAS/Information.h>
 
 #include <imgui/imgui.h>
 #include <iostream>
-
-struct ModuleInfo    {
-    std::string     title           {};
-    std::string     shortTitle      {};
-    WindowPtr       window          {};
-    std::vector<Command>     commands        {};
-};
-struct EnvironmentInfo     {
-    std::string     directory{};
-    
-    ImGuiContext&   context;
-    LoggerPtr       logger;
-};
 
 #if __GNUC__ >= 4
     #define MODULE_EXPORT extern "C" __attribute__ ((visibility ("protected")))
