@@ -46,20 +46,7 @@ bool LogToFile::log(const Log& log, const LogSettings& logSettings) const {
         }
     }
     if (logSettings.showMsg) {
-        std::string msg {log.getMsg()};
-
-
-        // If the msg is under the max size, print normally
-        if (msg.length() < logSettings.textBoxWidth_msg)
-            os << std::setw(logSettings.textBoxWidth_msg) << std::left << msg;
-
-
-        // If the msg is long, add spacing between next msg for readability
-        else if (msg.length() >= logSettings.textBoxWidth_msg) {
-            os << msg;
-            if (logSettings.showLocation)
-                os << std::endl << " > ";
-        }
+       os << log.getMsg() << " ";
     }
     if (logSettings.showLocation)
         os << printLocation(log.getLocation());
@@ -75,7 +62,7 @@ bool LogToFile::log(const Log& log, const LogSettings& logSettings) const {
 }
 
 // MARK: Log Window
-LogWindow::LogWindow(const LogSettings& setLogSettings) :   LAS::Window{"Log Viewer"}, logSettings {setLogSettings}
+LogWindow::LogWindow(LogSettingsPtr setLogSettings) :   LAS::Window{"Log Viewer"}, logSettings {setLogSettings}
 {
 
 }
@@ -90,45 +77,54 @@ void LogWindow::addLog(const Log& log){
 void LogWindow::draw() {
     if(ImGui::Begin(title.c_str(), &shown)){
 
-        for(auto log : logHistory){
+        ImGui::Checkbox("Show Time",        &logSettings->showTime); 
+        ImGui::SameLine();
+        ImGui::Checkbox("Show Tags",        &logSettings->showTags);
+        ImGui::SameLine();
+        ImGui::Checkbox("Show Message",     &logSettings->showMsg);
+        ImGui::SameLine();
+        ImGui::Checkbox("Show Location",    &logSettings->showLocation);
+        ImGui::SameLine();
+
+        static bool showDemo {false};
+        ImGui::Checkbox("Show Demo Window", &showDemo);
+        if(showDemo)
+            ImGui::ShowDemoWindow();
+
+        static int tagSizeBuffer    {logSettings->textBoxWidth_tag};
+        static int msgSizeBuffer    {logSettings->textBoxWidth_msg};
+        ImGui::InputInt("Tag Text Box Size", &tagSizeBuffer);
+        ImGui::SameLine();
+        ImGui::InputInt("Message Text Box Size", &msgSizeBuffer);
+
+        if(tagSizeBuffer >= 5)
+            logSettings->textBoxWidth_tag = tagSizeBuffer;
+        if(msgSizeBuffer >= 20)
+            logSettings->textBoxWidth_msg = msgSizeBuffer;
+
+
+
+        for(const auto& log : logHistory){
             using namespace LAS::TextManip::Logging;
             std::ostringstream os{};    // Buffer to store formatted log
 
-            if (logSettings.showTime)
+            if (logSettings->showTime)
                 os << '[' << printTime(log.getTimestamp()) << "]  ";
 
-            if (logSettings.showTags) {
+            if (logSettings->showTags) {
                 // Iterate through tags for the log and display each tag
                 for (const std::string& t : log.getTags()) {
-                    os << '[' << std::setw(logSettings.textBoxWidth_tag) << std::left;
-
-                    // No Centering if too long
-                    if (t.size() >= logSettings.textBoxWidth_tag)
-                        os << t;
-
-                    else {
-                        os << std::format("{:^{}}", t, logSettings.textBoxWidth_tag);
-                    }
-                    os << "]  ";           
+                    os << std::format("[{:^{}}]  ", t.substr(0, logSettings->textBoxWidth_tag), logSettings->textBoxWidth_tag);       
                 }
             }
-            if (logSettings.showMsg) {
-                std::string msg {log.getMsg()};
-
-
-                // If the msg is under the max size, print normally
-                if (msg.length() < logSettings.textBoxWidth_msg)
-                    os << std::setw(logSettings.textBoxWidth_msg) << std::left << msg;
-
-
-                // If the msg is long, add spacing between next msg for readability
-                else if (msg.length() >= logSettings.textBoxWidth_msg) {
-                    os << msg;
-                    if (logSettings.showLocation)
-                        os << std::endl << " > ";
+            if (logSettings->showMsg)
+                if(log.getMsg().size() > logSettings->textBoxWidth_msg){
+                    os << std::format("{:^{}}...  ", log.getMsg().substr(0, logSettings->textBoxWidth_msg-3), logSettings->textBoxWidth_msg-3);
                 }
-            }
-            if (logSettings.showLocation)
+                else
+                    os << std::format("{:<{}}  ", log.getMsg().substr(0, logSettings->textBoxWidth_msg), logSettings->textBoxWidth_msg);
+
+            if (logSettings->showLocation)
                 os << printLocation(log.getLocation());
 
             ImGui::Text(os.str().c_str());
