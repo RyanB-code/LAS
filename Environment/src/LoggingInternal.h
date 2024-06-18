@@ -16,7 +16,7 @@ private:
 
 class LogWindow : public LAS::Window {
 public:
-    LogWindow(const LogSettings&);
+    LogWindow(LogSettingsPtr);
     ~LogWindow();
 
     void draw() override;
@@ -25,7 +25,7 @@ public:
 
 private:
     std::vector<Log> logHistory;
-    const LogSettings& logSettings;
+    LogSettingsPtr logSettings;
 };
 
 class LogToWindow final : public LogOutput {
