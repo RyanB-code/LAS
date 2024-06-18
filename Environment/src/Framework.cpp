@@ -142,15 +142,19 @@ bool Framework::loadModules(const std::string& modulesDirectory) {
     }
 
     try{
-        std::pair<int, StringVector> modulesThatFailedToLoad {moduleManager->loadModules(modulesDirectory, *ImGui::GetCurrentContext())}; 
+        StringVector modulesThatFailedToLoad {moduleManager->loadModules(modulesDirectory, *ImGui::GetCurrentContext())}; 
 
-        // This is just for logging what failed to load
-        std::ostringstream msg;
-        msg << "There were [" << modulesThatFailedToLoad.first << "] Modules that could not be loaded: ";
-        for(const auto& s : modulesThatFailedToLoad.second){
-            msg << "[" << s << "] ";
+        if(modulesThatFailedToLoad.size() > 0){
+             // This is just for logging what failed to load
+            std::ostringstream msg;
+            msg << "There were [" << modulesThatFailedToLoad.size() << "] Modules that could not be loaded: ";
+            for(const auto& s : modulesThatFailedToLoad){
+                msg << "[" << s << "] ";
+            }
+            logger->log(msg.str(), Tags{"Module Manager"});
         }
-        logger->log(msg.str(), Tags{"Module Manager"});
+        else
+            logger->log("All Modules loaded successfully", Tags{"Module Manager"});
 
         // Load Commands
         StringVector commandsNotLoaded;
