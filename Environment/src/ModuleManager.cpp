@@ -41,9 +41,9 @@ ModulePtr ModuleManager::getModule(std::string title) const{
 bool ModuleManager::containsModule(std::string title) const{
     return modules.contains(title);
 }
-    std::pair<int, StringVector> ModuleManager::loadModules(std::string directory, ImGuiContext& context){
-    std::string                     moduleNameSuffix    {"LASModule_"};         // Every module name must have this key present to be added
-    std::pair<int, StringVector>    failedToLoad        {0 , StringVector{}};   // Initialize empty return variable
+StringVector ModuleManager::loadModules(std::string directory, ImGuiContext& context){
+    std::string     moduleNameSuffix    {"LASModule_"};         // Every module name must have this key present to be added
+    StringVector    failedToLoad        {};                     // Initialize empty return variable
 
     directory = LAS::TextManip::ensureSlash(directory);              // Ensure slash at the end
     const std::filesystem::path qualifiedDirectory{directory};          // Path with slashes
@@ -81,8 +81,7 @@ bool ModuleManager::containsModule(std::string title) const{
         }
 
         if(failed){
-            ++failedToLoad.first;
-            failedToLoad.second.push_back(fileName);
+            failedToLoad.push_back(fileName);
         }
 	}
 

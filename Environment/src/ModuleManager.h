@@ -33,7 +33,7 @@ public:
 
 
     [[nodiscard]]
-    std::pair<int, StringVector> loadModules(std::string directory, ImGuiContext& context);
+    StringVector loadModules(std::string directory, ImGuiContext& context);
 
 private:
     std::unordered_map<std::string, ModulePtr> modules{};
