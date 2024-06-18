@@ -76,7 +76,7 @@ public:
     bool addOutput (std::shared_ptr<LogOutput> output);
     bool removeOutput (uint8_t ID);
 
-    const LogSettings& getLogSettings () const;
+    LogSettingsPtr getLogSettings ();
 
 private:
     LogSettingsPtr logSettings;

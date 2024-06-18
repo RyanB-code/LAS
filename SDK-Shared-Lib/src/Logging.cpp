@@ -122,8 +122,8 @@ bool Logger::removeOutput (uint8_t ID){
     }
     return false;
 }
-const LogSettings& Logger::getLogSettings () const{
-    return *logSettings;
+LogSettingsPtr Logger::getLogSettings () {
+    return logSettings;
 }
 
 
