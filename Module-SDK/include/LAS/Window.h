@@ -11,22 +11,29 @@
 
 namespace LAS{
 
+    enum class MenuOption{
+        MODULE,
+        UTILITY
+    };
+
     class Window {
         public:
-            Window(std::string setTitle);
+            Window(std::string setTitle, MenuOption setMenuOption=MenuOption::MODULE);
             virtual ~Window();
 
             bool shown { false };
 
             virtual void draw();
 
-            const char* getTitle() const;
-            uint8_t     getID() const;
+            const char* getTitle()      const;
+            uint8_t     getID()         const;
+            MenuOption  getMenuOption() const;
 
         protected:
             std::string title;
         private:
             uint8_t ID;
+            MenuOption menuOption;
     };
 }
 

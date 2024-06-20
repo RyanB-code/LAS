@@ -129,13 +129,18 @@ bool DisplayManager::initImgui(){
 void DisplayManager::drawWindows(){
     if(ImGui::BeginMainMenuBar()){
 
-        if(ImGui::BeginMenu("Windows")){
-
+        if(ImGui::BeginMenu("Modules")){
             for(auto window : windows){
-                if(window.second)
+                if(window.second && window.second->getMenuOption() == LAS::MenuOption::MODULE)
                     ImGui::MenuItem(window.second->getTitle(), NULL, &window.second->shown);
             }
-
+            ImGui::EndMenu();
+        }
+        if(ImGui::BeginMenu("Utilities")){
+            for(auto window : windows){
+                if(window.second && window.second->getMenuOption() == LAS::MenuOption::UTILITY)
+                    ImGui::MenuItem(window.second->getTitle(), NULL, &window.second->shown);
+            }
             ImGui::EndMenu();
         }
 
