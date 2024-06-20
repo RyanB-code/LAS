@@ -2,8 +2,9 @@
 
 using namespace LAS;
 
-Window::Window(std::string setTitle)
-    :   title {setTitle}
+Window::Window(std::string setTitle, MenuOption setMenuOption)
+    :   title {setTitle},
+        menuOption {setMenuOption}
 {
     static uint8_t numberOfWindows { 0 };
 
@@ -21,6 +22,9 @@ const char* Window::getTitle() const {
 }
 uint8_t Window::getID() const {
     return ID;
+}
+MenuOption Window::getMenuOption() const {
+    return menuOption;
 }
 void Window::draw() {
     return;
