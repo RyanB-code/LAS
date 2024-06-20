@@ -76,33 +76,34 @@ void LogWindow::addLog(const Log& log){
 
 void LogWindow::draw() {
     if(ImGui::Begin(title.c_str(), &shown)){
+        ImVec2 windowSize {ImGui::GetWindowSize()};
 
-        ImGui::Checkbox("Show Time",        &logSettings->showTime); 
-        ImGui::SameLine();
-        ImGui::Checkbox("Show Tags",        &logSettings->showTags);
-        ImGui::SameLine();
-        ImGui::Checkbox("Show Message",     &logSettings->showMsg);
-        ImGui::SameLine();
-        ImGui::Checkbox("Show Location",    &logSettings->showLocation);
-        ImGui::SameLine();
+        static bool autoScroll {true};
 
-        static bool showDemo {false};
-        ImGui::Checkbox("Show Demo Window", &showDemo);
-        if(showDemo)
-            ImGui::ShowDemoWindow();
+        ImGui::BeginChild("Options", ImVec2(windowSize.x-20, 80), ImGuiChildFlags_Border);
+        ImGui::Checkbox("Show Time",            &logSettings->showTime); 
+        ImGui::SameLine();
+        ImGui::Checkbox("Show Tags",            &logSettings->showTags);
+        ImGui::SameLine();
+        ImGui::Checkbox("Show Message",         &logSettings->showMsg);
+        ImGui::SameLine();
+        ImGui::Checkbox("Show Code Location",   &logSettings->showLocation);
+        ImGui::SameLine();
+        ImGui::Checkbox("Auto Scroll",          &autoScroll);
 
         static int tagSizeBuffer    {logSettings->textBoxWidth_tag};
         static int msgSizeBuffer    {logSettings->textBoxWidth_msg};
         ImGui::InputInt("Tag Text Box Size", &tagSizeBuffer);
-        ImGui::SameLine();
         ImGui::InputInt("Message Text Box Size", &msgSizeBuffer);
+        ImGui::EndChild();
 
+        ImGui::SeparatorText("Logs");
+        ImGui::BeginChild("Logs", ImVec2(0,0), ImGuiChildFlags_None, ImGuiWindowFlags_HorizontalScrollbar);
+        
         if(tagSizeBuffer >= 5)
             logSettings->textBoxWidth_tag = tagSizeBuffer;
         if(msgSizeBuffer >= 20)
             logSettings->textBoxWidth_msg = msgSizeBuffer;
-
-
 
         for(const auto& log : logHistory){
             using namespace LAS::TextManip::Logging;
@@ -129,6 +130,12 @@ void LogWindow::draw() {
 
             ImGui::Text(os.str().c_str());
         }
+
+        if(autoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+                ImGui::SetScrollHereY(1.0f);
+        
+
+        ImGui::EndChild();
     }
     ImGui::End();
 }
