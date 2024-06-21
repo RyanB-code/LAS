@@ -44,6 +44,8 @@ bool Framework::setup(){
         if(!setupDisplay())
             return false;
     }
+    if(!setupInternalWindows())
+        return false;
 
     handleCommandQueue();
 
@@ -109,14 +111,33 @@ bool Framework::setupDisplay(){
         return false;
     }
 
-    // Setup display logger
+    logger->log("Display setup successful", Tags{"OK"});
+
+    return true;
+}
+bool Framework::setupInternalWindows(){
+
+    // Setup log viewer window
     LogWindow   logWindow{logger->getLogSettings()};
     LogToWindow logToWindow{std::make_shared<LogWindow>(logWindow)};
 
     logger->addOutput(std::make_shared<LogToWindow>(logToWindow));
-    displayManager->addWindow(logToWindow.getWindow());
 
-    logger->log("Display setup successful", Tags{"OK"});
+    if(!displayManager->addWindow(logToWindow.getWindow())){
+        logger->log("Log viewer could not be added to window manager", Tags{"ERROR"});
+        return false;
+    }
+    logger->log("Log viewer setup successful", Tags{"OK"});
+
+
+    // Setup console window
+    Console consoleWindow{commandQueue};
+    if(!displayManager->addWindow(std::make_shared<Console>(consoleWindow))){
+        logger->log("Console could not be added to window manager", Tags{"ERROR"});
+        return false;
+    }
+    logger->log("Console setup successful", Tags{"OK"});
+
     return true;
 }
 bool Framework::addCommand(std::unique_ptr<Command> command){
@@ -215,7 +236,7 @@ void Framework::loadModuleWindows(){
     if(couldntLoad >= 0){
         std::ostringstream msg;
         msg << "There were [" << couldntLoad << "] windows that could not be loaded from modules";
-        logger->log(msg.str(), Tags{"Display Manager", "Framework"});
+        logger->log(msg.str(), Tags{"Non Fatal", "Framework"});
     }
     else
         logger->log("All windows successfully loaded from all modules", Tags{"OK"});
