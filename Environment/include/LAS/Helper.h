@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <fstream>
 
+using StringVector      = std::vector<std::string>;
 
 namespace LAS{
     bool ensureDirectory    (const std::string& path);
@@ -18,5 +19,4 @@ namespace LAS{
             std::string printLocation(const std::source_location& location)             noexcept;   // <File Name> | <Function Name> | <Line> 
         }
     }
-
 }
