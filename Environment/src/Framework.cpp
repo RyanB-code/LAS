@@ -18,34 +18,17 @@ Framework::~Framework(){
 // MARK: PUBLIC FUNCTIONS
 bool Framework::setup(){
 
-    if(!LAS::FrameworkSetup::setupFilesystem(filePaths)){
-        std::cerr << "Could not setup default filesystem\n";
+    if(!LAS::FrameworkSetup::setupFilesystem(filePaths))
         return false;
-    }
 
     setupCommands();
 
-    if(!readSetupFile(filePaths.settingsPath)){
-        std::cerr << "Error reading settings file at [" << filePaths.settingsPath << "]\n";
+    if(!readSetupFile(filePaths.settingsPath))
         return false;
-    }
 
-    // Default Setup of Logger
     if(!logger){
-        LogSettingsPtr  logSettings {new LogSettings{}};                            // Uses default settings values
-        logger = std::make_shared<Logger>(Logger{logSettings});                     // Sets local logger member variable
-
-        LogToFile logToFile{};
-        logToFile.setPath(LAS::FrameworkSetup::createLogFile(filePaths.logDir));
-
-        // Check to ensure log file is good
-        if(logToFile.getPath().empty()){
-            std::cerr << "Could not create instance log file\n";
+        if(!setupLogger())
             return false;
-        }
-         // If all is good, add LogToFile to logger
-        logger->addOutput(std::make_shared<LogToFile>(logToFile));
-
     }
 
     // --------------------------------------------------
@@ -53,36 +36,22 @@ bool Framework::setup(){
     // --------------------------------------------------
 
     if(!moduleManager){
-        moduleManager = std::make_shared<ModuleManager>( ModuleManager{logger});
-    }
-    if(!displayManager){
-        displayManager = std::make_shared<DisplayManager>(logger);
-        if(!displayManager->init()){
-            logger->log("Error setting up necessary display libraries", Tags{"Display Manager"});
+        if(!setupModuleManager())
             return false;
-        }
-
-        // Setup display logger
-        LogWindow   logWindow{logger->getLogSettings()};
-        LogToWindow logToWindow{std::make_shared<LogWindow>(logWindow)};
-        logger->addOutput(std::make_shared<LogToWindow>(logToWindow));
-        displayManager->addWindow(logToWindow.getWindow());
-
+    }
+    
+    if(!displayManager){
+        if(!setupDisplay())
+            return false;
     }
 
     handleCommandQueue();
 
-    // After all is setup, load modules into module manager
-    if(!loadModules(filePaths.moduleDir)){
-        logger->log("Error loading modules.", Tags{"Module Loader"});
+    if(!loadModules(filePaths.moduleDir))
         return false;
-    }
 
-    // Load Windows from ModuleManager into DisplayManager
-    for(auto window : moduleManager->getAllWindows()){
-        displayManager->addWindow(window);
-    }
-
+    loadModuleCommands();
+    loadModuleWindows();
 
     return true;
 }
@@ -107,6 +76,48 @@ void Framework::setupCommands(){
     if(!addCommand(std::move(testCommand))){
         std::cerr << "Command [" + testCommand->getKey() << "] could not be added.\n";
     }
+}
+bool Framework::setupLogger(){
+    LogSettingsPtr  logSettings {new LogSettings{}};                            // Uses default settings values
+    logger = std::make_shared<Logger>(Logger{logSettings});                     // Sets local logger member variable
+
+    LogToFile logToFile{};
+    if(!logToFile.setPath(LAS::FrameworkSetup::createLogFile(filePaths.logDir))){
+         std::cerr << "Could not create instance log file\n";
+         return false;
+    }
+    
+    // If all is good, add LogToFile to logger
+    if(!logger->addOutput(std::make_shared<LogToFile>(logToFile))){
+        std::cerr << "Could not add default LogToFile output for logger\n";
+        return false;
+    }
+
+    logger->log("Logger setup successful", Tags{"OK"});
+    return true;
+}
+bool Framework::setupModuleManager(){
+    moduleManager = std::make_shared<ModuleManager>( ModuleManager{logger});
+    logger->log("Module Manager setup successful", Tags{"OK"});
+    return true;
+}
+bool Framework::setupDisplay(){
+    displayManager = std::make_shared<DisplayManager>(logger);
+
+    if(!displayManager->init()){
+        logger->log("Error setting up necessary display libraries", Tags{"Display Manager"});
+        return false;
+    }
+
+    // Setup display logger
+    LogWindow   logWindow{logger->getLogSettings()};
+    LogToWindow logToWindow{std::make_shared<LogWindow>(logWindow)};
+
+    logger->addOutput(std::make_shared<LogToWindow>(logToWindow));
+    displayManager->addWindow(logToWindow.getWindow());
+
+    logger->log("Display setup successful", Tags{"OK"});
+    return true;
 }
 bool Framework::addCommand(std::unique_ptr<Command> command){
     if(commands.contains(command->getKey())){
@@ -154,26 +165,29 @@ bool Framework::loadModules(const std::string& modulesDirectory) {
             logger->log(msg.str(), Tags{"Module Manager"});
         }
         else
-            logger->log("All Modules loaded successfully", Tags{"Module Manager"});
-
-        // Load Commands
-        StringVector commandsNotLoaded;
-        StringVector moduleNames {moduleManager->getModuleNames()};
-        for(auto name : moduleNames){
-            commandsNotLoaded = loadModuleCommands(name);
-            if(!commandsNotLoaded.empty()){
-                std::ostringstream msg;
-                msg << "[" << commandsNotLoaded.size() << "] commands could not be loaded from Module [" << name << "]";
-                logger->log(msg.str(), Tags{"Framework"});
-                commandsNotLoaded.clear();
-            }
-        }
+            logger->log("All Modules loaded successfully", Tags{"OK"});
 
         return true;
     }
     catch(std::filesystem::filesystem_error& e){
         logger->log("Could not find module directory [" + std::string{e.path1()} + "] to load Modules", Tags{"Module Loader", "Filesystem Error"});
         return false;
+    }
+}
+void Framework::loadModuleCommands(){  
+     // Load Commands
+    StringVector commandsNotLoaded;
+    StringVector moduleNames {moduleManager->getModuleNames()};
+    for(auto name : moduleNames){
+        commandsNotLoaded = loadModuleCommands(name);
+        if(!commandsNotLoaded.empty()){
+            std::ostringstream msg;
+            msg << "[" << commandsNotLoaded.size() << "] commands could not be loaded from Module [" << name << "]";
+            logger->log(msg.str(), Tags{"Framework"});
+            commandsNotLoaded.clear();
+        }
+        else
+            logger->log("All commands loaded successfully from module [" + name + "]", Tags {"OK"});
     }
 }
 StringVector Framework::loadModuleCommands(const std::string& moduleName) {
@@ -190,6 +204,21 @@ StringVector Framework::loadModuleCommands(const std::string& moduleName) {
     }
 
     return commandsNotLoaded;
+}
+void Framework::loadModuleWindows(){
+    int couldntLoad {0};
+    
+    for(auto window : moduleManager->getAllWindows()){
+        if(!displayManager->addWindow(window))
+            ++couldntLoad;
+    }
+    if(couldntLoad >= 0){
+        std::ostringstream msg;
+        msg << "There were [" << couldntLoad << "] windows that could not be loaded from modules";
+        logger->log(msg.str(), Tags{"Display Manager", "Framework"});
+    }
+    else
+        logger->log("All windows successfully loaded from all modules", Tags{"OK"});
 }
 
 bool Framework::readSetupFile(const std::string& path){
@@ -307,7 +336,12 @@ namespace LAS::FrameworkSetup{
             return false;
         }
 
-        if(!LAS::ensureDirectory(filePaths.logDir) || !LAS::ensureDirectory(filePaths.moduleDir)){
+        if(!LAS::ensureDirectory(filePaths.logDir)){
+            std::cerr << "Error finding or creating [" << filePaths.logDir << "]";
+            return false;
+        }
+        if(!LAS::ensureDirectory(filePaths.moduleDir)){
+            std::cerr << "Error finding or creating [" << filePaths.moduleDir << "]";
             return false;
         }
 
