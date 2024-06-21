@@ -3,6 +3,7 @@
 #include "Display.h"
 #include "ModuleManager.h"
 #include "LoggingInternal.h"
+#include "Console.h"
 
 #include <LAS/Commands.h>
 #include <LAS/Logging.h>
@@ -48,7 +49,7 @@ private:
     bool setupLogger();
     bool setupModuleManager();
     bool setupDisplay();
-
+    bool setupInternalWindows();
 
     bool addCommand(std::unique_ptr<Command> command);              // Adds to commands unoredered_map
     bool handleCommandQueue();
