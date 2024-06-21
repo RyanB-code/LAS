@@ -33,8 +33,8 @@ bool LogToFile::log(const Log& log, const LogSettings& logSettings) const {
     if (logSettings.showTags) {
         // Iterate through tags for the log and display each tag
         for (const std::string& t : log.getTags()) {
-            os << '[' << std::setw(logSettings.textBoxWidth_tag) << std::left;
-
+            os << '[';
+            
             // No Centering if too long
             if (t.size() >= logSettings.textBoxWidth_tag)
                 os << t;
@@ -46,7 +46,7 @@ bool LogToFile::log(const Log& log, const LogSettings& logSettings) const {
         }
     }
     if (logSettings.showMsg) {
-       os << log.getMsg() << " ";
+        os << std::format("{:<{}}  ", log.getMsg(), logSettings.textBoxWidth_msg);
     }
     if (logSettings.showLocation)
         os << printLocation(log.getLocation());
@@ -70,7 +70,7 @@ LogWindow::~LogWindow() {
 
 }
 void LogWindow::addLog(const Log& log){
-    Log logCopy {log.getMsg(), log.getTags().front(), log.getLocation(), log.getTimestamp()};
+    Log logCopy {log.getMsg(), log.getTags(), log.getLocation(), log.getTimestamp()};
     logHistory.push_back(logCopy);
 }
 
@@ -114,9 +114,18 @@ void LogWindow::draw() {
 
             if (logSettings->showTags) {
                 // Iterate through tags for the log and display each tag
-                for (const std::string& t : log.getTags()) {
-                    os << std::format("[{:^{}}]  ", t.substr(0, logSettings->textBoxWidth_tag), logSettings->textBoxWidth_tag);       
+                for (const std::string& tag : log.getTags()) {
+                     os << '[';
+            
+                    // No Centering if too long
+                    if (tag.size() >= logSettings->textBoxWidth_tag)
+                        os << tag;
+                    else 
+                        os << std::format("{:^{}}", tag, logSettings->textBoxWidth_tag);
+
+                    os << "] ";       
                 }
+                os << " ";
             }
             if (logSettings->showMsg)
                 if(log.getMsg().size() > logSettings->textBoxWidth_msg){
