@@ -45,11 +45,18 @@ private:
     std::queue<std::string>                     commandQueue;  
 
     void setupCommands();                                           // This is where to instantiate commands
+    bool setupLogger();
+    bool setupModuleManager();
+    bool setupDisplay();
+
+
     bool addCommand(std::unique_ptr<Command> command);              // Adds to commands unoredered_map
     bool handleCommandQueue();
 
-    bool            loadModules        (const std::string& modulesDirectory);
-    StringVector    loadModuleCommands (const std::string& moduleName);
+    bool            loadModules         (const std::string& modulesDirectory);
+    void            loadModuleWindows   ();
+    void            loadModuleCommands  ();
+    StringVector    loadModuleCommands  (const std::string& moduleName);
 
     bool readSetupFile      (const std::string& path);
 };
