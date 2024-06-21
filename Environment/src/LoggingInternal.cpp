@@ -80,7 +80,7 @@ void LogWindow::draw() {
 
         static bool autoScroll {true};
 
-        ImGui::BeginChild("Options", ImVec2(windowSize.x-20, 80), ImGuiChildFlags_Border);
+        ImGui::BeginChild("Options", ImVec2(windowSize.x-20, 85), ImGuiChildFlags_Border);
         ImGui::Checkbox("Show Time",            &logSettings->showTime); 
         ImGui::SameLine();
         ImGui::Checkbox("Show Tags",            &logSettings->showTags);
