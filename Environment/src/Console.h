@@ -6,6 +6,7 @@
 #include <imgui/imgui.h>
 #include <LAS/Commands.h>
 #include <LAS/Window.h>
+#include <LAS/Helper.h>
 
 class Console : public LAS::Window{
 public:
