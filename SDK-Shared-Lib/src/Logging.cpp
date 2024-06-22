@@ -42,8 +42,11 @@ Log& Log::addTag(std::string tag){
 
 LogOutput::LogOutput() {
     static uint8_t givenIDs {0};
-    ++givenIDs;
-    ID = givenIDs;
+
+    if(givenIDs < 0 || givenIDs > 200){
+        throw std::out_of_range{"Cannot be more than 200 LogOutputs"};
+    }
+    ID = ++givenIDs;
 }
 LogOutput::~LogOutput() {
 
