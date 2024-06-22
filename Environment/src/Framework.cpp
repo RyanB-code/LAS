@@ -2,12 +2,14 @@
 
 Framework::Framework (  LoggerPtr           setLogger,
                         ModuleManagerPtr    setModuleManager,
-                        DisplayManagerPtr   setDisplayManager
+                        DisplayManagerPtr   setDisplayManager,
+                        ShellPtr            setLasShell
                     )
                     :
                         logger          {setLogger},
                         moduleManager   {setModuleManager},
-                        displayManager  {setDisplayManager}
+                        displayManager  {setDisplayManager},
+                        lasShell        {setLasShell}
 {
 
 }
@@ -21,9 +23,14 @@ bool Framework::setup(){
     if(!LAS::FrameworkSetup::setupFilesystem(filePaths))
         return false;
 
+    if(!lasShell){
+        if(!setupShell())
+            return false;
+    }
+
     setupCommands();
 
-    if(!readSetupFile(filePaths.settingsPath))
+    if(!lasShell->readRCFile(filePaths.settingsPath))
         return false;
 
     if(!logger){
@@ -47,7 +54,11 @@ bool Framework::setup(){
     if(!setupInternalWindows())
         return false;
 
-    handleCommandQueue();
+    // Handle commands
+    if(lasShell)
+        lasShell->handleCommandQueue();
+    else
+        logger->log("There is no target shell for LAS", Tags{"ERROR", "SHELL"});
 
     if(!loadModules(filePaths.moduleDir))
         return false;
@@ -55,18 +66,28 @@ bool Framework::setup(){
     loadModuleCommands();
     loadModuleWindows();
 
+    // After all is done, mark as complete
+    setupComplete = true;
     return true;
 }
 void Framework::run(){
-
+    if(!setupComplete){
+        std::cerr << "Application must be setup before running\n";
+        return;
+    }
+    
     // If refresh() returns true, that means an glfwShouldWindowClose() was called
     while(!displayManager->refresh()){
-        if(!commandQueue.empty()){
-            handleCommandQueue();
-        }
+        lasShell->handleCommandQueue();
     }
 
     return;
+}
+bool Framework::setupShell(){
+    using namespace LAS;
+    ShellPtr shell { new Shell{} };
+    lasShell = shell;
+    return true;
 }
 // MARK: PRIVATE FUNCTIONS
 void Framework::setupCommands(){
@@ -75,7 +96,7 @@ void Framework::setupCommands(){
     std::unique_ptr<TestCommand> testCommand {new TestCommand()};
 
     // Add to known commands
-    if(!addCommand(std::move(testCommand))){
+    if(!lasShell->addCommand(std::move(testCommand))){
         std::cerr << "Command [" + testCommand->getKey() << "] could not be added.\n";
     }
 }
@@ -131,8 +152,7 @@ bool Framework::setupInternalWindows(){
 
 
     // Setup console window
-    Console consoleWindow{commandQueue};
-    if(!displayManager->addWindow(std::make_shared<Console>(consoleWindow))){
+    if(!displayManager->addWindow(lasShell->getWindow())){
         logger->log("Console could not be added to window manager", Tags{"ERROR"});
         return false;
     }
@@ -140,32 +160,7 @@ bool Framework::setupInternalWindows(){
 
     return true;
 }
-bool Framework::addCommand(std::unique_ptr<Command> command){
-    if(commands.contains(command->getKey())){
-        return false;
-    }
-    else{
-        commands.try_emplace(command->getKey(), std::move(command));
-        return true;
-    }
-    return false;
-}
-bool Framework::handleCommandQueue(){\
 
-    // This just prints each command entry riught now
-    std::cout << "From Framework::handleCommandQueue():\n";
-    for (/*Nothing*/; !commandQueue.empty(); commandQueue.pop())
-        std::cout << "\t" << commandQueue.front() << '\n';
-    std::cout << "\n";
-    
-    /* This is for inputting quoted buffer
-    while (inputStream >> std::quoted(buffer)) {    // Separate by quotes or spaces
-            arguments.push_back(buffer);                // Add to argument list
-        }
-    */
-
-    return false;
-}
 bool Framework::loadModules(const std::string& modulesDirectory) {
 
     if(!ImGui::GetCurrentContext()){
@@ -218,7 +213,7 @@ StringVector Framework::loadModuleCommands(const std::string& moduleName) {
 
     if(!module.getCommands().empty()){
         for(auto command : module.getCommands()){
-            if(!addCommand(std::make_unique<Command>(command))){
+            if(!lasShell->addCommand(std::make_unique<Command>(command))){
                 commandsNotLoaded.push_back(command.getKey());
             }
         }
@@ -240,41 +235,6 @@ void Framework::loadModuleWindows(){
     }
     else
         logger->log("All windows successfully loaded from all modules", Tags{"OK"});
-}
-
-bool Framework::readSetupFile(const std::string& path){
-
-     if(std::filesystem::exists(path)){
-        std::ifstream settingsFile {path}; 
-        std::string line;
-
-        // Read line by line
-        while (std::getline(settingsFile, line))
-        {
-            std::stringstream inputStream{};
-            inputStream << line;
-            std::string buffer {inputStream.str()};
-
-            // Filter out comments and newlines, add the rest to commandQueue
-            if(!buffer.starts_with("#") && !buffer.starts_with('\n') && !buffer.empty())
-                commandQueue.push(buffer);
-        }
-        return true;
-    }
-    else{
-        std::ofstream newSettings {path, std::ios::trunc};
-
-        if(!std::filesystem::exists(path)){
-            std::cerr << "Could not create new configuration file at [" << path << "]\n";
-            return false;
-        }
-
-        newSettings << "# Life Application Suite Configuration File\n# Any commands entered here will be executed upon each startup" << std::endl;
-        newSettings.close();
-        return true;
-    }
-
-    return false;
 }
 
 
