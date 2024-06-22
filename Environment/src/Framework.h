@@ -3,7 +3,7 @@
 #include "Display.h"
 #include "ModuleManager.h"
 #include "LoggingInternal.h"
-#include "Console.h"
+#include "Shell.h"
 
 #include <LAS/Commands.h>
 #include <LAS/Logging.h>
@@ -28,7 +28,8 @@ class Framework final{
 public:
     Framework(  LoggerPtr           setLogger           =nullptr,
                 ModuleManagerPtr    setModuleManager    =nullptr,
-                DisplayManagerPtr   setDisplayManager   =nullptr
+                DisplayManagerPtr   setDisplayManager   =nullptr,
+                ShellPtr            setLasShell         =nullptr
             );
     ~Framework  ();
 
@@ -39,27 +40,25 @@ private:
     LoggerPtr           logger;
     ModuleManagerPtr    moduleManager;
     DisplayManagerPtr   displayManager;
+    ShellPtr            lasShell;
 
     FilePaths           filePaths;
+    bool                setupComplete{false};
 
-    std::unordered_map<std::string, CommandPtr> commands;
-    std::queue<std::string>                     commandQueue;  
 
+    bool setupShell();
     void setupCommands();                                           // This is where to instantiate commands
     bool setupLogger();
     bool setupModuleManager();
     bool setupDisplay();
     bool setupInternalWindows();
 
-    bool addCommand(std::unique_ptr<Command> command);              // Adds to commands unoredered_map
-    bool handleCommandQueue();
 
     bool            loadModules         (const std::string& modulesDirectory);
     void            loadModuleWindows   ();
     void            loadModuleCommands  ();
     StringVector    loadModuleCommands  (const std::string& moduleName);
 
-    bool readSetupFile      (const std::string& path);
 };
 
 namespace LAS::FrameworkSetup{
