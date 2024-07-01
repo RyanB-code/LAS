@@ -57,12 +57,15 @@ bool Framework::setup(){
     // Handle commands
     if(lasShell)
         lasShell->handleCommandQueue();
-    else
+    else{
         logger->log("There is no target shell for LAS", Tags{"ERROR", "SHELL"});
+        return false;
+    }
 
     if(!loadModules(filePaths.moduleDir))
         return false;
 
+    // Non fatal if these fail
     loadModuleCommands();
     loadModuleWindows();
 
@@ -106,13 +109,13 @@ bool Framework::setupLogger(){
 
     LogToFile logToFile{};
     if(!logToFile.setPath(LAS::FrameworkSetup::createLogFile(filePaths.logDir))){
-         std::cerr << "Could not create instance log file\n";
+         std::cerr << "Could not create a log file for the current instance\n";
          return false;
     }
     
     // If all is good, add LogToFile to logger
     if(!logger->addOutput(std::make_shared<LogToFile>(logToFile))){
-        std::cerr << "Could not add default LogToFile output for logger\n";
+        std::cerr << "Could not add default LogToFile as an output for the logger\n";
         return false;
     }
 
@@ -128,7 +131,7 @@ bool Framework::setupDisplay(){
     displayManager = std::make_shared<DisplayManager>(logger);
 
     if(!displayManager->init()){
-        logger->log("Error setting up necessary display libraries", Tags{"Display Manager"});
+        logger->log("Error setting up necessary display libraries", Tags{"ERROR", "Display Manager"});
         return false;
     }
 
@@ -145,7 +148,7 @@ bool Framework::setupInternalWindows(){
     logger->addOutput(std::make_shared<LogToWindow>(logToWindow));
 
     if(!displayManager->addWindow(logToWindow.getWindow())){
-        logger->log("Log viewer could not be added to window manager", Tags{"ERROR"});
+        logger->log("Log viewer could not be added to window manager", Tags{"ERROR", "Display Manager"});
         return false;
     }
     logger->log("Log viewer setup successful", Tags{"OK"});
@@ -153,7 +156,7 @@ bool Framework::setupInternalWindows(){
 
     // Setup console window
     if(!displayManager->addWindow(lasShell->getWindow())){
-        logger->log("Console could not be added to window manager", Tags{"ERROR"});
+        logger->log("Console could not be added to window manager", Tags{"ERROR", "Display Manager"});
         return false;
     }
     logger->log("Console setup successful", Tags{"OK"});
@@ -164,7 +167,7 @@ bool Framework::setupInternalWindows(){
 bool Framework::loadModules(const std::string& modulesDirectory) {
 
     if(!ImGui::GetCurrentContext()){
-        logger->log("No ImGuiContext found", Tags{"Module Loader", "ERROR"});
+        logger->log("No ImGuiContext found", Tags{"ERROR", "Framework"});
         return false;
     }
 
@@ -178,7 +181,7 @@ bool Framework::loadModules(const std::string& modulesDirectory) {
             for(const auto& s : modulesThatFailedToLoad){
                 msg << "[" << s << "] ";
             }
-            logger->log(msg.str(), Tags{"Module Manager"});
+            logger->log(msg.str(), Tags{"Non Fatal", "Module Manager"});
         }
         else
             logger->log("All Modules loaded successfully", Tags{"OK"});
@@ -186,7 +189,7 @@ bool Framework::loadModules(const std::string& modulesDirectory) {
         return true;
     }
     catch(std::filesystem::filesystem_error& e){
-        logger->log("Could not find module directory [" + std::string{e.path1()} + "] to load Modules", Tags{"Module Loader", "Filesystem Error"});
+        logger->log("Could not find module directory [" + std::string{e.path1()} + "] to load Modules", Tags{"ERROR", "Module Manager", "Filesystem Error"});
         return false;
     }
 }
