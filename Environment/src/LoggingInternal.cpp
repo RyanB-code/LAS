@@ -127,13 +127,12 @@ void LogWindow::draw() {
                 }
                 os << " ";
             }
-            if (logSettings->showMsg)
-                if(log.getMsg().size() > logSettings->textBoxWidth_msg){
+            if (logSettings->showMsg){
+                if(log.getMsg().size() > logSettings->textBoxWidth_msg)
                     os << std::format("{:^{}}...  ", log.getMsg().substr(0, logSettings->textBoxWidth_msg-3), logSettings->textBoxWidth_msg-3);
-                }
                 else
                     os << std::format("{:<{}}  ", log.getMsg().substr(0, logSettings->textBoxWidth_msg), logSettings->textBoxWidth_msg);
-
+            }
             if (logSettings->showLocation)
                 os << printLocation(log.getLocation());
 

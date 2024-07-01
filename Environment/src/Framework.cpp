@@ -228,7 +228,7 @@ void Framework::loadModuleWindows(){
         if(!displayManager->addWindow(window))
             ++couldntLoad;
     }
-    if(couldntLoad >= 0){
+    if(couldntLoad > 0){
         std::ostringstream msg;
         msg << "There were [" << couldntLoad << "] windows that could not be loaded from modules";
         logger->log(msg.str(), Tags{"Non Fatal", "Framework"});
