@@ -24,7 +24,7 @@ namespace LAS{
 }
 
 using ShellPtr = std::shared_ptr<LAS::Shell>;
-using ShellOutputPtr = std::unique_ptr<LAS::ShellOutput>;
+using ShellOutputPtr = std::shared_ptr<LAS::ShellOutput>;
 
 namespace LAS{
 
