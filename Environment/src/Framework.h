@@ -54,10 +54,10 @@ private:
     bool setupInternalWindows();
 
 
-    bool            loadModules         (const std::string& modulesDirectory);
-    void            loadModuleWindows   ();
-    void            loadModuleCommands  ();
-    StringVector    loadModuleCommands  (const std::string& moduleName);
+    bool            loadModules             (const std::string& modulesDirectory);
+    void            loadModuleWindows       ();
+    void            loadAllModuleCommands   ();                                 
+    StringVector    loadModuleCommands      (const std::string& moduleName);
 
 };
 

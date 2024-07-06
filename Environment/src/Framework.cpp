@@ -66,7 +66,7 @@ bool Framework::setup(){
         return false;
 
     // Non fatal if these fail
-    loadModuleCommands();
+    loadAllModuleCommands();
     loadModuleWindows();
 
     // After all is done, mark as complete
@@ -193,7 +193,7 @@ bool Framework::loadModules(const std::string& modulesDirectory) {
         return false;
     }
 }
-void Framework::loadModuleCommands(){  
+void Framework::loadAllModuleCommands(){  
      // Load Commands
     StringVector commandsNotLoaded;
     StringVector moduleNames {moduleManager->getModuleNames()};
