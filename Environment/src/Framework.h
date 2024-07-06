@@ -75,5 +75,5 @@ public:
     TestCommand();
     ~TestCommand();
 
-    bool execute() const override;
+    std::pair<int, std::ostringstream> execute() const override;
 };

@@ -27,25 +27,12 @@ using ShellPtr = std::shared_ptr<LAS::Shell>;
 using ShellOutputPtr = std::shared_ptr<LAS::ShellOutput>;
 
 namespace LAS{
-
-    class ConsoleWindow : public LAS::Window{
-    public:
-        ConsoleWindow(std::queue<std::string>& setQueue);
-        ~ConsoleWindow();
-
-        void draw() override;
-
-    private:
-        std::queue<std::string>& queue;
-    };
-
-
     class ShellOutput{
     public:
         ShellOutput();
         virtual ~ShellOutput();
 
-        virtual void output() const = 0;
+        virtual void output(const std::ostringstream&);
 
         uint8_t getID() const;
 
@@ -53,6 +40,20 @@ namespace LAS{
         uint8_t ID;
     };
 
+    class ConsoleWindow : public LAS::Window, public ShellOutput {
+    public:
+        ConsoleWindow(std::queue<std::string>& setQueue);
+        ~ConsoleWindow();
+
+        void draw() override;
+        void output(const std::ostringstream& os) override;
+
+    private:
+        std::queue<std::string>& queue;
+
+        std::ostringstream  textHistory;
+        StringVector        commandHistory;
+    };
 
     class Shell{
     public:
@@ -78,4 +79,5 @@ namespace LAS{
 
         std::shared_ptr<ConsoleWindow>              window;
     };
+
 }
