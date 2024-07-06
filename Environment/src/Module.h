@@ -28,7 +28,7 @@ public:
     std::string     getShortTitle()     const;
     
     const ModuleInfo&   getInfo()       const;
-    std::vector<Command>&   getCommands();
+    std::vector<CommandPtr>&   getCommands();
 
     bool    load(const EnvironmentInfo& whatToPass);
     void    cleanup();
