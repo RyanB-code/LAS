@@ -20,8 +20,6 @@ void ConsoleWindow::draw(){
     static bool autoScroll {true};
     static bool scrollToBottom {false};
 
-    static StringVector commandHistory;
-
 
     if(ImGui::BeginChild("Options", ImVec2(windowSize.x-20, 40), ImGuiChildFlags_Border)){
         static bool showDemo {false};
@@ -37,10 +35,8 @@ void ConsoleWindow::draw(){
 
     const float footerHeightToReserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
     if (ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footerHeightToReserve), ImGuiChildFlags_None, ImGuiWindowFlags_HorizontalScrollbar)) {
-        for(const auto& s : commandHistory){
-            std::string msg {"$ " + s};
-            ImGui::Text(msg.c_str());
-        }
+       
+       ImGui::TextUnformatted(textHistory.str().c_str());
 
         if (scrollToBottom || (autoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY()))
             ImGui::SetScrollHereY(1.0f);
@@ -58,9 +54,12 @@ void ConsoleWindow::draw(){
         if(!strBuf.empty() && !strBuf.starts_with(' ')){
             commandHistory.push_back(strBuf);
             queue.push(strBuf);                             // Push to command queue
+
+            // Add to textHistory
+            textHistory << "$ " << strBuf << "\n";
         }
         if(strBuf.empty())
-            commandHistory.push_back("");                   // Hit enter to indent if they user wants without sending to command handler
+            textHistory<<("\n");                   // Hit enter to indent if they user wants without sending to command handler
 
         scrollToBottom = true;
         memset(inputBuf, 0, 256*(sizeof inputBuf[0]) );
@@ -73,6 +72,11 @@ void ConsoleWindow::draw(){
 
     return;
 }
+void ConsoleWindow::output(const std::ostringstream& os) {
+    textHistory << os.str();
+    return;
+}
+
 
 // MARK: Shell Output
 ShellOutput::ShellOutput()
@@ -90,7 +94,9 @@ ShellOutput::~ShellOutput(){
 uint8_t ShellOutput::getID() const{
     return ID;
 }
-
+void ShellOutput::output(const std::ostringstream&){
+    return;
+}
 
 // MARK: Shell
 Shell::Shell(std::shared_ptr<ConsoleWindow> setWindow)
@@ -149,8 +155,28 @@ bool Shell::addCommand(CommandPtr command){
     return false;
 }
 bool Shell::handleCommandQueue(){
-    for (/*Nothing*/; !commandQueue.empty(); commandQueue.pop())
-        std::cout << "From Shell::handleCommandQueue(): " << commandQueue.front() << '\n';
+    for (/*Nothing*/; !commandQueue.empty(); commandQueue.pop()){
+        // Argument Buffers
+        std::vector<std::string> arguments;
+        std::stringstream inputStream{};
+        
+        inputStream << commandQueue.front();
+        std::string buffer;
+        while (inputStream >> std::quoted(buffer)) {    // Separate by quotes or spaces
+            arguments.push_back(buffer);                // Add to argument list
+        }
+
+        // Initial lookup of first command only to see if it is a valid command
+        if(commands.contains(arguments[0])){
+            std::string command {arguments[0]};
+            arguments.erase(arguments.begin());
+
+            // Execute command and pass to output
+            for(const auto& output : outputs){
+                output->output(commands.at(command)->execute().second);
+            }
+        }
+    }
 
     return true;   
 }
@@ -165,6 +191,14 @@ bool Shell::addOutput(ShellOutputPtr output){
             return true;
         }
     }
+
+    // If there are no outputs, just add the parameter
+    if(outputs.empty()){
+        outputs.push_back(output);
+        return true;
+    }
+
+    return false;
 }
 bool Shell::removeOutput(uint8_t ID){
     for(std::vector<ShellOutputPtr>::iterator it {outputs.begin()}; it != outputs.end();){

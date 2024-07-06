@@ -155,8 +155,13 @@ bool Framework::setupInternalWindows(){
 
 
     // Setup console window
+    
     if(!displayManager->addWindow(lasShell->getWindow())){
         logger->log("Console could not be added to window manager", Tags{"ERROR", "Display Manager"});
+        return false;
+    }
+    if(!lasShell->addOutput(lasShell->getWindow())){
+        logger->log("Console Window's Shell Output could not be added to Shell Outputs", Tags{"ERROR", "Shell"});
         return false;
     }
     logger->log("Console setup successful", Tags{"OK"});
@@ -214,11 +219,12 @@ StringVector Framework::loadModuleCommands(const std::string& moduleName) {
 
     StringVector commandsNotLoaded;
 
-    if(!module.getCommands().empty()){
-        for(auto command : module.getCommands()){
-            if(!lasShell->addCommand(std::make_unique<Command>(command))){
-                commandsNotLoaded.push_back(command.getKey());
-            }
+    if(module.getCommands().empty())
+        return commandsNotLoaded;
+
+    for(auto& command : module.getCommands()){
+        if(!lasShell->addCommand(std::move(command))){
+            commandsNotLoaded.push_back(command->getKey());
         }
     }
 
@@ -251,9 +257,12 @@ TestCommand::~TestCommand(){
 
 }
 
-bool TestCommand::execute() const {
-    std::cout << "in test command\n";
-    return true;    
+std::pair<int, std::ostringstream> TestCommand::execute() const {
+    std::pair<int, std::ostringstream> returnVal;
+    returnVal.first = 0;
+    returnVal.second << "returned os from test command\n";
+
+    return returnVal;    
 }
 
 // MARK: LAS::FrameworkSetup Namespace
