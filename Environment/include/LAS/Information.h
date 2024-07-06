@@ -13,7 +13,7 @@ struct ModuleInfo    {
     std::string     shortTitle      {};
     WindowPtr       window          {};
 
-    std::vector<Command> commands {};
+    std::vector<CommandPtr> commands {};
 };
 struct EnvironmentInfo     {
     std::string     directory{};

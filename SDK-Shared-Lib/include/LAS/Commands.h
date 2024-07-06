@@ -3,6 +3,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <sstream>
 
 class Command {
 public:
@@ -12,7 +13,7 @@ public:
     std::string getKey          () const;
     std::string getDescription  () const;
     
-    virtual bool execute () const;
+    virtual std::pair<int, std::ostringstream> execute () const;
 private:
     std::string key, description;
 };
