@@ -17,9 +17,12 @@ std::string Command::getDescription() const {
     return description;
 }
 
-bool Command::execute() const {
+std::pair<int, std::ostringstream> Command::execute() const {
     throw std::runtime_error{"Invalid command execution state."};
-    return false;
+    std::pair<int, std::ostringstream> returnVal;
+    returnVal.first = 0;
+    returnVal.second << "Invalid command execution state.";
+    return returnVal;
 }
 
 
