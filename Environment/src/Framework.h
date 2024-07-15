@@ -4,6 +4,8 @@
 #include "ModuleManager.h"
 #include "LoggingInternal.h"
 #include "Shell.h"
+#include "CommandsInternal.h"
+
 
 #include <LAS/Commands.h>
 #include <LAS/Logging.h>
@@ -71,12 +73,3 @@ namespace LAS{
 
     };
 }
-
-// For testing command functionality
-class TestCommand : public Command{
-public: 
-    TestCommand();
-    ~TestCommand();
-
-    std::pair<int, std::ostringstream> execute(const StringVector&) override;
-};
