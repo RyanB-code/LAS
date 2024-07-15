@@ -30,11 +30,6 @@ bool Framework::setup(){
             return false;
     }
 
-    setupCommands();
-
-    if(!lasShell->readRCFile(filePaths.settingsPath))
-        return false;
-
     if(!logger){
         if(!setupLogger())
             return false;
@@ -71,6 +66,11 @@ bool Framework::setup(){
     loadAllModuleCommands();
     loadModuleWindows();
 
+    setupCommands();
+
+    if(!lasShell->readRCFile(filePaths.settingsPath))
+        return false;
+
     // After all is done, mark as complete
     setupComplete = true;
     return true;
@@ -96,13 +96,19 @@ bool Framework::setupShell(){
 }
 // MARK: PRIVATE FUNCTIONS
 void Framework::setupCommands(){
+    using namespace LAS::Commands;
 
     // Instantiate commands
-    std::unique_ptr<TestCommand> testCommand {std::make_unique<TestCommand>()};
+    std::unique_ptr<TestCommand>    testCommand     {std::make_unique<TestCommand>()};
+    std::unique_ptr<Set>            set             {std::make_unique<Set>(displayManager, moduleManager, logger)};
+
 
     // Add to known commands
     if(!lasShell->addCommand(std::move(testCommand))){
         std::cerr << "Command [" + testCommand->getKey() << "] could not be added.\n";
+    }
+    if(!lasShell->addCommand(std::move(set))){
+        std::cerr << "Command [" + set->getKey() << "] could not be added.\n";
     }
 }
 bool Framework::setupLogger(){
@@ -249,23 +255,6 @@ void Framework::loadModuleWindows(){
 }
 
 
-// MARK: TEST COMMAND
-TestCommand::TestCommand() : Command {"test", "Testing command"}
-{
-
-}
-
-TestCommand::~TestCommand(){
-
-}
-
-std::pair<int, std::ostringstream> TestCommand::execute(const StringVector& args) {
-    std::pair<int, std::ostringstream> returnVal;
-    returnVal.first = 0;
-    returnVal.second << "returned os from test command\n";
-
-    return returnVal;    
-}
 
 // MARK: LAS::FrameworkSetup Namespace
 namespace LAS::FrameworkSetup{
