@@ -16,7 +16,7 @@ private:
 
 class LogWindow : public LAS::Window {
 public:
-    LogWindow(LogSettingsPtr);
+    explicit LogWindow(const LogSettingsPtr&);
     ~LogWindow();
 
     void draw() override;
@@ -30,12 +30,12 @@ private:
 
 class LogToWindow final : public LogOutput {
 public:
-    LogToWindow(std::shared_ptr<LogWindow>);
+    explicit LogToWindow(std::shared_ptr<LogWindow>);
     ~LogToWindow();
 
     bool log(const Log&, const LogSettings&) const override;
     std::shared_ptr<LogWindow> getWindow();
 
 private:
-    std::shared_ptr<LogWindow> window;
+    const std::shared_ptr<LogWindow> window;
 };

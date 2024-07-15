@@ -1,5 +1,7 @@
 #include "Framework.h"
 
+using namespace LAS;
+
 Framework::Framework (  LoggerPtr           setLogger,
                         ModuleManagerPtr    setModuleManager,
                         DisplayManagerPtr   setDisplayManager,
@@ -96,7 +98,7 @@ bool Framework::setupShell(){
 void Framework::setupCommands(){
 
     // Instantiate commands
-    std::unique_ptr<TestCommand> testCommand {new TestCommand()};
+    std::unique_ptr<TestCommand> testCommand {std::make_unique<TestCommand>()};
 
     // Add to known commands
     if(!lasShell->addCommand(std::move(testCommand))){
@@ -257,7 +259,7 @@ TestCommand::~TestCommand(){
 
 }
 
-std::pair<int, std::ostringstream> TestCommand::execute() const {
+std::pair<int, std::ostringstream> TestCommand::execute(const StringVector& args) {
     std::pair<int, std::ostringstream> returnVal;
     returnVal.first = 0;
     returnVal.second << "returned os from test command\n";

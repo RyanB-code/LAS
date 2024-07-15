@@ -16,57 +16,60 @@
 #include <chrono>
 #include <exception>
 
-struct FilePaths{
-    std::string settingsPath;
+namespace LAS{
+    struct FilePaths{
+        std::string settingsPath;
 
-    std::string parentDir;
-    std::string logDir;
-    std::string moduleDir;
-};
+        std::string parentDir;
+        std::string logDir;
+        std::string moduleDir;
+    };
 
-class Framework final{
-public:
-    Framework(  LoggerPtr           setLogger           =nullptr,
-                ModuleManagerPtr    setModuleManager    =nullptr,
-                DisplayManagerPtr   setDisplayManager   =nullptr,
-                ShellPtr            setLasShell         =nullptr
-            );
-    ~Framework  ();
+    namespace FrameworkSetup{
+        std::string     createLogFile   (const std::string& parentDir);
+        std::string     getSettingsPath ();
+        std::string     getExeParentDir ();
 
-    bool setup();
-    void run();
+        bool            setupFilesystem (FilePaths& filePaths);
+    }
 
-private:
-    LoggerPtr           logger;
-    ModuleManagerPtr    moduleManager;
-    DisplayManagerPtr   displayManager;
-    ShellPtr            lasShell;
+    class Framework final{
+    public:
+        Framework(  LoggerPtr           setLogger           =nullptr,
+                    ModuleManagerPtr    setModuleManager    =nullptr,
+                    DisplayManagerPtr   setDisplayManager   =nullptr,
+                    ShellPtr            setLasShell         =nullptr
+                );
+        ~Framework  ();
 
-    FilePaths           filePaths;
-    bool                setupComplete{false};
-
-
-    bool setupShell();
-    void setupCommands();                                           // This is where to instantiate commands
-    bool setupLogger();
-    bool setupModuleManager();
-    bool setupDisplay();
-    bool setupInternalWindows();
+        bool setup();
+        void run();
 
 
-    bool            loadModules             (const std::string& modulesDirectory);
-    void            loadModuleWindows       ();
-    void            loadAllModuleCommands   ();                                 
-    StringVector    loadModuleCommands      (const std::string& moduleName);
+    private:
+        LoggerPtr           logger;
+        ModuleManagerPtr    moduleManager;
+        DisplayManagerPtr   displayManager;
+        ShellPtr            lasShell;
 
-};
+        LAS::FilePaths      filePaths;
+        bool                setupComplete{false};
 
-namespace LAS::FrameworkSetup{
-    std::string     createLogFile   (const std::string& parentDir);
-    std::string     getSettingsPath ();
-    std::string     getExeParentDir ();
 
-    bool            setupFilesystem (FilePaths& filePaths);
+        bool setupShell();
+        void setupCommands();                                           // This is where to instantiate commands
+        bool setupLogger();
+        bool setupModuleManager();
+        bool setupDisplay();
+        bool setupInternalWindows();
+
+
+        bool            loadModules             (const std::string& modulesDirectory);
+        void            loadModuleWindows       ();
+        void            loadAllModuleCommands   ();                                 
+        StringVector    loadModuleCommands      (const std::string& moduleName);
+
+    };
 }
 
 // For testing command functionality
@@ -75,5 +78,5 @@ public:
     TestCommand();
     ~TestCommand();
 
-    std::pair<int, std::ostringstream> execute() const override;
+    std::pair<int, std::ostringstream> execute(const StringVector&) override;
 };

@@ -3,6 +3,23 @@
 
 using namespace LAS;
 
+// MARK: Shell Output
+ShellOutput::ShellOutput()
+{
+    static uint8_t givenIDs {0};
+
+    if(givenIDs < 0 || givenIDs > 200){
+        throw std::out_of_range{"Cannot be more than 200 ShellOutputs"};
+    }
+    ID = ++givenIDs;
+}
+ShellOutput::~ShellOutput(){
+
+}
+uint8_t ShellOutput::getID() const{
+    return ID;
+}
+
 // MARK: ConsoleWindow
 ConsoleWindow::ConsoleWindow(std::queue<std::string>& setQueue)
     :   Window("Console", MenuOption::UTILITY),
@@ -16,9 +33,9 @@ ConsoleWindow::~ConsoleWindow(){
 void ConsoleWindow::draw(){
     ImGui::Begin(title.c_str(), &shown);
     
-    ImVec2 windowSize {ImGui::GetWindowSize()};
-    static bool autoScroll {true};
-    static bool scrollToBottom {false};
+    ImVec2 windowSize           {ImGui::GetWindowSize()};
+    static bool autoScroll      {true};
+    static bool scrollToBottom  {false};
 
 
     if(ImGui::BeginChild("Options", ImVec2(windowSize.x-20, 40), ImGuiChildFlags_Border)){
@@ -78,26 +95,6 @@ void ConsoleWindow::output(const std::ostringstream& os) {
 }
 
 
-// MARK: Shell Output
-ShellOutput::ShellOutput()
-{
-    static uint8_t givenIDs {0};
-
-    if(givenIDs < 0 || givenIDs > 200){
-        throw std::out_of_range{"Cannot be more than 200 ShellOutputs"};
-    }
-    ID = ++givenIDs;
-}
-ShellOutput::~ShellOutput(){
-
-}
-uint8_t ShellOutput::getID() const{
-    return ID;
-}
-void ShellOutput::output(const std::ostringstream&){
-    return;
-}
-
 // MARK: Shell
 Shell::Shell(std::shared_ptr<ConsoleWindow> setWindow)
     : window{setWindow}
@@ -109,6 +106,80 @@ Shell::Shell(std::shared_ptr<ConsoleWindow> setWindow)
 }
 Shell::~Shell(){
 
+}
+bool Shell::addCommand(CommandPtr command){
+    if(commands.contains(command->getKey())){
+        return false;
+    }
+    else{
+        commands.try_emplace(command->getKey(), std::move(command));
+        return true;
+    }
+    return false;
+}
+bool Shell::addOutput(const ShellOutputPtr& output){
+    for(const auto& o : outputs){
+        // Do not add if IDs are same
+        if(o->getID() == output->getID()){
+            return false;
+        }
+        else{
+            outputs.push_back(std::move(output));
+            return true;
+        }
+    }
+
+    // If there are no outputs, just add the parameter
+    if(outputs.empty()){
+        outputs.push_back(output);
+        return true;
+    }
+
+    return false;
+}
+bool Shell::removeOutput(const uint8_t& ID){
+    for(std::vector<ShellOutputPtr>::iterator it {outputs.begin()}; it != outputs.end();){
+        if (it->get()->getID() == ID){
+            it = outputs.erase(it);
+            return true;
+        }
+        else
+            ++it;
+    }
+    return false;
+}
+void Shell::addToQueue(const std::string& entry){
+    if(!entry.empty())
+        commandQueue.push(entry);
+
+    return;
+}
+bool Shell::handleCommandQueue(){
+    for (/*Nothing*/; !commandQueue.empty(); commandQueue.pop()){
+
+        // Buffers
+        std::vector<std::string> arguments;
+        std::stringstream inputStream{};
+        
+        inputStream << commandQueue.front();            // Read the string
+        std::string buffer;
+        while (inputStream >> std::quoted(buffer)) {    // Separate by quotes or spaces
+            arguments.push_back(buffer);                // Add the quoted token or separated by space token
+        }
+
+        // Initial lookup of first arg only to see if it is a valid command
+        if(commands.contains(arguments[0])){
+            std::string command {arguments[0]};
+            arguments.erase(arguments.begin());  // Removes the first command key (from arg list)
+
+            // Execute command and pass to every output
+            for(const auto& output : outputs){
+                output->output(commands.at(command)->execute(arguments).second);
+            }
+        }
+    }
+
+    return true;   
 }
 bool Shell::readRCFile(const std::string& path){
 
@@ -142,80 +213,6 @@ bool Shell::readRCFile(const std::string& path){
     }
 
     return false;
-}
-
-bool Shell::addCommand(CommandPtr command){
-    if(commands.contains(command->getKey())){
-        return false;
-    }
-    else{
-        commands.try_emplace(command->getKey(), std::move(command));
-        return true;
-    }
-    return false;
-}
-bool Shell::handleCommandQueue(){
-    for (/*Nothing*/; !commandQueue.empty(); commandQueue.pop()){
-        // Argument Buffers
-        std::vector<std::string> arguments;
-        std::stringstream inputStream{};
-        
-        inputStream << commandQueue.front();
-        std::string buffer;
-        while (inputStream >> std::quoted(buffer)) {    // Separate by quotes or spaces
-            arguments.push_back(buffer);                // Add to argument list
-        }
-
-        // Initial lookup of first command only to see if it is a valid command
-        if(commands.contains(arguments[0])){
-            std::string command {arguments[0]};
-            arguments.erase(arguments.begin());
-
-            // Execute command and pass to output
-            for(const auto& output : outputs){
-                output->output(commands.at(command)->execute().second);
-            }
-        }
-    }
-
-    return true;   
-}
-bool Shell::addOutput(ShellOutputPtr output){
-    for(const auto& o : outputs){
-        // Do not add if IDs are same
-        if(o->getID() == output->getID()){
-            return false;
-        }
-        else{
-            outputs.push_back(std::move(output));
-            return true;
-        }
-    }
-
-    // If there are no outputs, just add the parameter
-    if(outputs.empty()){
-        outputs.push_back(output);
-        return true;
-    }
-
-    return false;
-}
-bool Shell::removeOutput(uint8_t ID){
-    for(std::vector<ShellOutputPtr>::iterator it {outputs.begin()}; it != outputs.end();){
-        if (it->get()->getID() == ID){
-            it = outputs.erase(it);
-            return true;
-        }
-        else
-            ++it;
-    }
-    return false;
-}
-void Shell::addToQueue(const std::string& entry){
-    if(!entry.empty())
-        commandQueue.push(entry);
-
-    return;
 }
 std::shared_ptr<ConsoleWindow> Shell::getWindow(){
     return window;

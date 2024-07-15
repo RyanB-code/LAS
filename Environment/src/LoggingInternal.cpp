@@ -62,7 +62,9 @@ bool LogToFile::log(const Log& log, const LogSettings& logSettings) const {
 }
 
 // MARK: Log Window
-LogWindow::LogWindow(LogSettingsPtr setLogSettings) :   LAS::Window{"Log Viewer", LAS::MenuOption::UTILITY}, logSettings {setLogSettings}
+LogWindow::LogWindow(const LogSettingsPtr& setLogSettings) 
+    :       LAS::Window{"Log Viewer", LAS::MenuOption::UTILITY}, 
+            logSettings {setLogSettings}
 {
 
 }

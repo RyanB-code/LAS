@@ -1,8 +1,8 @@
 #include "ModuleManager.h"
 
-#include <iostream>
+using namespace LAS;
 
-ModuleManager::ModuleManager(LoggerPtr setLogger) :
+ModuleManager::ModuleManager(const LoggerPtr& setLogger) :
     logger {setLogger}
 {
 
@@ -10,7 +10,7 @@ ModuleManager::ModuleManager(LoggerPtr setLogger) :
 ModuleManager::~ModuleManager(){
 
 }
-bool ModuleManager::addModule(ModulePtr module){
+bool ModuleManager::addModule(const ModulePtr& module){
     // Check if modules contains a module of the same title before adding
     if(modules.contains(module->getTitle())){
         return false;
@@ -106,7 +106,7 @@ WindowList ModuleManager::getAllWindows()    const{
 
 // MARK: LASCore Namespace 
 namespace LAS::Modules{
-    ModulePtr bindFiletoModule(std::string path, LoggerPtr logger, ImGuiContext& context){
+    ModulePtr bindFiletoModule(std::string path, const LoggerPtr& logger, ImGuiContext& context){
         void* lib {dlopen(path.c_str(), RTLD_LAZY)};    // Map the shared object file
 
         if(!lib)
