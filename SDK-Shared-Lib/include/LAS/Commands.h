@@ -13,7 +13,7 @@ public:
     std::string getKey          () const;
     std::string getDescription  () const;
     
-    virtual std::pair<int, std::ostringstream> execute () const;
+    virtual std::pair<int, std::ostringstream> execute (const std::vector<std::string>& args) = 0;
 private:
     std::string key, description;
 };
