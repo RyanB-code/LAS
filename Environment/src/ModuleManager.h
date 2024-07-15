@@ -13,35 +13,38 @@
 #include <vector>
 #include <dlfcn.h>
 
+namespace LAS{
+    class ModuleManager;
 
-using StringVector = std::vector<std::string>;
-
-class ModuleManager final {
-public:
-    ModuleManager(LoggerPtr setLogger);
-    ~ModuleManager();
-
-    bool addModule      (ModulePtr module);
-    bool removeModule   (std::string title);
-    bool containsModule (std::string title)   const;
+    using StringVector      = std::vector<std::string>;
+    using ModuleManagerPtr  = std::shared_ptr<ModuleManager>;
 
 
-    ModulePtr           getModule(std::string title)        const;
-    const StringVector  getModuleNames()                    const;
+    class ModuleManager final {
+    public:
+        explicit ModuleManager(const LoggerPtr& setLogger);
+        ~ModuleManager();
 
-    WindowList          getAllWindows()                     const;
+        bool addModule      (const ModulePtr& module);
+        bool removeModule   (std::string title);
+        bool containsModule (std::string title)   const;
 
 
-    [[nodiscard]]
-    StringVector loadModules(std::string directory, ImGuiContext& context);
+        ModulePtr           getModule(std::string title)        const;
+        const StringVector  getModuleNames()                    const;
 
-private:
-    std::unordered_map<std::string, ModulePtr> modules{};
-    LoggerPtr logger;
-};
+        WindowList          getAllWindows()                     const;
 
-using ModuleManagerPtr = std::shared_ptr<ModuleManager>;
 
-namespace LAS::Modules{
-    ModulePtr bindFiletoModule(std::string path, LoggerPtr logger, ImGuiContext& context);
+        [[nodiscard]]
+        StringVector loadModules(std::string directory, ImGuiContext& context);
+
+    private:
+        std::unordered_map<std::string, ModulePtr> modules{};
+        const LoggerPtr& logger;
+    };
+
+    namespace Modules{
+        ModulePtr bindFiletoModule(std::string path, const LoggerPtr& logger, ImGuiContext& context);
+    }
 }

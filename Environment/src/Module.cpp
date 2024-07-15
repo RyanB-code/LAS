@@ -1,6 +1,8 @@
 #include "Module.h"
 
-Module::Module( LoggerPtr                    setLogger,
+using namespace LAS;
+
+Module::Module( const LoggerPtr&             setLogger,
                 LAS::Modules::loadFunction   setLoad, 
                 LAS::Modules::voidNoParams   setCleanup) :
         logger      {setLogger},

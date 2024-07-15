@@ -23,8 +23,8 @@ namespace LAS{
     class Shell;
 }
 
-using ShellPtr = std::shared_ptr<LAS::Shell>;
-using ShellOutputPtr = std::shared_ptr<LAS::ShellOutput>;
+using ShellPtr          = std::shared_ptr<LAS::Shell>;
+using ShellOutputPtr    = std::shared_ptr<LAS::ShellOutput>;
 
 namespace LAS{
     class ShellOutput{
@@ -32,7 +32,7 @@ namespace LAS{
         ShellOutput();
         virtual ~ShellOutput();
 
-        virtual void output(const std::ostringstream&);
+        virtual void output(const std::ostringstream&) = 0;
 
         uint8_t getID() const;
 
@@ -40,9 +40,9 @@ namespace LAS{
         uint8_t ID;
     };
 
-    class ConsoleWindow : public LAS::Window, public ShellOutput {
+    class ConsoleWindow : public Window, public ShellOutput {
     public:
-        ConsoleWindow(std::queue<std::string>& setQueue);
+        explicit ConsoleWindow(std::queue<std::string>& setQueue);
         ~ConsoleWindow();
 
         void draw() override;
@@ -57,27 +57,26 @@ namespace LAS{
 
     class Shell{
     public:
-        Shell(std::shared_ptr<ConsoleWindow> = nullptr);
+        explicit Shell(std::shared_ptr<ConsoleWindow> = nullptr);
         ~Shell();
 
-        bool readRCFile         (const std::string& path);
-        bool addCommand         (CommandPtr command);              // Adds to commands unoredered_map
-        bool handleCommandQueue ();
+        bool addCommand         (CommandPtr command);              // Adds command to list of known commands
 
-        bool addOutput(ShellOutputPtr output);
-        bool removeOutput(uint8_t getID);
+        bool addOutput          (const ShellOutputPtr& output);
+        bool removeOutput       (const uint8_t& getID);
 
         void addToQueue         (const std::string& entry);
+        bool handleCommandQueue ();
+
+        bool readRCFile         (const std::string& path);
 
         std::shared_ptr<ConsoleWindow> getWindow();
 
     private:
         std::unordered_map<std::string, CommandPtr> commands;
-        std::queue<std::string>                     commandQueue;
-
-        std::vector<ShellOutputPtr>                 outputs;
-
-        std::shared_ptr<ConsoleWindow>              window;
+        std::queue      <std::string>               commandQueue;
+        std::vector     <ShellOutputPtr>            outputs;
+        std::shared_ptr <ConsoleWindow>             window;
     };
 
 }

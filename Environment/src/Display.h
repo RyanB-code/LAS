@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include <map>
 
 #include <LAS/Window.h>
@@ -18,37 +17,38 @@
 #include </usr/include/GL/glext.h>
 #include </usr/include/GL/glxext.h>
 
-class DisplayManager;
 
-using DisplayManagerPtr = std::shared_ptr<DisplayManager>;
+namespace LAS{
+
+    class DisplayManager;
+    using DisplayManagerPtr = std::shared_ptr<DisplayManager>;  
+    class DisplayManager{
+    public:
+        explicit DisplayManager(const LoggerPtr& setLogger);
+        ~DisplayManager();
+
+        bool init();
+        bool refresh();
+        void shutdown();
+
+        bool addWindow      (const WindowPtr& window);
+        bool removeWindow   (uint8_t ID);
+        bool removeWindow   (LAS::Window& window);
+
+    private:
+        const LoggerPtr&      logger;
+
+        std::map<uint8_t, WindowPtr> windows;
+
+        GLFWwindow* window;
+        std::string windowTitle { "Life Application Suite" };
 
 
-class DisplayManager{
-public:
-    DisplayManager(LoggerPtr setLogger);
-    ~DisplayManager();
+        bool initGLFW();
+        bool initImgui();
 
-    bool init();
-    bool refresh();
-    void shutdown();
+        void drawWindows();
 
-    bool addWindow(WindowPtr window);
-    bool removeWindow(uint8_t ID);
-    bool removeWindow(LAS::Window& window);
-
-private:
-    LoggerPtr      logger;
-
-    std::map<uint8_t, WindowPtr> windows;
-
-    GLFWwindow* window;
-    std::string windowTitle { "Life Application Suite" };
-
-
-    bool initGLFW();
-    bool initImgui();
-
-    void drawWindows();
-
-};
+    };
+}
 

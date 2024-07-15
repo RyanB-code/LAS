@@ -1,6 +1,8 @@
 #include "Display.h"
 
-DisplayManager::DisplayManager(LoggerPtr setLogger)
+using namespace LAS;
+
+DisplayManager::DisplayManager(const LoggerPtr& setLogger)
     :   logger {setLogger}
 {
 
@@ -49,7 +51,7 @@ void DisplayManager::shutdown(){
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 }
-bool DisplayManager::addWindow(WindowPtr window){
+bool DisplayManager::addWindow(const WindowPtr& window){
     if(!window)
         return false;
 
