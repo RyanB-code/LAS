@@ -1,3 +1,5 @@
+#pragma once
+
 #include <LAS/Logging.h>
 #include <LAS/Window.h>
 
