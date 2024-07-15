@@ -80,7 +80,7 @@ void LogWindow::draw() {
     if(ImGui::Begin(title.c_str(), &shown)){
         ImVec2 windowSize {ImGui::GetWindowSize()};
 
-        static bool autoScroll {true};
+        static bool autoScroll      {true};
 
         ImGui::BeginChild("Options", ImVec2(windowSize.x-20, 85), ImGuiChildFlags_Border);
         ImGui::Checkbox("Show Time",            &logSettings->showTime); 
@@ -93,10 +93,13 @@ void LogWindow::draw() {
         ImGui::SameLine();
         ImGui::Checkbox("Auto Scroll",          &autoScroll);
 
-        static int tagSizeBuffer    {logSettings->textBoxWidth_tag};
-        static int msgSizeBuffer    {logSettings->textBoxWidth_msg};
-        ImGui::InputInt("Tag Text Box Size", &tagSizeBuffer);
-        ImGui::InputInt("Message Text Box Size", &msgSizeBuffer);
+        int  tagSizeBuffer    {logSettings->textBoxWidth_tag};
+        int  msgSizeBuffer    {logSettings->textBoxWidth_msg};
+
+        if(ImGui::InputInt("Tag Text Box Size", &tagSizeBuffer))
+            logSettings->textBoxWidth_tag = tagSizeBuffer;
+        if(ImGui::InputInt("Message Text Box Size", &msgSizeBuffer))
+            logSettings->textBoxWidth_msg = msgSizeBuffer;
         ImGui::EndChild();
 
         ImGui::SeparatorText("Logs");
