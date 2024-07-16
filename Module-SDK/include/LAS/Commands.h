@@ -23,8 +23,9 @@ using CommandPtr = std::unique_ptr<Command>;
 using CommandList = std::vector<CommandPtr>;
 
 namespace LAS{
-    std::pair<int, std::ostringstream> returnInvalidArgument(const std::string& arg);
+    std::pair<int, std::ostringstream> returnPair(int, const std::string&);
     std::pair<int, std::ostringstream> returnNormal();
+    std::pair<int, std::ostringstream> returnInvalidArgument(const std::string& arg);
     std::pair<int, std::ostringstream> returnErrorWithMessage(const std::string& msg);
 
     bool stringValueTrue    (std::string s);
