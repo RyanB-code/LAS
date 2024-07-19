@@ -100,8 +100,7 @@ Shell::Shell(std::shared_ptr<ConsoleWindow> setWindow)
     : window{setWindow}
 {
     if(!window){
-        std::shared_ptr<ConsoleWindow> windowBuf {new ConsoleWindow{commandQueue}};
-        window = windowBuf;
+        window = std::shared_ptr<ConsoleWindow>{new ConsoleWindow{commandQueue}};
     }
 }
 Shell::~Shell(){
@@ -177,6 +176,12 @@ bool Shell::handleCommandQueue(){
                 output->output(commands.at(command)->execute(arguments).second);
             }
         }
+        else{
+            for(const auto& output : outputs){
+                std::ostringstream msg {"Command \"" + arguments[0] + "\" not found\n"};
+                output->output(msg);
+            }
+        }
     }
 
     return true;   
@@ -213,6 +218,9 @@ bool Shell::readRCFile(const std::string& path){
     }
 
     return false;
+}
+const std::unordered_map<std::string, CommandPtr>& Shell::viewCommandInfo(){
+    return commands;
 }
 std::shared_ptr<ConsoleWindow> Shell::getWindow(){
     return window;
