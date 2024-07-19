@@ -23,11 +23,67 @@ std::pair<int, std::ostringstream> TestCommand::execute(const StringVector& args
     return returnVal;    
 }
 
+Manual::Manual(std::weak_ptr<Shell> setShell)
+    :   Command {"man", "Show manual pages\n"},
+        shell   {setShell}
+{
+
+}
+Manual::~Manual(){
+
+}
+std::pair<int, std::ostringstream> Manual::execute(const StringVector&){
+    std::shared_ptr<Shell> tempShell { shell.lock() };
+
+    if(!tempShell)
+        return returnPair(-1, "\tCould not access necessary shell\n");
+
+    std::ostringstream os;
+    
+    // Buffer the output of the description accordingly to add padding to newlines
+    const std::string padding {"                                "};     // 32 spaces is the size of 2 tabs and 20 chars
+
+    os << "LAS Manual Page\n";
+
+    for(const auto& command : tempShell->viewCommandInfo()){
+        std::string description {command.second->getDescription()};
+        size_t charNum { 0 };
+
+        while(charNum < description.size()){
+            char& c {description[charNum]};
+            if(c == '\n'){
+                description.insert(charNum+1, padding);
+                charNum += padding.size();
+            }
+            ++charNum;
+        }
+
+        /*
+        for(char& c : description){
+            if(c == '\n' && charNum < description.size()){
+                description.insert(charNum, padding);
+                charNum += padding.size();
+            }
+            ++charNum;
+
+        }
+        */
+
+        // Display output
+        os << std::format("\t{:20}\t", command.second->getKey());
+        os << std::format("\t{}\n", description);
+    }
+
+    return returnPair(0, os.str());
+}
 // MARK: Set
 Set::Set(   const std::weak_ptr<DisplayManager> setDM,
             const std::weak_ptr<ModuleManager>  setMM,
             const std::weak_ptr<Logger>         setLogger) 
-        :   Command {"set", "Description Here"},
+        :   Command {"set",     "<setting> <value>\n"
+                                "--log-tag-text-box-size <int>\tSets the text box size for log tags\n"
+                                "--log-msg-text-box-size <int>\tSets the text box size for log messages\n"
+                                "--show-log-time <bool>   \t\tToggle showing of log times\n"},
             displayManager  {setDM},
             moduleManager   {setMM},
             logger          {setLogger}
@@ -43,7 +99,7 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
     std::shared_ptr<Logger>         temp_logger         { logger.lock()};
 
     if(!temp_displayManager|| !temp_moduleManager || !temp_logger)
-        return std::pair<int, std::ostringstream>(-1, "\tCould not access necessary items\n");
+        return returnPair(-1, "\tCould not access necessary items\n");
     
     std::pair<int, std::ostringstream> returnBuf;
 

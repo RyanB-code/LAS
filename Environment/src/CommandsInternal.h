@@ -4,6 +4,7 @@
 #include "ModuleManager.h"
 #include "Module.h"
 #include "LoggingInternal.h"
+#include "Shell.h"
 
 #include <LAS/Commands.h>
 #include <LAS/Logging.h>
@@ -20,18 +21,28 @@ namespace LAS::Commands{
         std::pair<int, std::ostringstream> execute(const StringVector&) override;
     };
 
+    class Manual : public Command {
+    public:
+        Manual(std::weak_ptr<Shell>);
+        ~Manual();
+
+        std::pair<int, std::ostringstream> execute(const StringVector&) override;
+    private:
+        const std::weak_ptr<Shell> shell;
+    };
+
     class Set : public Command {
     public:
-        Set(    const std::weak_ptr<DisplayManager>,
-                const std::weak_ptr<ModuleManager>,
-                const std::weak_ptr<Logger>  
+        Set(    std::weak_ptr<DisplayManager>,
+                std::weak_ptr<ModuleManager>,
+                std::weak_ptr<Logger>  
         );
         ~Set();
 
         std::pair<int, std::ostringstream> execute(const StringVector&) override;
     private:
-        std::weak_ptr<DisplayManager> displayManager;
-        std::weak_ptr<ModuleManager>  moduleManager;
-        std::weak_ptr<Logger>         logger;
+        const std::weak_ptr<DisplayManager> displayManager;
+        const std::weak_ptr<ModuleManager>  moduleManager;
+        const std::weak_ptr<Logger>         logger;
     };
 }
