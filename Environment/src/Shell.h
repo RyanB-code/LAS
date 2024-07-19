@@ -70,6 +70,8 @@ namespace LAS{
 
         bool readRCFile         (const std::string& path);
 
+        const std::unordered_map<std::string, CommandPtr>& viewCommandInfo();
+
         std::shared_ptr<ConsoleWindow> getWindow();
 
     private:
