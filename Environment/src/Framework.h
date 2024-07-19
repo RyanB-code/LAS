@@ -52,7 +52,7 @@ namespace LAS{
         LoggerPtr           logger;
         ModuleManagerPtr    moduleManager;
         DisplayManagerPtr   displayManager;
-        ShellPtr            lasShell;
+        ShellPtr            shell;
 
         LAS::FilePaths      filePaths;
         bool                setupComplete{false};

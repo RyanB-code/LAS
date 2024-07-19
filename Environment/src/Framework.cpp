@@ -5,13 +5,13 @@ using namespace LAS;
 Framework::Framework (  LoggerPtr           setLogger,
                         ModuleManagerPtr    setModuleManager,
                         DisplayManagerPtr   setDisplayManager,
-                        ShellPtr            setLasShell
+                        ShellPtr            setShell
                     )
                     :
                         logger          {setLogger},
                         moduleManager   {setModuleManager},
                         displayManager  {setDisplayManager},
-                        lasShell        {setLasShell}
+                        shell           {setShell}
 {
 
 }
@@ -25,7 +25,7 @@ bool Framework::setup(){
     if(!LAS::FrameworkSetup::setupFilesystem(filePaths))
         return false;
 
-    if(!lasShell){
+    if(!shell){
         if(!setupShell())
             return false;
     }
@@ -52,8 +52,8 @@ bool Framework::setup(){
         return false;
 
     // Handle commands
-    if(lasShell)
-        lasShell->handleCommandQueue();
+    if(shell)
+        shell->handleCommandQueue();
     else{
         logger->log("There is no target shell for LAS", Tags{"ERROR", "SHELL"});
         return false;
@@ -68,7 +68,7 @@ bool Framework::setup(){
 
     setupCommands();
 
-    if(!lasShell->readRCFile(filePaths.settingsPath))
+    if(!shell->readRCFile(filePaths.settingsPath))
         return false;
 
     // After all is done, mark as complete
@@ -83,15 +83,15 @@ void Framework::run(){
     
     // If refresh() returns true, that means an glfwShouldWindowClose() was called
     while(!displayManager->refresh()){
-        lasShell->handleCommandQueue();
+        shell->handleCommandQueue();
     }
 
     return;
 }
 bool Framework::setupShell(){
     using namespace LAS;
-    ShellPtr shell { new Shell{} };
-    lasShell = shell;
+    ShellPtr lasShell { new Shell{} };
+    shell = lasShell;
     return true;
 }
 // MARK: PRIVATE FUNCTIONS
@@ -101,14 +101,25 @@ void Framework::setupCommands(){
     // Instantiate commands
     std::unique_ptr<TestCommand>    testCommand     {std::make_unique<TestCommand>()};
     std::unique_ptr<Set>            set             {std::make_unique<Set>(displayManager, moduleManager, logger)};
+    std::unique_ptr<Manual>         manual          {std::make_unique<Manual>(shell)};
+
 
 
     // Add to known commands
-    if(!lasShell->addCommand(std::move(testCommand))){
-        std::cerr << "Command [" + testCommand->getKey() << "] could not be added.\n";
+    if(!shell->addCommand(std::move(testCommand))){
+        std::ostringstream msg;
+        msg << "Command [" << testCommand->getKey() << "] could not be added.\n";
+        logger->log(msg.str(), Tags{"Shell"});
     }
-    if(!lasShell->addCommand(std::move(set))){
-        std::cerr << "Command [" + set->getKey() << "] could not be added.\n";
+    if(!shell->addCommand(std::move(set))){
+        std::ostringstream msg;
+        msg << "Command [" << set->getKey() << "] could not be added.\n";
+        logger->log(msg.str(), Tags{"Shell"});
+    }
+    if(!shell->addCommand(std::move(manual))){
+        std::ostringstream msg;
+        msg << "Command [" << manual->getKey() << "] could not be added.\n";
+        logger->log(msg.str(), Tags{"Shell"});
     }
 }
 bool Framework::setupLogger(){
@@ -163,12 +174,11 @@ bool Framework::setupInternalWindows(){
 
 
     // Setup console window
-    
-    if(!displayManager->addWindow(lasShell->getWindow())){
+    if(!displayManager->addWindow(shell->getWindow())){
         logger->log("Console could not be added to window manager", Tags{"ERROR", "Display Manager"});
         return false;
     }
-    if(!lasShell->addOutput(lasShell->getWindow())){
+    if(!shell->addOutput(shell->getWindow())){
         logger->log("Console Window's Shell Output could not be added to Shell Outputs", Tags{"ERROR", "Shell"});
         return false;
     }
@@ -231,7 +241,7 @@ StringVector Framework::loadModuleCommands(const std::string& moduleName) {
         return commandsNotLoaded;
 
     for(auto& command : module.getCommands()){
-        if(!lasShell->addCommand(std::move(command))){
+        if(!shell->addCommand(std::move(command))){
             commandsNotLoaded.push_back(command->getKey());
         }
     }
