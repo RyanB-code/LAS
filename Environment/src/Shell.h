@@ -68,17 +68,29 @@ namespace LAS{
         void addToQueue         (const std::string& entry);
         bool handleCommandQueue ();
 
-        bool readRCFile         (const std::string& path);
+        bool readRCFile         (const std::string& path);      // Creates if it does not exist
 
         const std::unordered_map<std::string, CommandPtr>& viewCommandInfo();
 
-        std::shared_ptr<ConsoleWindow> getWindow();
+        std::shared_ptr<ConsoleWindow>  getWindow()                 const;
+        std::string                     getRCPath()                 const;
+        std::string                     getCommandHistoryPath()     const;
+
+        bool               setRCPath                (const std::string& path);
+        bool               setCommandHistoryPath    (const std::string& path);
 
     private:
         std::unordered_map<std::string, CommandPtr> commands;
         std::queue      <std::string>               commandQueue;
         std::vector     <ShellOutputPtr>            outputs;
         std::shared_ptr <ConsoleWindow>             window;
+
+        std::string rcPath;
+        std::string commandHistoryPath;
     };
+
+    namespace ShellSetup{
+        bool defaultInitializeRCFile(const std::string& path);
+    }
 
 }
