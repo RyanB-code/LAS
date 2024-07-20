@@ -189,11 +189,11 @@ bool Shell::handleCommandQueue(){
 bool Shell::readRCFile(const std::string& path){
 
      if(std::filesystem::exists(path)){
-        std::ifstream settingsFile {path}; 
+        std::ifstream rcFile {path}; 
         std::string line;
 
         // Read line by line
-        while (std::getline(settingsFile, line)){
+        while (std::getline(rcFile, line)){
             std::stringstream inputStream{};
             inputStream << line;
             std::string buffer {inputStream.str()};
@@ -205,16 +205,14 @@ bool Shell::readRCFile(const std::string& path){
         return true;
     }
     else{
-        std::ofstream newSettings {path, std::ios::trunc};
+        std::ofstream newRCFile {path, std::ios::trunc};
 
         if(!std::filesystem::exists(path)){
             std::cerr << "Could not create new configuration file at [" << path << "]\n";
             return false;
         }
-
-        newSettings << "# Life Application Suite Configuration File\n# Any commands entered here will be executed upon each startup" << std::endl;
-        newSettings.close();
-        return true;
+        rcPath = path;
+        return ShellSetup::defaultInitializeRCFile(rcPath);
     }
 
     return false;
@@ -222,6 +220,59 @@ bool Shell::readRCFile(const std::string& path){
 const std::unordered_map<std::string, CommandPtr>& Shell::viewCommandInfo(){
     return commands;
 }
-std::shared_ptr<ConsoleWindow> Shell::getWindow(){
+std::shared_ptr<ConsoleWindow> Shell::getWindow() const{
     return window;
+}
+std::string Shell::getRCPath() const{
+    return rcPath;
+}
+std::string Shell::getCommandHistoryPath() const{
+    return commandHistoryPath;
+}
+bool Shell::setRCPath (const std::string& path){
+    if(std::filesystem::exists(path)){
+        rcPath = path;
+        return true;
+    }
+
+    std::ofstream newRCFile {path, std::ios::trunc};
+
+    if(!std::filesystem::exists(path)){
+        std::cerr << "Could not create new configuration file at [" << path << "]\n";
+        return false;
+    }
+
+    rcPath = path;
+    return ShellSetup::defaultInitializeRCFile(rcPath);
+}
+bool Shell::setCommandHistoryPath (const std::string& path){
+    if(std::filesystem::exists(path)){
+        commandHistoryPath = path;
+        return true;
+    }
+
+    std::ofstream newRCFile {path, std::ios::trunc};
+
+    if(!std::filesystem::exists(path)){
+        std::cerr << "Could not create new command history file at [" << path << "]\n";
+        return false;
+    }
+
+    commandHistoryPath = path;
+    return true;
+}
+
+// MARK: Shell Setup
+namespace LAS::ShellSetup{
+    bool defaultInitializeRCFile(const std::string& path){
+        if(!std::filesystem::exists(path))
+            return false;
+        
+        std::ofstream rcFile {path, std::ios::trunc};
+
+        rcFile << "# Life Application Suite Configuration File\n# Any commands entered here will be executed upon each startup" << std::endl;
+        rcFile.close();
+
+        return true;
+    }
 }
