@@ -19,20 +19,23 @@
 #include <exception>
 
 namespace LAS{
-    struct FilePaths{
-        std::string settingsPath;
 
+    struct FilePaths{
         std::string parentDir;
+        std::string dotLASDir;
+
         std::string logDir;
         std::string moduleDir;
+
+        std::string rcPath;
+        std::string commandHistoryPath;
     };
-
+    
     namespace FrameworkSetup{
-        std::string     createLogFile   (const std::string& parentDir);
-        std::string     getSettingsPath ();
-        std::string     getExeParentDir ();
-
-        bool            setupFilesystem (FilePaths& filePaths);
+        std::string     createLogFile(const std::string& parentDir);
+        std::string     getRCPath();
+        std::string     getExeParentDir();
+        bool            setupFilesystem(FilePaths& filePaths);
     }
 
     class Framework final{
@@ -54,16 +57,15 @@ namespace LAS{
         DisplayManagerPtr   displayManager;
         ShellPtr            shell;
 
-        LAS::FilePaths      filePaths;
         bool                setupComplete{false};
 
-
-        bool setupShell();
-        void setupCommands();                                           // This is where to instantiate commands
-        bool setupLogger();
-        bool setupModuleManager();
+        bool setupShell             (const std::string& rcPath, const std::string& commandHistoryPath);
+        bool setupLogger            (const std::string& logDir);
+        bool setupModuleManager     (const std::string& moduleDir);
         bool setupDisplay();
         bool setupInternalWindows();
+        void setupCommands();                                           // This is where to instantiate commands
+
 
 
         bool            loadModules             (const std::string& modulesDirectory);
