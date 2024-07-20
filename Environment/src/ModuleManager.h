@@ -35,13 +35,18 @@ namespace LAS{
 
         WindowList          getAllWindows()                     const;
 
+        std::string         getModuleDirectory() const;
+        bool                setModuleDirectory(const std::string& directory);
+
 
         [[nodiscard]]
-        StringVector loadModules(std::string directory, ImGuiContext& context);
+        StringVector loadModules(ImGuiContext& context, std::string directory="");
 
     private:
         std::unordered_map<std::string, ModulePtr> modules{};
         const LoggerPtr& logger;
+
+        std::string moduleDirectory;
     };
 
     namespace Modules{
