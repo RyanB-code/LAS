@@ -41,12 +41,15 @@ ModulePtr ModuleManager::getModule(std::string title) const{
 bool ModuleManager::containsModule(std::string title) const{
     return modules.contains(title);
 }
-StringVector ModuleManager::loadModules(std::string directory, ImGuiContext& context){
+StringVector ModuleManager::loadModules(ImGuiContext& context, std::string directory){
+    if(moduleDirectory.empty())
+        directory = moduleDirectory;
+
     std::string     moduleNameSuffix    {"LASModule_"};         // Every module name must have this key present to be added
     StringVector    failedToLoad        {};                     // Initialize empty return variable
 
     directory = LAS::TextManip::ensureSlash(directory);              // Ensure slash at the end
-    const std::filesystem::path qualifiedDirectory{directory};          // Path with slashes
+    const std::filesystem::path qualifiedDirectory{directory};       // Path with slashes
 
 
     // Throw exception if the directory doesn't exist
@@ -102,6 +105,19 @@ WindowList ModuleManager::getAllWindows()    const{
     }
 
     return list;
+}
+std::string ModuleManager::getModuleDirectory() const{
+    return moduleDirectory;
+}
+bool ModuleManager::setModuleDirectory(const std::string& directory){
+    std::string qualifiedDirectory = LAS::TextManip::ensureSlash(directory);              // Ensure slash at the end
+
+    if(!std::filesystem::exists(qualifiedDirectory))
+        return false;
+    
+    moduleDirectory = qualifiedDirectory;
+
+    return std::filesystem::exists(qualifiedDirectory);
 }
 
 // MARK: LASCore Namespace 
