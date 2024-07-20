@@ -22,16 +22,18 @@ Framework::~Framework(){
 // MARK: PUBLIC FUNCTIONS
 bool Framework::setup(){
 
+    FilePaths filePaths;
+
     if(!LAS::FrameworkSetup::setupFilesystem(filePaths))
         return false;
 
     if(!shell){
-        if(!setupShell())
+        if(!setupShell(filePaths.rcPath, filePaths.commandHistoryPath))
             return false;
     }
 
     if(!logger){
-        if(!setupLogger())
+        if(!setupLogger(filePaths.logDir))
             return false;
     }
 
@@ -40,7 +42,7 @@ bool Framework::setup(){
     // --------------------------------------------------
 
     if(!moduleManager){
-        if(!setupModuleManager())
+        if(!setupModuleManager(filePaths.moduleDir))
             return false;
     }
     
@@ -68,7 +70,7 @@ bool Framework::setup(){
 
     setupCommands();
 
-    if(!shell->readRCFile(filePaths.settingsPath))
+    if(!shell->readRCFile(filePaths.rcPath))
         return false;
 
     // After all is done, mark as complete
@@ -88,13 +90,25 @@ void Framework::run(){
 
     return;
 }
-bool Framework::setupShell(){
+
+// MARK: PRIVATE FUNCTIONS
+
+bool Framework::setupShell(const std::string& rcPath, const std::string& commandHistoryPath){
     using namespace LAS;
     ShellPtr lasShell { new Shell{} };
     shell = lasShell;
+
+    if(!shell->setRCPath(rcPath)){
+        std::cerr << "Failed to set shell RC file\n";
+        return false;
+    }
+    if(!shell->setCommandHistoryPath(commandHistoryPath)){
+        std::cerr << "Failed to set shell commadn history file\n";
+        return false;
+    }
+
     return true;
 }
-// MARK: PRIVATE FUNCTIONS
 void Framework::setupCommands(){
     using namespace LAS::Commands;
 
@@ -122,12 +136,12 @@ void Framework::setupCommands(){
         logger->log(msg.str(), Tags{"Shell"});
     }
 }
-bool Framework::setupLogger(){
+bool Framework::setupLogger(const std::string& logDir){
     LogSettingsPtr  logSettings {new LogSettings{}};                            // Uses default settings values
     logger = std::make_shared<Logger>(Logger{logSettings});                     // Sets local logger member variable
 
     LogToFile logToFile{};
-    if(!logToFile.setPath(LAS::FrameworkSetup::createLogFile(filePaths.logDir))){
+    if(!logToFile.setPath(LAS::FrameworkSetup::createLogFile(logDir))){
          std::cerr << "Could not create a log file for the current instance\n";
          return false;
     }
@@ -141,9 +155,16 @@ bool Framework::setupLogger(){
     logger->log("Logger setup successful", Tags{"OK"});
     return true;
 }
-bool Framework::setupModuleManager(){
+bool Framework::setupModuleManager(const std::string& moduleDir){
     moduleManager = std::make_shared<ModuleManager>( ModuleManager{logger});
     logger->log("Module Manager setup successful", Tags{"OK"});
+
+
+    if(!moduleManager->setModuleDirectory(moduleDir)){
+        logger->log("Failed to set module directory", Tags{"Module Manager"});
+        return false;
+    }
+
     return true;
 }
 bool Framework::setupDisplay(){
@@ -195,7 +216,7 @@ bool Framework::loadModules(const std::string& modulesDirectory) {
     }
 
     try{
-        StringVector modulesThatFailedToLoad {moduleManager->loadModules(modulesDirectory, *ImGui::GetCurrentContext())}; 
+        StringVector modulesThatFailedToLoad {moduleManager->loadModules(*ImGui::GetCurrentContext(), modulesDirectory)}; 
 
         if(modulesThatFailedToLoad.size() > 0){
              // This is just for logging what failed to load
@@ -279,17 +300,17 @@ namespace LAS::FrameworkSetup{
         else
             return fileName;
     }
-    std::string getSettingsPath(){
+    std::string getRCPath(){
             // If linux, check the home directory
         #ifdef __linux__
 
             #ifdef DEBUG
                 std::string directory {"/mnt/NAS/1-Project-Related/Project-Source-Directories/LAS/Environment/bin/"};
-                return directory + ".las-rc";
+                return directory + ".las/.las-rc";
             #endif
             #ifndef DEBUG
                 std::string home {getenv("HOME")};
-                return home + "/.las-rc";
+                return home + "/.las/.las-rc";
             #endif
         #endif
 
@@ -315,21 +336,27 @@ namespace LAS::FrameworkSetup{
         }
         return parentDir;
     }
-    bool setupFilesystem(FilePaths& filePaths){
+    bool setupFilesystem(FilePaths& filePaths) {
         // Ensure filesystem is in place
-        filePaths.parentDir     = LAS::FrameworkSetup::getExeParentDir();
-        filePaths.logDir        = filePaths.parentDir + "logs/";
-        filePaths.moduleDir     = filePaths.parentDir + "modules/";
+        filePaths.parentDir       = LAS::FrameworkSetup::getExeParentDir();
+
+        filePaths.dotLASDir             = filePaths.parentDir + ".las/";
+        filePaths.moduleDir             = filePaths.parentDir + "modules/";
+
+        filePaths.commandHistoryPath    = filePaths.dotLASDir + ".las-history";
+        filePaths.logDir                = filePaths.dotLASDir + "logs/";
+
 
         // Get the correct directory for the settings file
         try{
-            filePaths.settingsPath = LAS::FrameworkSetup::getSettingsPath();
+            filePaths.rcPath = LAS::FrameworkSetup::getRCPath();
         }
         catch(std::exception& e){
             std::cerr << e.what() << "\n";
             return false;
         }
 
+        // Check paths are good
         if(!LAS::ensureDirectory(filePaths.logDir)){
             std::cerr << "Error finding or creating [" << filePaths.logDir << "]";
             return false;
@@ -338,8 +365,11 @@ namespace LAS::FrameworkSetup{
             std::cerr << "Error finding or creating [" << filePaths.moduleDir << "]";
             return false;
         }
+        if(!LAS::ensureDirectory(filePaths.dotLASDir)){
+            std::cerr << "Error finding or creating [" << filePaths.dotLASDir << "]";
+            return false;
+        }
 
         return true;
     }
-
 }
