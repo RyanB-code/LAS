@@ -76,8 +76,8 @@ namespace LAS{
         std::string                     getRCPath()                 const;
         std::string                     getCommandHistoryPath()     const;
 
-        bool               setRCPath                (const std::string& path);
-        bool               setCommandHistoryPath    (const std::string& path);
+        bool                setRCPath               (const std::string& path);
+        bool                setCommandHistoryPath   (const std::string& path);
 
     private:
         std::unordered_map<std::string, CommandPtr> commands;
@@ -89,8 +89,10 @@ namespace LAS{
         std::string commandHistoryPath;
     };
 
-    namespace ShellSetup{
-        bool defaultInitializeRCFile(const std::string& path);
+    namespace ShellHelper{
+        bool        defaultInitializeRCFile (const std::string& path);
+        bool        writeToCommandHistory   (const std::string& path, const std::string& text);
+        uint16_t    linesInFile             (const std::string& path);
     }
 
 }
