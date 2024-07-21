@@ -62,7 +62,48 @@ void ConsoleWindow::draw(){
     ImGui::EndChild();
     ImGui::Separator();
 
-    static char inputBuf [256];
+    static char inputBuf[256];
+
+    // Scroll command history
+    static size_t   offsetFromEnd   { 0 };
+    static bool     fetchHistory    {false};     
+    if(ImGui::IsWindowFocused()){
+        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow))){
+            if(offsetFromEnd < 256)
+                ++offsetFromEnd;    
+            fetchHistory = true;
+        }
+
+        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow))){
+            if(offsetFromEnd > 0)
+                --offsetFromEnd;
+            fetchHistory = true;
+        }
+
+        if(fetchHistory){
+            size_t sizeOfCommandHistory { commandHistory.size() };
+
+            if(offsetFromEnd < 0)
+                offsetFromEnd = 0;
+            else if(offsetFromEnd > sizeOfCommandHistory)
+                offsetFromEnd = sizeOfCommandHistory;
+
+            if(offsetFromEnd > 0 && offsetFromEnd <= sizeOfCommandHistory){
+                ImGui::ClearActiveID();                             // Clears the inputText field to accecpt input
+                memset(inputBuf, 0, 256*(sizeof inputBuf[0]) );     // Clears the input buffer
+
+                size_t commandIndex {sizeOfCommandHistory - offsetFromEnd};
+                
+                std::string stringCommandBuf {commandHistory[commandIndex]};  
+                stringCommandBuf.copy(inputBuf, stringCommandBuf.length());     // Set input buffer
+            }
+            ImGui::SetKeyboardFocusHere(-1);
+            fetchHistory = false;
+        }
+    }
+
+
+    // Handle input box
     bool reclaimFocus {false};
     ImGuiInputTextFlags inputBoxflags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_EscapeClearsAll;
     if (ImGui::InputText("Input", inputBuf, IM_ARRAYSIZE(inputBuf), inputBoxflags)){
@@ -73,15 +114,17 @@ void ConsoleWindow::draw(){
             queue.push(strBuf);                             // Push to command queue
 
             // Add to textHistory
-            textHistory << "$ " << strBuf << "\n";
+            textHistory << "$ " << strBuf << '\n';
         }
         if(strBuf.empty())
-            textHistory<<("\n");                   // Hit enter to indent if they user wants without sending to command handler
+            textHistory<<('\n');                   // Hit enter to indent if they user wants without sending to command handler
 
         scrollToBottom = true;
         memset(inputBuf, 0, 256*(sizeof inputBuf[0]) );
         reclaimFocus = true;
     }
+
+    ImGui::SetItemDefaultFocus();
     if(reclaimFocus)
         ImGui::SetKeyboardFocusHere(-1); // Auto focus previous widget
 
@@ -161,6 +204,7 @@ bool Shell::handleCommandQueue(){
         std::stringstream inputStream{};
         
         inputStream << commandQueue.front();            // Read the string
+
         std::string buffer;
         while (inputStream >> std::quoted(buffer)) {    // Separate by quotes or spaces
             arguments.push_back(buffer);                // Add the quoted token or separated by space token
@@ -168,6 +212,10 @@ bool Shell::handleCommandQueue(){
 
         // Initial lookup of first arg only to see if it is a valid command
         if(commands.contains(arguments[0])){
+
+            // Write to command history file
+            LAS::ShellHelper::writeToCommandHistory(commandHistoryPath, inputStream.str());
+
             std::string command {arguments[0]};
             arguments.erase(arguments.begin());  // Removes the first command key (from arg list)
 
@@ -212,7 +260,7 @@ bool Shell::readRCFile(const std::string& path){
             return false;
         }
         rcPath = path;
-        return ShellSetup::defaultInitializeRCFile(rcPath);
+        return ShellHelper::defaultInitializeRCFile(rcPath);
     }
 
     return false;
@@ -243,7 +291,7 @@ bool Shell::setRCPath (const std::string& path){
     }
 
     rcPath = path;
-    return ShellSetup::defaultInitializeRCFile(rcPath);
+    return ShellHelper::defaultInitializeRCFile(rcPath);
 }
 bool Shell::setCommandHistoryPath (const std::string& path){
     if(std::filesystem::exists(path)){
@@ -263,7 +311,7 @@ bool Shell::setCommandHistoryPath (const std::string& path){
 }
 
 // MARK: Shell Setup
-namespace LAS::ShellSetup{
+namespace LAS::ShellHelper{
     bool defaultInitializeRCFile(const std::string& path){
         if(!std::filesystem::exists(path))
             return false;
@@ -275,4 +323,35 @@ namespace LAS::ShellSetup{
 
         return true;
     }
+    bool writeToCommandHistory  (const std::string& path, const std::string& text){
+        if(!std::filesystem::exists(path))
+            return false;
+
+        std::ofstream file (path, std::ios_base::app);
+        
+        if(text.back() != '\n')
+            file << text << '\n';
+        else
+            file << text;
+        
+        return true;
+    }
+    uint16_t linesInFile (const std::string& path){
+        if(!std::filesystem::exists(path))
+            return 0;
+
+        std::ifstream file (path, std::ios_base::app);
+        uint16_t linesInFile { 0 };
+
+        std::string lastLineRead;
+        if(file.is_open()) {
+            while (getline(file, lastLineRead)) {
+                ++linesInFile;
+            }
+        }
+
+        file.close();
+        return linesInFile;
+    }
+
 }
