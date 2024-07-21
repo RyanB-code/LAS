@@ -83,7 +83,8 @@ Set::Set(   const std::weak_ptr<DisplayManager> setDM,
         :   Command {"set",     "<setting> <value>\n"
                                 "--log-tag-text-box-size <int>\tSets the text box size for log tags\n"
                                 "--log-msg-text-box-size <int>\tSets the text box size for log messages\n"
-                                "--show-log-time <bool>   \t\tToggle showing of log times\n"},
+                                "--show-log-time <bool>   \t\tToggle showing of log times\n"
+                                "--module-directory [optional] <directory>\tChange directory where modules are loaded from\n\tOptional: -c creates directory specified"},
             displayManager  {setDM},
             moduleManager   {setMM},
             logger          {setLogger}
@@ -200,6 +201,37 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
         }
         else
             return returnInvalidArgument(args[1]);
+    }
+    else if(args[0] == "--module-directory"){
+        bool setDirectory {false};
+
+        // Option to create directory
+        if(args.size() >= 3){
+            if(args[1] == "-c"){
+                if(std::filesystem::exists(args[2]))
+                    setDirectory = true;
+                else{
+                    LAS::TextManip::ensureSlash(args[2]);
+                    if(std::filesystem::create_directory(args[2]))
+                        setDirectory = true;
+                }
+            }
+            else
+                return returnInvalidArgument(args[2]);
+        }
+        else if(args.size() == 2){
+            setDirectory = true;
+        }
+
+
+        if(setDirectory){
+            if(temp_moduleManager->setModuleDirectory(args[1]))
+                return returnNormal();
+            else
+                return returnErrorWithMessage("Failed to set module directory to \"" + args[1] + "\"\n");
+        }
+
+        return returnErrorWithMessage("Failed to set module directory\n");
     }
     else{
         return returnInvalidArgument(args[0]);
