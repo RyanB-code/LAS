@@ -116,6 +116,7 @@ void Framework::setupCommands(){
     std::unique_ptr<TestCommand>    testCommand     {std::make_unique<TestCommand>()};
     std::unique_ptr<Set>            set             {std::make_unique<Set>(displayManager, moduleManager, logger)};
     std::unique_ptr<Manual>         manual          {std::make_unique<Manual>(shell)};
+    std::unique_ptr<Print>          print           {std::make_unique<Print>(displayManager, moduleManager, logger)};
 
 
 
@@ -133,6 +134,11 @@ void Framework::setupCommands(){
     if(!shell->addCommand(std::move(manual))){
         std::ostringstream msg;
         msg << "Command [" << manual->getKey() << "] could not be added.\n";
+        logger->log(msg.str(), Tags{"Shell"});
+    }
+    if(!shell->addCommand(std::move(print))){
+        std::ostringstream msg;
+        msg << "Command [" << print->getKey() << "] could not be added.\n";
         logger->log(msg.str(), Tags{"Shell"});
     }
 }

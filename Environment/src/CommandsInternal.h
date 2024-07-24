@@ -45,4 +45,18 @@ namespace LAS::Commands{
         const std::weak_ptr<ModuleManager>  moduleManager;
         const std::weak_ptr<Logger>         logger;
     };
+
+    class Print : public Command {
+    public:
+        Print ( std::weak_ptr<DisplayManager>,
+                std::weak_ptr<ModuleManager>,
+                std::weak_ptr<Logger> 
+            );
+        ~Print();
+        std::pair<int, std::ostringstream> execute(const StringVector&) override;
+    private:
+        const std::weak_ptr<DisplayManager> displayManager;
+        const std::weak_ptr<ModuleManager>  moduleManager;
+        const std::weak_ptr<Logger>         logger;
+    };
 }
