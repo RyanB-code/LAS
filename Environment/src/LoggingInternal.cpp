@@ -141,6 +141,7 @@ void LogWindow::draw() {
             if (logSettings->showLocation)
                 os << printLocation(log.getLocation());
 
+            
             ImGui::Text(os.str().c_str());
         }
 
