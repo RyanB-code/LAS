@@ -120,11 +120,12 @@ void ConsoleWindow::draw(){
             textHistory << "$ " << strBuf << '\n';
         }
         if(strBuf.empty())
-            textHistory<<('\n');                   // Hit enter to indent if they user wants without sending to command handler
+            textHistory<<('\n');                            // Hit enter to indent if they user wants without sending to command handler
 
         scrollToBottom = true;
         memset(inputBuf, 0, 256*(sizeof inputBuf[0]) );
         reclaimFocus = true;
+        offsetFromEnd = 0;                                  // Entering a new command resets the place
     }
 
     ImGui::SetItemDefaultFocus();
