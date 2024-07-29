@@ -48,6 +48,8 @@ namespace LAS{
         void draw() override;
         void output(const std::ostringstream& os) override;
 
+        bool addToCommandHistory (const std::string& text);
+
     private:
         std::queue<std::string>& queue;
 
@@ -93,6 +95,7 @@ namespace LAS{
         bool        defaultInitializeRCFile (const std::string& path);
         bool        writeToCommandHistory   (const std::string& path, const std::string& text);
         uint16_t    linesInFile             (const std::string& path);
+        bool        retrieveLines           (const std::string& path, StringVector& cache, uint16_t cacheNumberOfLines);    // Retrieves the last X number of lines
     }
 
 }

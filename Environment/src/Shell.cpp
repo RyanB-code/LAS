@@ -66,7 +66,8 @@ void ConsoleWindow::draw(){
 
     // Scroll command history
     static size_t   offsetFromEnd   { 0 };
-    static bool     fetchHistory    {false};     
+    static bool     fetchHistory    {false}; 
+    static bool     setCursorFocusToTextBox {false};    
     if(ImGui::IsWindowFocused()){
         if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow))){
             if(offsetFromEnd < 256)
@@ -80,8 +81,10 @@ void ConsoleWindow::draw(){
             fetchHistory = true;
         }
 
+        // Use of arrow key detected
         if(fetchHistory){
             size_t sizeOfCommandHistory { commandHistory.size() };
+            setCursorFocusToTextBox = true;
 
             if(offsetFromEnd < 0)
                 offsetFromEnd = 0;
@@ -135,6 +138,10 @@ void ConsoleWindow::draw(){
 void ConsoleWindow::output(const std::ostringstream& os) {
     textHistory << os.str();
     return;
+}
+bool ConsoleWindow::addToCommandHistory (const std::string& text){
+    commandHistory.push_back(text);
+    return true;
 }
 
 
@@ -213,8 +220,7 @@ bool Shell::handleCommandQueue(){
         // Initial lookup of first arg only to see if it is a valid command
         if(commands.contains(arguments[0])){
 
-            // Write to command history file
-            LAS::ShellHelper::writeToCommandHistory(commandHistoryPath, inputStream.str());
+            LAS::ShellHelper::writeToCommandHistory(commandHistoryPath, inputStream.str()); // Write to command history file
 
             std::string command {arguments[0]};
             arguments.erase(arguments.begin());  // Removes the first command key (from arg list)
@@ -310,7 +316,7 @@ bool Shell::setCommandHistoryPath (const std::string& path){
     return true;
 }
 
-// MARK: Shell Setup
+// MARK: Shell Helper
 namespace LAS::ShellHelper{
     bool defaultInitializeRCFile(const std::string& path){
         if(!std::filesystem::exists(path))
@@ -352,6 +358,34 @@ namespace LAS::ShellHelper{
 
         file.close();
         return linesInFile;
+    }
+    bool retrieveLines (const std::string& path, StringVector& cache, uint16_t cacheNumberOfLines){
+        if(!std::filesystem::exists(path))
+            return false;
+
+        uint16_t totalLines {linesInFile(path)};
+        
+        if(cacheNumberOfLines > totalLines)
+            cacheNumberOfLines = totalLines;
+    
+        uint16_t linesToCache {totalLines - cacheNumberOfLines};
+        
+
+        std::ifstream file (path, std::ios_base::app);
+        uint16_t currentLine {0};
+
+        std::string lastLineRead;
+        if(file.is_open()) {
+            while (getline(file, lastLineRead)) {
+                if(currentLine >= linesToCache && currentLine <= totalLines)
+                    cache.push_back(lastLineRead);
+                ++currentLine;
+                lastLineRead = "";
+            }
+        }
+
+        file.close();
+        return true;
     }
 
 }

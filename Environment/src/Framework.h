@@ -57,7 +57,8 @@ namespace LAS{
         DisplayManagerPtr   displayManager;
         ShellPtr            shell;
 
-        bool                setupComplete{false};
+        bool                setupComplete               {false};
+        uint16_t            cacheLastNumberOfCommands   { 50 };     // How many previous commands will be added to command history upon startup
 
         bool setupShell             (const std::string& rcPath, const std::string& commandHistoryPath);
         bool setupLogger            (const std::string& logDir);

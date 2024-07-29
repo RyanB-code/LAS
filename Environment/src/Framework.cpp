@@ -106,6 +106,13 @@ bool Framework::setupShell(const std::string& rcPath, const std::string& command
         std::cerr << "Failed to set shell commadn history file\n";
         return false;
     }
+    // Add commands to command history
+    StringVector historyCache { };
+    ShellHelper::retrieveLines(shell->getCommandHistoryPath(), historyCache, cacheLastNumberOfCommands);
+
+    for(const auto& s : historyCache){
+        shell->getWindow()->addToCommandHistory(s);
+    }
 
     return true;
 }
@@ -209,6 +216,8 @@ bool Framework::setupInternalWindows(){
         logger->log("Console Window's Shell Output could not be added to Shell Outputs", Tags{"ERROR", "Shell"});
         return false;
     }
+
+
     logger->log("Console setup successful", Tags{"OK"});
 
     return true;
