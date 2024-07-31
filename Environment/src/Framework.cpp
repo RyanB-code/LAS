@@ -53,13 +53,6 @@ bool Framework::setup(){
     if(!setupInternalWindows())
         return false;
 
-    // Handle commands
-    if(shell)
-        shell->handleCommandQueue();
-    else{
-        logger->log("There is no target shell for LAS", Tags{"ERROR", "SHELL"});
-        return false;
-    }
 
     if(!loadModules(filePaths.moduleDir))
         return false;
@@ -72,6 +65,14 @@ bool Framework::setup(){
 
     if(!shell->readRCFile(filePaths.rcPath))
         return false;
+
+    // Handle RC file commands
+    if(shell)
+        shell->handleCommandQueue(false);
+    else{
+        logger->log("There is no target shell for LAS", Tags{"ERROR", "SHELL"});
+        return false;
+    }
 
     // After all is done, mark as complete
     setupComplete = true;
