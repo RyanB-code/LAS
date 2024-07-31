@@ -203,7 +203,7 @@ void Shell::addToQueue(const std::string& entry){
 
     return;
 }
-bool Shell::handleCommandQueue(){
+bool Shell::handleCommandQueue(bool writeToHistory){
     for (/*Nothing*/; !commandQueue.empty(); commandQueue.pop()){
 
         // Buffers
@@ -220,7 +220,8 @@ bool Shell::handleCommandQueue(){
         // Initial lookup of first arg only to see if it is a valid command
         if(commands.contains(arguments[0])){
 
-            LAS::ShellHelper::writeToCommandHistory(commandHistoryPath, inputStream.str()); // Write to command history file
+            if(writeToHistory)
+                LAS::ShellHelper::writeToCommandHistory(commandHistoryPath, inputStream.str()); // Write to command history file
 
             std::string command {arguments[0]};
             arguments.erase(arguments.begin());  // Removes the first command key (from arg list)
