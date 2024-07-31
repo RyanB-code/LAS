@@ -68,7 +68,7 @@ namespace LAS{
         bool removeOutput       (const uint8_t& getID);
 
         void addToQueue         (const std::string& entry);
-        bool handleCommandQueue ();
+        bool handleCommandQueue (bool writeToHistory=true);
 
         bool readRCFile         (const std::string& path);      // Creates if it does not exist
 
