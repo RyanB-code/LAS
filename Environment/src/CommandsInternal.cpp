@@ -73,6 +73,9 @@ Set::Set(   std::weak_ptr<DisplayManager> setDM,
                                 "--log-tag-text-box-size <int>\tSets the text box size for log tags\n"
                                 "--log-msg-text-box-size <int>\tSets the text box size for log messages\n"
                                 "--show-log-time <bool>   \t\tToggle showing of log times\n"
+                                "--show-log-tag  <bool>   \t\tToggle showing of log tags\n"
+                                "--show-log-msg  <bool>   \t\tToggle showing of log messages\n"
+                                "--show-log-location <bool>   \t\tToggle showing of log location\n"
                                 "--module-directory [optional] <directory>\tChange directory where modules are loaded from\n\tOptional: -c creates directory specified"},
             displayManager  {setDM},
             moduleManager   {setMM},
