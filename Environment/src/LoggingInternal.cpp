@@ -81,6 +81,8 @@ void LogWindow::draw() {
         ImVec2 windowSize {ImGui::GetWindowSize()};
 
         static bool autoScroll      {true};
+        static int  tagSizeBuffer   {logSettings->textBoxWidth_tag};
+        static int  msgSizeBuffer   {logSettings->textBoxWidth_msg};
 
         ImGui::BeginChild("Options", ImVec2(windowSize.x-20, 85), ImGuiChildFlags_Border);
         ImGui::Checkbox("Show Time",            &logSettings->showTime); 
@@ -93,22 +95,30 @@ void LogWindow::draw() {
         ImGui::SameLine();
         ImGui::Checkbox("Auto Scroll",          &autoScroll);
 
-        int  tagSizeBuffer    {logSettings->textBoxWidth_tag};
-        int  msgSizeBuffer    {logSettings->textBoxWidth_msg};
 
-        if(ImGui::InputInt("Tag Text Box Size", &tagSizeBuffer))
+        if(ImGui::InputInt("Tag Text Box Size",     &tagSizeBuffer, 1, 5, ImGuiInputTextFlags_EnterReturnsTrue))
             logSettings->textBoxWidth_tag = tagSizeBuffer;
-        if(ImGui::InputInt("Message Text Box Size", &msgSizeBuffer))
+        if(ImGui::InputInt("Message Text Box Size", &msgSizeBuffer, 1, 5, ImGuiInputTextFlags_EnterReturnsTrue))
             logSettings->textBoxWidth_msg = msgSizeBuffer;
         ImGui::EndChild();
 
-        ImGui::SeparatorText("Logs");
-        ImGui::BeginChild("Logs", ImVec2(0,0), ImGuiChildFlags_None, ImGuiWindowFlags_HorizontalScrollbar);
-        
+
+        // Ensure sizes are not too small
         if(tagSizeBuffer >= 5)
             logSettings->textBoxWidth_tag = tagSizeBuffer;
+        else{
+            logSettings->textBoxWidth_tag = 5;
+            tagSizeBuffer = 5;
+        }
         if(msgSizeBuffer >= 20)
             logSettings->textBoxWidth_msg = msgSizeBuffer;
+        else{
+            logSettings->textBoxWidth_msg = 20;
+            msgSizeBuffer = 20;
+        }
+
+        ImGui::SeparatorText("Logs");
+        ImGui::BeginChild("Logs", ImVec2(0,0), ImGuiChildFlags_None, ImGuiWindowFlags_HorizontalScrollbar);
 
         for(const auto& log : logHistory){
             using namespace LAS::TextManip::Logging;
@@ -142,7 +152,7 @@ void LogWindow::draw() {
                 os << printLocation(log.getLocation());
 
             
-            ImGui::Text(os.str().c_str());
+            ImGui::TextUnformatted(os.str().c_str());
         }
 
         if(autoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
