@@ -65,9 +65,9 @@ void ConsoleWindow::draw(){
     static char inputBuf[256];
 
     // Scroll command history
-    static size_t   offsetFromEnd   { 0 };
-    static bool     fetchHistory    {false}; 
-    static bool     setCursorFocusToTextBox {false};    
+    static size_t   offsetFromEnd           { 0 };
+    static bool     fetchHistory            {false}; 
+
     if(ImGui::IsWindowFocused()){
         if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow))){
             if(offsetFromEnd < 256)
@@ -84,7 +84,6 @@ void ConsoleWindow::draw(){
         // Use of arrow key detected
         if(fetchHistory){
             size_t sizeOfCommandHistory { commandHistory.size() };
-            setCursorFocusToTextBox = true;
 
             if(offsetFromEnd < 0)
                 offsetFromEnd = 0;
@@ -369,7 +368,7 @@ namespace LAS::ShellHelper{
         if(cacheNumberOfLines > totalLines)
             cacheNumberOfLines = totalLines;
     
-        uint16_t linesToCache {totalLines - cacheNumberOfLines};
+        uint16_t linesToCache = (uint16_t)totalLines - (uint16_t)cacheNumberOfLines;
         
 
         std::ifstream file (path, std::ios_base::app);
