@@ -82,10 +82,10 @@ namespace LAS{
         bool                setCommandHistoryPath   (const std::string& path);
 
     private:
-        std::unordered_map<std::string, CommandPtr> commands;
-        std::queue      <std::string>               commandQueue;
-        std::vector     <ShellOutputPtr>            outputs;
-        std::shared_ptr <ConsoleWindow>             window;
+        std::unordered_map  <std::string, CommandPtr>   commands;
+        std::queue          <std::string>               commandQueue;
+        std::vector         <ShellOutputPtr>            outputs;
+        std::shared_ptr     <ConsoleWindow>             window;
 
         std::string rcPath;
         std::string commandHistoryPath;
