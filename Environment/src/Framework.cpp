@@ -104,15 +104,20 @@ bool Framework::setupShell(const std::string& rcPath, const std::string& command
         return false;
     }
     if(!shell->setCommandHistoryPath(commandHistoryPath)){
-        std::cerr << "Failed to set shell commadn history file\n";
+        std::cerr << "Failed to set shell command history file\n";
         return false;
     }
     // Add commands to command history
     StringVector historyCache { };
     ShellHelper::retrieveLines(shell->getCommandHistoryPath(), historyCache, cacheLastNumberOfCommands);
+    for(const auto& commandText : historyCache){
+        shell->getWindow()->addToCommandHistory(commandText);
+    }
 
-    for(const auto& s : historyCache){
-        shell->getWindow()->addToCommandHistory(s);
+    // Make las command group
+    if(!shell->addCommandGroup(commandGroupName)){
+        std::cerr << "Failed to create \"" << commandGroupName << "\" command group.\n";
+        return false;
     }
 
     return true;
@@ -126,25 +131,23 @@ void Framework::setupCommands(){
     std::unique_ptr<Manual>         manual          {std::make_unique<Manual>(shell)};
     std::unique_ptr<Print>          print           {std::make_unique<Print>(displayManager, moduleManager, logger)};
 
-
-
     // Add to known commands
-    if(!shell->addCommand(std::move(testCommand))){
+    if(!shell->addCommand(commandGroupName, std::move(testCommand))){
         std::ostringstream msg;
         msg << "Command [" << testCommand->getKey() << "] could not be added.\n";
         logger->log(msg.str(), Tags{"Shell"});
     }
-    if(!shell->addCommand(std::move(set))){
+    if(!shell->addCommand(commandGroupName, std::move(set))){
         std::ostringstream msg;
         msg << "Command [" << set->getKey() << "] could not be added.\n";
         logger->log(msg.str(), Tags{"Shell"});
     }
-    if(!shell->addCommand(std::move(manual))){
+    if(!shell->addCommand(commandGroupName, std::move(manual))){
         std::ostringstream msg;
         msg << "Command [" << manual->getKey() << "] could not be added.\n";
         logger->log(msg.str(), Tags{"Shell"});
     }
-    if(!shell->addCommand(std::move(print))){
+    if(!shell->addCommand(commandGroupName, std::move(print))){
         std::ostringstream msg;
         msg << "Command [" << print->getKey() << "] could not be added.\n";
         logger->log(msg.str(), Tags{"Shell"});
@@ -254,11 +257,13 @@ bool Framework::loadModules(const std::string& modulesDirectory) {
     }
 }
 void Framework::loadAllModuleCommands(){  
-     // Load Commands
-    StringVector commandsNotLoaded;
     StringVector moduleNames {moduleManager->getModuleNames()};
+
     for(auto name : moduleNames){
-        commandsNotLoaded = loadModuleCommands(name);
+        StringVector commandsNotLoaded {};
+        loadModuleCommands(name, commandsNotLoaded); 
+
+        // Report how many commands were not loaded
         if(!commandsNotLoaded.empty()){
             std::ostringstream msg;
             msg << "[" << commandsNotLoaded.size() << "] commands could not be loaded from Module [" << name << "]";
@@ -269,21 +274,23 @@ void Framework::loadAllModuleCommands(){
             logger->log("All commands loaded successfully from module [" + name + "]", Tags {"OK"});
     }
 }
-StringVector Framework::loadModuleCommands(const std::string& moduleName) {
+bool Framework::loadModuleCommands(const std::string& moduleName, StringVector& commandsNotLoaded) {
     Module& module {*moduleManager->getModule(moduleName)};
 
-    StringVector commandsNotLoaded;
+    if(!shell->addCommandGroup(module.getGroupName()))
+        return false;
 
     if(module.getCommands().empty())
-        return commandsNotLoaded;
+        return true;
 
+    // Load the commands
     for(auto& command : module.getCommands()){
-        if(!shell->addCommand(std::move(command))){
+        if(!shell->addCommand(module.getGroupName(), std::move(command))){
             commandsNotLoaded.push_back(command->getKey());
         }
     }
 
-    return commandsNotLoaded;
+    return true;
 }
 void Framework::loadModuleWindows(){
     int couldntLoad {0};

@@ -139,6 +139,11 @@ void ConsoleWindow::output(const std::ostringstream& os) {
     textHistory << os.str();
     return;
 }
+void ConsoleWindow::output(const std::string& msg) {
+    textHistory << msg;
+    return;
+}
+
 bool ConsoleWindow::addToCommandHistory (const std::string& text){
     commandHistory.push_back(text);
     return true;
@@ -156,16 +161,47 @@ Shell::Shell(std::shared_ptr<ConsoleWindow> setWindow)
 Shell::~Shell(){
 
 }
-bool Shell::addCommand(CommandPtr command){
-    if(commands.contains(command->getKey())){
+bool Shell::addCommandGroup(const std::string& name){
+    if(commands.contains(name))
         return false;
-    }
-    else{
-        commands.try_emplace(command->getKey(), std::move(command));
+  
+    return commands.try_emplace(name, std::unordered_map<std::string, CommandPtr>{}).second;
+}
+bool Shell::removeCommandGroup (const std::string& name){
+    if(commands.contains(name)){
+        commands.erase(name);
         return true;
     }
-    return false;
+    else
+        return false;
 }
+
+bool Shell::addCommand(const std::string& groupName, CommandPtr command){
+    if(!commands.contains(groupName))
+        return false;
+    
+    try{
+        auto& group {commands.at(groupName)};
+
+        // Check the actual group before adding
+        if(group.contains(command->getKey()))
+            return false;
+
+        group.try_emplace(command->getKey(), std::move(command));
+        return true;
+    }
+    catch(std::out_of_range& e){
+        return false;               // If the group could not be found
+    }
+}
+const std::unordered_map<std::string, CommandPtr>& Shell::getGroup (const std::string& name) const{
+    if(!commands.contains(name))
+        throw std::out_of_range{"No command group\"" + name + "\" found."};
+    
+    return 
+        commands.at(name);
+}
+
 bool Shell::addOutput(const ShellOutputPtr& output){
     for(const auto& o : outputs){
         // Do not add if IDs are same
@@ -197,6 +233,17 @@ bool Shell::removeOutput(const uint8_t& ID){
     }
     return false;
 }
+void Shell::reportToAllOutputs (const std::string& msg){
+    for(const auto& output : outputs){
+        output->output(msg);
+    }
+}
+void Shell::reportToAllOutputs (const std::ostringstream& msg){
+    for(const auto& output : outputs){
+        output->output(msg);
+    }
+}
+
 void Shell::addToQueue(const std::string& entry){
     if(!entry.empty())
         commandQueue.push(entry);
@@ -206,36 +253,48 @@ void Shell::addToQueue(const std::string& entry){
 bool Shell::handleCommandQueue(bool writeToHistory){
     for (/*Nothing*/; !commandQueue.empty(); commandQueue.pop()){
 
-        // Buffers
+        // Buffer variables
         std::vector<std::string> arguments;
         std::stringstream inputStream{};
         
         inputStream << commandQueue.front();            // Read the string
+
+        // Check to redirect manual to approriate showing all
+        if(inputStream.str() == "man")
+            inputStream.str("las man");
 
         std::string buffer;
         while (inputStream >> std::quoted(buffer)) {    // Separate by quotes or spaces
             arguments.push_back(buffer);                // Add the quoted token or separated by space token
         }
 
-        // Initial lookup of first arg only to see if it is a valid command
-        if(commands.contains(arguments[0])){
-
-            if(writeToHistory)
-                LAS::ShellHelper::writeToCommandHistory(commandHistoryPath, inputStream.str()); // Write to command history file
-
-            std::string command {arguments[0]};
-            arguments.erase(arguments.begin());  // Removes the first command key (from arg list)
-
-            // Execute command and pass to every output
-            for(const auto& output : outputs){
-                output->output(commands.at(command)->execute(arguments).second);
-            }
+        if(arguments.size() < 2){
+            reportToAllOutputs("Invalid number of arguments.\n");
+            commandQueue.pop();
+            break;
         }
-        else{
-            for(const auto& output : outputs){
-                std::ostringstream msg {"Command \"" + arguments[0] + "\" not found\n"};
-                output->output(msg);
+
+        std::string firstArg {arguments[0]};
+        try{
+            auto& group  {getGroup(firstArg) };     // Sets the group
+            arguments.erase(arguments.begin());     // Removes the group from arg list
+
+            std::string command {arguments [0]};    // Contains first actual command to be run
+            arguments.erase(arguments.begin());     // Removes the command key from arg list, leaving just the arguments
+
+            // Verify command exists
+            if(group.contains(command)){
+                 if(writeToHistory)
+                    LAS::ShellHelper::writeToCommandHistory(commandHistoryPath, inputStream.str()); // Write to command history file
+
+                // Execute command and pass to every output
+                reportToAllOutputs(group.at(command)->execute(arguments).second);
             }
+            else
+                 reportToAllOutputs("Command \"" + command + "\" not found in group \"" + firstArg + "\".\n");
+        }
+        catch(std::out_of_range& e){
+            reportToAllOutputs("Could not find command group \"" + firstArg + "\".\n");
         }
     }
 
@@ -243,7 +302,7 @@ bool Shell::handleCommandQueue(bool writeToHistory){
 }
 bool Shell::readRCFile(const std::string& path){
 
-     if(std::filesystem::exists(path)){
+    if(std::filesystem::exists(path)){
         std::ifstream rcFile {path}; 
         std::string line;
 
@@ -269,12 +328,42 @@ bool Shell::readRCFile(const std::string& path){
         rcPath = path;
         return ShellHelper::defaultInitializeRCFile(rcPath);
     }
+}
+bool Shell::getAllGroupsManuals(std::ostringstream& os) const {
+    for(const auto& group : commands){
+        os << group.first << " Manual:\n";
+        getGroupManual(os, group.first);
+    }
+    return true;
+}
+bool Shell::getGroupManual(std::ostringstream& os, const std::string& groupName) const{
+    if(!commands.contains(groupName))
+        return false;
 
-    return false;
+    // 32 spaces is the size of 2 tabs and 20 chars
+    static const std::string padding {"                                "};
+
+    for(const auto& command : getGroup(groupName)){
+        std::string description {command.second->getDescription()};
+        size_t charNum { 0 };
+
+        while(charNum < description.size()){
+            char& c {description[charNum]};
+            if(c == '\n'){
+                description.insert(charNum+1, padding);
+                charNum += padding.size();
+            }
+            ++charNum;
+        }
+
+        os << std::format("\t{:20}\t", command.second->getKey());
+        os << std::format("\t{}\n", description);
+        
+    }
+
+    return true;
 }
-const std::unordered_map<std::string, CommandPtr>& Shell::viewCommandInfo(){
-    return commands;
-}
+
 std::shared_ptr<ConsoleWindow> Shell::getWindow() const{
     return window;
 }
