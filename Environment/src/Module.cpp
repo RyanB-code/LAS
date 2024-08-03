@@ -18,8 +18,8 @@ Module::~Module(){
 std::string Module::getTitle() const{
     return moduleInfo.title;
 }
-std::string Module::getShortTitle() const{
-    return moduleInfo.shortTitle;
+std::string Module::getGroupName() const{
+    return moduleInfo.commandGroupName;
 }
 const ModuleInfo& Module::getInfo() const{
     return moduleInfo;
@@ -35,7 +35,7 @@ bool Module::load(const EnvironmentInfo& whatToPass){
     if(!loadPtr(whatToPass, moduleInfo))
         return false;
 
-    if(moduleInfo.title.empty() || moduleInfo.shortTitle.empty())
+    if(moduleInfo.title.empty() || moduleInfo.commandGroupName.empty())
         return false;
 
     return true;
