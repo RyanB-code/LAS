@@ -62,7 +62,7 @@ namespace LAS{
         explicit Shell(std::shared_ptr<ConsoleWindow> = nullptr);
         ~Shell();
 
-        bool addCommand         (CommandPtr command);              // Adds command to list of known commands
+        bool addCommand         (CommandPtr command);               // Adds command to list of known commands
 
         bool addOutput          (const ShellOutputPtr& output);
         bool removeOutput       (const uint8_t& getID);
@@ -70,7 +70,7 @@ namespace LAS{
         void addToQueue         (const std::string& entry);
         bool handleCommandQueue (bool writeToHistory=true);
 
-        bool readRCFile         (const std::string& path);      // Creates if it does not exist
+        bool readRCFile         (const std::string& path);          // Creates if it does not exist
 
         const std::unordered_map<std::string, CommandPtr>& viewCommandInfo();
 
