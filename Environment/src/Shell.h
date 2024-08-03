@@ -33,6 +33,7 @@ namespace LAS{
         virtual ~ShellOutput();
 
         virtual void output(const std::ostringstream&) = 0;
+        virtual void output(const std::string&) = 0;
 
         uint8_t getID() const;
 
@@ -47,6 +48,7 @@ namespace LAS{
 
         void draw() override;
         void output(const std::ostringstream& os) override;
+        void output(const std::string& msg) override;
 
         bool addToCommandHistory (const std::string& text);
 
@@ -61,18 +63,27 @@ namespace LAS{
     public:
         explicit Shell(std::shared_ptr<ConsoleWindow> = nullptr);
         ~Shell();
+    
+        bool addCommandGroup    (const std::string& name);
+        bool removeCommandGroup (const std::string& name);
 
-        bool addCommand         (CommandPtr command);               // Adds command to list of known commands
+        bool addCommand         (const std::string& groupName, CommandPtr command);                 // Adds command to list of known commands
+        const std::unordered_map<std::string, CommandPtr>& getGroup (const std::string& name) const;      // Throws out of range if not found
 
         bool addOutput          (const ShellOutputPtr& output);
         bool removeOutput       (const uint8_t& getID);
+        void reportToAllOutputs (const std::string& msg);       
+        void reportToAllOutputs (const std::ostringstream& msg);
+
 
         void addToQueue         (const std::string& entry);
         bool handleCommandQueue (bool writeToHistory=true);
 
         bool readRCFile         (const std::string& path);          // Creates if it does not exist
 
-        const std::unordered_map<std::string, CommandPtr>& viewCommandInfo();
+        bool getAllGroupsManuals    (std::ostringstream& os) const;
+        bool getGroupManual         (std::ostringstream& os, const std::string& groupName) const;
+
 
         std::shared_ptr<ConsoleWindow>  getWindow()                 const;
         std::string                     getRCPath()                 const;
@@ -82,7 +93,7 @@ namespace LAS{
         bool                setCommandHistoryPath   (const std::string& path);
 
     private:
-        std::unordered_map  <std::string, CommandPtr>   commands;
+        std::unordered_map  <std::string, std::unordered_map<std::string, CommandPtr>> commands;
         std::queue          <std::string>               commandQueue;
         std::vector         <ShellOutputPtr>            outputs;
         std::shared_ptr     <ConsoleWindow>             window;

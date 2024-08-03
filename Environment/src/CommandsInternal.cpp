@@ -24,7 +24,7 @@ std::pair<int, std::ostringstream> TestCommand::execute(const StringVector& args
 }
 
 Manual::Manual(std::weak_ptr<Shell> setShell)
-    :   Command {"man", "Show manual pages\n"},
+    :   Command {"man", "Show manual pages"},
         shell   {setShell}
 {
 
@@ -39,29 +39,7 @@ std::pair<int, std::ostringstream> Manual::execute(const StringVector&){
         return returnPair(-1, "\tCould not access necessary shell\n");
 
     std::ostringstream os;
-    
-    // Buffer the output of the description accordingly to add padding to newlines
-    const std::string padding {"                                "};     // 32 spaces is the size of 2 tabs and 20 chars
-
-    os << "LAS Manual Page\n";
-
-    for(const auto& command : tempShell->viewCommandInfo()){
-        std::string description {command.second->getDescription()};
-        size_t charNum { 0 };
-
-        while(charNum < description.size()){
-            char& c {description[charNum]};
-            if(c == '\n'){
-                description.insert(charNum+1, padding);
-                charNum += padding.size();
-            }
-            ++charNum;
-        }
-
-        // Display output
-        os << std::format("\t{:20}\t", command.second->getKey());
-        os << std::format("\t{}\n", description);
-    }
+    tempShell->getAllGroupsManuals(os);
 
     return returnPair(0, os.str());
 }
