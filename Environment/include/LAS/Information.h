@@ -9,9 +9,9 @@
 #include "LAS/Window.h"
 
 struct ModuleInfo    {
-    std::string     title           {};
-    std::string     shortTitle      {};
-    WindowPtr       window          {};
+    std::string     title               {};
+    std::string     commandGroupName    {};
+    WindowPtr       window              {};
 
     std::vector<CommandPtr> commands {};
 };

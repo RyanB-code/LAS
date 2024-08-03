@@ -28,7 +28,7 @@ namespace LAS{
         ~Module();
 
         std::string     getTitle()          const;
-        std::string     getShortTitle()     const;
+        std::string     getGroupName()      const;
         
         const ModuleInfo&   getInfo()       const;
         std::vector<CommandPtr>&   getCommands();

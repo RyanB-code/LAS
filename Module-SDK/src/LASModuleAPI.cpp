@@ -40,9 +40,9 @@ public:
 };
 
 bool LASM_load(EnvironmentInfo given, ModuleInfo& moduleInfo){
-    moduleInfo.title        = "New Testing";
-    moduleInfo.shortTitle   = "short testing";
-    moduleInfo.window       = std::make_shared<TestWindow>(window);
+    moduleInfo.title                = "New Testing";
+    moduleInfo.commandGroupName     = "testModule";
+    moduleInfo.window               = std::make_shared<TestWindow>(window);
 
     // Adding commands
     moduleInfo.commands.push_back(std::make_unique<ModuleTestCommand>());          
