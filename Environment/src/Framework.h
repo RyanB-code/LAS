@@ -50,7 +50,6 @@ namespace LAS{
         bool setup  ();
         void run    ();
 
-
     private:
         LoggerPtr           logger;
         ModuleManagerPtr    moduleManager;
@@ -69,12 +68,10 @@ namespace LAS{
         bool setupInternalWindows   ();
         void setupCommands          ();                            // This is where to instantiate commands
 
-
-
-        bool    loadModules             (const std::string& modulesDirectory);
-        void    loadModuleWindows       ();
-        void    loadAllModuleCommands   ();                                 
-        bool    loadModuleCommands      (const std::string& moduleName, StringVector& commandsNotLoaded);
+        bool loadModules            (const std::string& modulesDirectory);
+        void loadModuleWindows      ();
+        void loadAllModuleCommands  ();                                 
+        bool loadModuleCommands     (const std::string& moduleName, StringVector& commandsNotLoaded);
 
     };
 }
