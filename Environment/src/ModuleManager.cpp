@@ -69,7 +69,6 @@ StringVector ModuleManager::loadModules(ImGuiContext& context, std::string direc
             ModulePtr moduleBuffer {LAS::Modules::bindFiletoModule(fileName, logger, context)}; // Creates Module buffer
         
             if(moduleBuffer){
-        
                 if(moduleBuffer->load(pass)){       // Pass info across DLL boundary
                     if(!addModule(moduleBuffer))    // Add to known modules
                         failed = true;

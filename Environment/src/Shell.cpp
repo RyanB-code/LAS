@@ -299,8 +299,7 @@ bool Shell::handleCommandQueue(bool writeToHistory){
                     reportToAllOutputs("Could not add alias \"" + alias.first + "\".\nAn alias for that key may already exist.\n");
             }
             catch(std::invalid_argument& e){
-                reportToAllOutputs(e.what());
-                reportToAllOutputs("Alias is not in correct format.\n");
+                reportToAllOutputs(std::string{e.what()} + "\nAlias is not in correct format.\n");
             }
 
             commandQueue.pop();
@@ -525,27 +524,26 @@ namespace LAS::ShellHelper{
     }
     std::pair<std::string, std::string> createAlias(std::string text){
         if(text.find('=') == std::string::npos){
-            throw std::invalid_argument("Does not contain '=' sign.\n");
+            throw std::invalid_argument("Does not contain '=' sign.");
         }
 
         try {
             std::stringstream   rawKeyBuffer    { text.substr(0, text.find('='))};
             std::stringstream   rawValueBuffer  { text.substr(text.find('=')+1, text.size())};
 
+            std::string formattedKey;
+            rawKeyBuffer >> std::quoted(formattedKey);
 
             std::string formattedValue;
             rawValueBuffer >> std::quoted(formattedValue);
-
-            std::string formattedKey;
-            rawKeyBuffer >> std::quoted(formattedKey);
         
             if(formattedKey.contains(' '))
-                throw std::invalid_argument ("Key cannot contain spaces.\n");
+                throw std::invalid_argument ("Key cannot contain spaces.");
 
             return std::pair<std::string, std::string>{formattedKey, formattedValue};
         }
         catch (std::out_of_range& e){
-            throw std::invalid_argument("Not in correct format.\n");
+            throw std::invalid_argument("Not in correct format.");
         }
     }
 
