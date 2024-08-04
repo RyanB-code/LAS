@@ -126,17 +126,11 @@ void Framework::setupCommands(){
     using namespace LAS::Commands;
 
     // Instantiate commands
-    std::unique_ptr<TestCommand>    testCommand     {std::make_unique<TestCommand>()};
     std::unique_ptr<Set>            set             {std::make_unique<Set>(displayManager, moduleManager, logger)};
     std::unique_ptr<Manual>         manual          {std::make_unique<Manual>(shell)};
     std::unique_ptr<Print>          print           {std::make_unique<Print>(displayManager, moduleManager, logger)};
 
     // Add to known commands
-    if(!shell->addCommand(commandGroupName, std::move(testCommand))){
-        std::ostringstream msg;
-        msg << "Command [" << testCommand->getKey() << "] could not be added.\n";
-        logger->log(msg.str(), Tags{"Shell"});
-    }
     if(!shell->addCommand(commandGroupName, std::move(set))){
         std::ostringstream msg;
         msg << "Command [" << set->getKey() << "] could not be added.\n";
