@@ -62,7 +62,8 @@ void ConsoleWindow::draw(){
     ImGui::EndChild();
     ImGui::Separator();
 
-    static char inputBuf[256];
+    bool reclaimTextBoxFocus {false};
+    static char inputBuf[256]; // Holds the buffer for inputting commands
 
     // Scroll command history
     static size_t   offsetFromEnd           { 0 };
@@ -78,10 +79,15 @@ void ConsoleWindow::draw(){
         if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow))){
             if(offsetFromEnd > 0)
                 --offsetFromEnd;
+            else if(offsetFromEnd == 0){
+                // Reset text box to nothing
+                ImGui::ClearActiveID();                             // Clears the inputText field to accept input
+                memset(inputBuf, 0, 256*(sizeof inputBuf[0]) );     // Clears the input buffer
+                reclaimTextBoxFocus = true;
+            }
             fetchHistory = true;
         }
 
-        // Use of arrow key detected
         if(fetchHistory){
             size_t sizeOfCommandHistory { commandHistory.size() };
 
@@ -90,23 +96,23 @@ void ConsoleWindow::draw(){
             else if(offsetFromEnd > sizeOfCommandHistory)
                 offsetFromEnd = sizeOfCommandHistory;
 
+            // Write to text box
             if(offsetFromEnd > 0 && offsetFromEnd <= sizeOfCommandHistory){
-                ImGui::ClearActiveID();                             // Clears the inputText field to accecpt input
+                ImGui::ClearActiveID();                             // Clears the inputText field to accept input
                 memset(inputBuf, 0, 256*(sizeof inputBuf[0]) );     // Clears the input buffer
 
                 size_t commandIndex {sizeOfCommandHistory - offsetFromEnd};
                 
-                std::string stringCommandBuf {commandHistory[commandIndex]};  
+                std::string stringCommandBuf {commandHistory[commandIndex]};    // Retrieves the command in the list of command history
                 stringCommandBuf.copy(inputBuf, stringCommandBuf.length());     // Set input buffer
             }
-            ImGui::SetKeyboardFocusHere(-1);
+            reclaimTextBoxFocus = true;
             fetchHistory = false;
         }
     }
 
 
     // Handle input box
-    bool reclaimFocus {false};
     ImGuiInputTextFlags inputBoxflags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_EscapeClearsAll;
     if (ImGui::InputText("Input", inputBuf, IM_ARRAYSIZE(inputBuf), inputBoxflags)){
 
@@ -123,12 +129,12 @@ void ConsoleWindow::draw(){
 
         scrollToBottom = true;
         memset(inputBuf, 0, 256*(sizeof inputBuf[0]) );
-        reclaimFocus = true;
+        reclaimTextBoxFocus = true;
         offsetFromEnd = 0;                                  // Entering a new command resets the place
     }
 
     ImGui::SetItemDefaultFocus();
-    if(reclaimFocus)
+    if(reclaimTextBoxFocus)
         ImGui::SetKeyboardFocusHere(-1); // Auto focus previous widget
 
     ImGui::End();
