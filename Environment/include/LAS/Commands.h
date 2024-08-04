@@ -23,10 +23,10 @@ using CommandPtr = std::unique_ptr<Command>;
 using CommandList = std::vector<CommandPtr>;
 
 namespace LAS{
-    std::pair<int, std::ostringstream> returnPair(int, const std::string&);
-    std::pair<int, std::ostringstream> returnNormal();
-    std::pair<int, std::ostringstream> returnInvalidArgument(const std::string& arg);
-    std::pair<int, std::ostringstream> returnErrorWithMessage(const std::string& msg);
+    std::pair<int, std::ostringstream> pair                     (int returnVal, const std::string& msg);
+    std::pair<int, std::ostringstream> pairNormal               ();
+    std::pair<int, std::ostringstream> pairErrorWithMessage     (const std::string& msg);
+    std::pair<int, std::ostringstream> pairInvalidArgument      (const std::string& arg);
 
     bool stringValueTrue    (std::string s);
     bool stringValueFalse   (std::string s);

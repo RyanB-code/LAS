@@ -15,12 +15,12 @@ std::pair<int, std::ostringstream> Manual::execute(const StringVector&){
     std::shared_ptr<Shell> tempShell { shell.lock() };
 
     if(!tempShell)
-        return returnPair(-1, "\tCould not access necessary shell\n");
+        return pairErrorWithMessage("\tCould not access necessary shell\n");
 
     std::ostringstream os;
     tempShell->getAllGroupsManuals(os);
 
-    return returnPair(0, os.str());
+    return pair(0, os.str());
 }
 // MARK: Set
 Set::Set(   std::weak_ptr<DisplayManager> setDM,
@@ -49,7 +49,7 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
     std::shared_ptr<Logger>         tempLogger         { logger.lock()};
 
     if(!tempDisplayManager|| !tempModuleManager || !tempLogger)
-        return returnPair(-1, "\tCould not access necessary items\n");
+        return pair(-1, "\tCould not access necessary items\n");
     
     std::pair<int, std::ostringstream> returnBuf;
 
@@ -63,17 +63,17 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
         try{
             int size {std::stoi(args[1])};
             if(size < 5 )
-                return returnErrorWithMessage("Size cannot be below 5");
+                return pairErrorWithMessage("Size cannot be below 5");
 
             if(size > 200 )
-                return returnErrorWithMessage("Size cannot be greater than 200");
+                return pairErrorWithMessage("Size cannot be greater than 200");
             
             auto settings = tempLogger->getLogSettings();
             settings->textBoxWidth_tag = size;
-            return returnNormal();
+            return pairNormal();
         }
         catch(std::exception& e){
-            return returnInvalidArgument(args[1]);
+            return pairErrorWithMessage(args[1]);
         }
         return returnBuf;
     }
@@ -81,17 +81,17 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
         try{
             int size {std::stoi(args[1])};
             if(size < 30 )
-                return returnErrorWithMessage("Size cannot be below 30");
+                return pairErrorWithMessage("Size cannot be below 30");
 
             if(size > 255 )
-                return returnErrorWithMessage("Size cannot be greater than 255");
+                return pairErrorWithMessage("Size cannot be greater than 255");
             
             auto settings = tempLogger->getLogSettings();
             settings->textBoxWidth_msg = size;
-            return returnNormal();
+            return pairNormal();
         }
         catch(std::exception& e){
-            return returnInvalidArgument(args[1]);
+            return pairInvalidArgument(args[1]);
         }
         return returnBuf;
     }
@@ -99,57 +99,57 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
         if(stringValueTrue(args[1])){
             auto settings = tempLogger->getLogSettings();
             settings->showTime = true;
-            return returnNormal();
+            return pairNormal();
         }
         else if(stringValueFalse(args[1])){
             auto settings = tempLogger->getLogSettings();
             settings->showTime = false;
-            return returnNormal();
+            return pairNormal();
         }
         else
-            return returnInvalidArgument(args[1]);
+            return pairInvalidArgument(args[1]);
     }
     else if(args[0] == "--show-log-tag"){
         if(stringValueTrue(args[1])){
             auto settings = tempLogger->getLogSettings();
             settings->showTags = true;
-            return returnNormal();
+            return pairNormal();
         }
         else if(stringValueFalse(args[1])){
             auto settings = tempLogger->getLogSettings();
             settings->showTags = false;
-            return returnNormal();
+            return pairNormal();
         }
         else
-            return returnInvalidArgument(args[1]);
+            return pairInvalidArgument(args[1]);
     }
     else if(args[0] == "--show-log-msg"){
         if(stringValueTrue(args[1])){
             auto settings = tempLogger->getLogSettings();
             settings->showMsg = true;
-            return returnNormal();
+            return pairNormal();
         }
         else if(stringValueFalse(args[1])){
             auto settings = tempLogger->getLogSettings();
             settings->showMsg = false;
-            return returnNormal();
+            return pairNormal();
         }
         else
-            return returnInvalidArgument(args[1]);
+            return pairInvalidArgument(args[1]);
     }
     else if(args[0] == "--show-log-location"){
         if(stringValueTrue(args[1])){
             auto settings = tempLogger->getLogSettings();
             settings->showLocation = true;
-            return returnNormal();
+            return pairNormal();
         }
         else if(stringValueFalse(args[1])){
             auto settings = tempLogger->getLogSettings();
             settings->showLocation = false;
-            return returnNormal();
+            return pairNormal();
         }
         else
-            return returnInvalidArgument(args[1]);
+            return pairInvalidArgument(args[1]);
     }
     else if(args[0] == "--module-directory"){
         bool setDirectory {false};
@@ -166,7 +166,7 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
                 }
             }
             else
-                return returnInvalidArgument(args[1]);
+                return pairInvalidArgument(args[1]);
         }
         else if(args.size() == 2){
             setDirectory = true;
@@ -175,15 +175,15 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
 
         if(setDirectory){
             if(tempModuleManager->setModuleDirectory(args[2]))
-                return returnNormal();
+                return pairNormal();
             else
-                return returnErrorWithMessage("Failed to set module directory to \"" + args[2] + "\"\n");
+                return pairErrorWithMessage("Failed to set module directory to \"" + args[2] + "\"\n");
         }
 
-        return returnErrorWithMessage("Failed to set module directory\n");
+        return pairErrorWithMessage("Failed to set module directory\n");
     }
     else{
-        return returnInvalidArgument(args[0]);
+        return pairInvalidArgument(args[0]);
     }
 }
 
@@ -213,7 +213,7 @@ std::pair<int, std::ostringstream> Print::execute(const StringVector& args) {
     std::shared_ptr<Logger>         tempLogger         { logger.lock()};
 
     if(!tempDisplayManager|| !tempModuleManager || !tempLogger)
-        return returnPair(-1, "\tCould not access necessary items\n");
+        return pairErrorWithMessage("\tCould not access necessary items\n");
     
     std::ostringstream os;
 
@@ -239,7 +239,7 @@ std::pair<int, std::ostringstream> Print::execute(const StringVector& args) {
             }
 
             if(!option.starts_with('-') || !optionFound){
-                returnInvalidArgument(option);
+                pairInvalidArgument(option);
             }
         }
         else{
@@ -268,5 +268,5 @@ std::pair<int, std::ostringstream> Print::execute(const StringVector& args) {
         os <<   "Display Settings:\n"
                 "\tNothing to display...\n";
 
-    return returnPair(0, os.str());
+    return pair(0, os.str());
 }

@@ -18,26 +18,26 @@ std::string Command::getDescription() const {
 }
 
 namespace LAS{
-    std::pair<int, std::ostringstream> returnPair(int value, const std::string& msg){
+    std::pair<int, std::ostringstream> pair(int value, const std::string& msg){
         std::pair<int, std::ostringstream> returnBuf;
         returnBuf.first = value;
         returnBuf.second << msg;
         return returnBuf;
     }
-    std::pair<int, std::ostringstream> returnNormal(){
+    std::pair<int, std::ostringstream> pairNormal(){
         std::pair<int, std::ostringstream> returnBuf;
         returnBuf.first = 0;
         returnBuf.second << "";
         return returnBuf;
     }
-    std::pair<int, std::ostringstream> returnInvalidArgument(const std::string& arg){
+    std::pair<int, std::ostringstream> pairInvalidArgument(const std::string& arg){
         std::pair<int, std::ostringstream> returnBuf;
         returnBuf.first = -1;
         returnBuf.second << "\tInvalid argument \"" << arg << "\"\n";
 
         return returnBuf;
     }
-    std::pair<int, std::ostringstream> returnErrorWithMessage(const std::string& msg){
+    std::pair<int, std::ostringstream> pairErrorWithMessage(const std::string& msg){
         std::pair<int, std::ostringstream> returnBuf;
         returnBuf.first = -1;
         returnBuf.second << "\t" << msg << "\n";
