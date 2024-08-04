@@ -126,9 +126,9 @@ void Framework::setupCommands(){
     using namespace LAS::Commands;
 
     // Instantiate commands
-    std::unique_ptr<Set>            set             {std::make_unique<Set>(displayManager, moduleManager, logger)};
-    std::unique_ptr<Manual>         manual          {std::make_unique<Manual>(shell)};
-    std::unique_ptr<Print>          print           {std::make_unique<Print>(displayManager, moduleManager, logger)};
+    std::unique_ptr<Set>            set             {std::make_unique<Set>      (displayManager, moduleManager, logger)};
+    std::unique_ptr<Manual>         manual          {std::make_unique<Manual>   (shell)};
+    std::unique_ptr<Print>          print           {std::make_unique<Print>    (displayManager, moduleManager, logger)};
 
     // Add to known commands
     if(!shell->addCommand(commandGroupName, std::move(set))){
