@@ -35,8 +35,17 @@ bool Module::load(const EnvironmentInfo& whatToPass){
     if(!loadPtr(whatToPass, moduleInfo))
         return false;
 
-    if(moduleInfo.title.empty() || moduleInfo.commandGroupName.empty())
+    if(moduleInfo.title.empty())
         return false;
+
+    std::string groupName {moduleInfo.commandGroupName};
+    if(groupName.empty())
+        return false;
+    
+    for(const auto& c : groupName){
+        if(!std::isalnum(c))
+            return false;
+    }
 
     return true;
 }
