@@ -175,7 +175,13 @@ bool Shell::removeCommandGroup (const std::string& name){
     else
         return false;
 }
-
+const std::unordered_map<std::string, CommandPtr>& Shell::getGroup (const std::string& name) const{
+    if(!commands.contains(name))
+        throw std::out_of_range{"No command group\"" + name + "\" found."};
+    
+    return 
+        commands.at(name);
+}
 bool Shell::addCommand(const std::string& groupName, CommandPtr command){
     if(!commands.contains(groupName))
         return false;
@@ -194,12 +200,26 @@ bool Shell::addCommand(const std::string& groupName, CommandPtr command){
         return false;               // If the group could not be found
     }
 }
-const std::unordered_map<std::string, CommandPtr>& Shell::getGroup (const std::string& name) const{
-    if(!commands.contains(name))
-        throw std::out_of_range{"No command group\"" + name + "\" found."};
+bool Shell::addAlias(const std::string& key, const std::string& value){
+    if(aliases.contains(key))
+        return false;
     
-    return 
-        commands.at(name);
+    return aliases.try_emplace(key, value).second;
+}
+bool Shell::removeAlias(const std::string& key){
+    if(aliases.contains(key)){
+        aliases.erase(key);
+        return true;
+    }
+    else
+        return false;
+}
+std::string Shell::findAlias(const std::string& key){
+    if(aliases.contains(key)){
+        return aliases[key];
+    }
+
+    return "";
 }
 
 bool Shell::addOutput(const ShellOutputPtr& output){
@@ -233,12 +253,12 @@ bool Shell::removeOutput(const uint8_t& ID){
     }
     return false;
 }
-void Shell::reportToAllOutputs (const std::string& msg){
+void Shell::reportToAllOutputs (const std::string& msg) const{
     for(const auto& output : outputs){
         output->output(msg);
     }
 }
-void Shell::reportToAllOutputs (const std::ostringstream& msg){
+void Shell::reportToAllOutputs (const std::ostringstream& msg) const{
     for(const auto& output : outputs){
         output->output(msg);
     }
@@ -254,15 +274,40 @@ bool Shell::handleCommandQueue(bool writeToHistory){
     for (/*Nothing*/; !commandQueue.empty(); commandQueue.pop()){
 
         // Buffer variables
-        std::vector<std::string> arguments;
-        std::stringstream inputStream{};
+        std::vector<std::string>    arguments   { };
+        std::stringstream           inputStream { };
         
         inputStream << commandQueue.front();            // Read the string
 
-        // Check to redirect manual to approriate showing all
-        if(inputStream.str() == "man")
-            inputStream.str("las man");
 
+        std::string rawInput {inputStream.str()};
+        if(writeToHistory)
+                    LAS::ShellHelper::writeToCommandHistory(commandHistoryPath, rawInput); // Write to command history file
+
+        // Create alias if in proper format
+        if(rawInput.size() >= 5 && rawInput.substr(0,6) == "alias "){ // Need the space in there
+            try{
+                auto alias {ShellHelper::createAlias(rawInput.substr(6, rawInput.size()))};
+                
+                if(!addAlias(alias.first, alias.second))
+                    reportToAllOutputs("Could not add alias \"" + alias.first + "\".\nAn alias for that key may already exist.\n");
+            }
+            catch(std::invalid_argument& e){
+                reportToAllOutputs(e.what());
+                reportToAllOutputs("Alias is not in correct format.\n");
+            }
+
+            commandQueue.pop();
+            break;
+        }
+
+        // Replace if alias was found
+        std::string aliasValue {findAlias(rawInput)};
+        if(aliasValue != "")
+            inputStream.str(aliasValue);
+
+
+        // Parse the line
         std::string buffer;
         while (inputStream >> std::quoted(buffer)) {    // Separate by quotes or spaces
             arguments.push_back(buffer);                // Add the quoted token or separated by space token
@@ -283,13 +328,8 @@ bool Shell::handleCommandQueue(bool writeToHistory){
             arguments.erase(arguments.begin());     // Removes the command key from arg list, leaving just the arguments
 
             // Verify command exists
-            if(group.contains(command)){
-                 if(writeToHistory)
-                    LAS::ShellHelper::writeToCommandHistory(commandHistoryPath, inputStream.str()); // Write to command history file
-
-                // Execute command and pass to every output
-                reportToAllOutputs(group.at(command)->execute(arguments).second);
-            }
+            if(group.contains(command))
+                reportToAllOutputs(group.at(command)->execute(arguments).second);   // Execute command and pass to every output
             else
                  reportToAllOutputs("Command \"" + command + "\" not found in group \"" + firstArg + "\".\n");
         }
@@ -477,5 +517,31 @@ namespace LAS::ShellHelper{
         file.close();
         return true;
     }
+    std::pair<std::string, std::string> createAlias(std::string text){
+        if(text.find('=') == std::string::npos){
+            throw std::invalid_argument("Does not contain '=' sign.\n");
+        }
+
+        try {
+            std::stringstream   rawKeyBuffer    { text.substr(0, text.find('='))};
+            std::stringstream   rawValueBuffer  { text.substr(text.find('=')+1, text.size())};
+
+
+            std::string formattedValue;
+            rawValueBuffer >> std::quoted(formattedValue);
+
+            std::string formattedKey;
+            rawKeyBuffer >> std::quoted(formattedKey);
+        
+            if(formattedKey.contains(' '))
+                throw std::invalid_argument ("Key cannot contain spaces.\n");
+
+            return std::pair<std::string, std::string>{formattedKey, formattedValue};
+        }
+        catch (std::out_of_range& e){
+            throw std::invalid_argument("Not in correct format.\n");
+        }
+    }
+
 
 }
