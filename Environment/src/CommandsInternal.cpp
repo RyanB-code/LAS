@@ -2,27 +2,6 @@
 
 using namespace LAS::Commands;
 
-// MARK: TEST COMMAND
-TestCommand::TestCommand() : Command {"test", "Testing command"}
-{
-
-}
-
-TestCommand::~TestCommand(){
-
-}
-
-std::pair<int, std::ostringstream> TestCommand::execute(const StringVector& args) {
-    std::pair<int, std::ostringstream> returnVal;
-    returnVal.first = 0;
-    returnVal.second << "Test Command:\n";
-    for(const auto& s : args){
-        returnVal.second << "\t" << s << "\n";
-    }
-
-    return returnVal;    
-}
-
 Manual::Manual(std::weak_ptr<Shell> setShell)
     :   Command {"man", "Show manual pages"},
         shell   {setShell}

@@ -13,14 +13,6 @@
 // For testing command functionality
 namespace LAS::Commands{
 
-    class TestCommand : public Command{
-    public: 
-        TestCommand();
-        ~TestCommand();
-
-        std::pair<int, std::ostringstream> execute(const StringVector&) override;
-    };
-
     class Manual : public Command {
     public:
         Manual(std::weak_ptr<Shell>);
