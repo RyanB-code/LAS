@@ -310,7 +310,7 @@ namespace LAS::FrameworkSetup{
         std::chrono::zoned_time now { std::chrono::current_zone(), std::chrono::system_clock::now() };
 
         using namespace LAS::TextManip::Logging;
-        std::string fileName {parentDir + std::format("{:%F} {}", now, printTime(now))};  // Outputs in format HH:MM:SS DD MM YYYY as 19:56::23 28 05 2024
+        std::string fileName {parentDir + std::format("{:%F} {}", now, printTime(now) + ".log")};  // Outputs in format YYY-MM-DD HH:MM::SS.log
 
         if(!ensureFile(fileName))
             return "";
