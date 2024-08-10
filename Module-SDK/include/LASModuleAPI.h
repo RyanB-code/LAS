@@ -13,6 +13,7 @@
     #define MODULE_EXPORT extern "C" __attribute__ ((visibility ("protected")))
 #endif
 
-MODULE_EXPORT bool      LASM_load       (EnvironmentInfo, ModuleInfo&);
+MODULE_EXPORT bool      LASM_loadModuleInfo         (ModuleInfo&);
+MODULE_EXPORT bool      LASM_loadEnvironmentInfo    (const EnvironmentInfo&);
 MODULE_EXPORT void      LASM_cleanup    ();
 
