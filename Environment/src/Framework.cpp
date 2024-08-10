@@ -42,7 +42,7 @@ bool Framework::setup(){
     // --------------------------------------------------
 
     if(!moduleManager){
-        if(!setupModuleManager(filePaths.moduleDir))
+        if(!setupModuleManager(filePaths.moduleLibDir))
             return false;
     }
     
@@ -54,7 +54,7 @@ bool Framework::setup(){
         return false;
 
 
-    if(!loadModules(filePaths.moduleDir))
+    if(!loadModules(filePaths.moduleLibDir, filePaths.moduleFilesDir))
         return false;
 
     // Non fatal if these fail
@@ -170,7 +170,6 @@ bool Framework::setupModuleManager(const std::string& moduleDir){
     moduleManager = std::make_shared<ModuleManager>( ModuleManager{logger});
     logger->log("Module Manager setup successful", Tags{"OK"});
 
-
     if(!moduleManager->setModuleDirectory(moduleDir)){
         logger->log("Failed to set module directory", Tags{"Module Manager"});
         return false;
@@ -221,7 +220,7 @@ bool Framework::setupInternalWindows(){
     return true;
 }
 
-bool Framework::loadModules(const std::string& modulesDirectory) {
+bool Framework::loadModules(const std::string& moduleLibDirectory, const std::string& moduleFilesDirectory) {
 
     if(!ImGui::GetCurrentContext()){
         logger->log("No ImGuiContext found", Tags{"ERROR", "Framework"});
@@ -229,10 +228,10 @@ bool Framework::loadModules(const std::string& modulesDirectory) {
     }
 
     try{
-        StringVector modulesThatFailedToLoad {moduleManager->loadModules(*ImGui::GetCurrentContext(), modulesDirectory)}; 
+        StringVector modulesThatFailedToLoad {moduleManager->loadModules(moduleFilesDirectory, *ImGui::GetCurrentContext(), moduleLibDirectory)}; 
 
+        // This is just for logging what failed to load
         if(modulesThatFailedToLoad.size() > 0){
-             // This is just for logging what failed to load
             std::ostringstream msg;
             msg << "There were [" << modulesThatFailedToLoad.size() << "] Modules that could not be loaded: ";
             for(const auto& s : modulesThatFailedToLoad){
@@ -242,13 +241,13 @@ bool Framework::loadModules(const std::string& modulesDirectory) {
         }
         else
             logger->log("All Modules loaded successfully", Tags{"OK"});
-
-        return true;
     }
     catch(std::filesystem::filesystem_error& e){
         logger->log("Could not find module directory [" + std::string{e.path1()} + "] to load Modules", Tags{"ERROR", "Module Manager", "Filesystem Error"});
         return false;
     }
+
+    return true;
 }
 void Framework::loadAllModuleCommands(){  
     StringVector moduleNames {moduleManager->getModuleNames()};
@@ -355,10 +354,11 @@ namespace LAS::FrameworkSetup{
     }
     bool setupFilesystem(FilePaths& filePaths) {
         // Ensure filesystem is in place
-        filePaths.parentDir       = LAS::FrameworkSetup::getExeParentDir();
+        filePaths.parentDir             = LAS::FrameworkSetup::getExeParentDir();
 
         filePaths.dotLASDir             = filePaths.parentDir + ".las/";
-        filePaths.moduleDir             = filePaths.parentDir + "modules/";
+        filePaths.moduleLibDir          = filePaths.parentDir + "Module Libraries/";
+        filePaths.moduleFilesDir        = filePaths.parentDir + "Module Files/";
 
         filePaths.commandHistoryPath    = filePaths.dotLASDir + ".las-history";
         filePaths.logDir                = filePaths.dotLASDir + "logs/";
@@ -378,8 +378,12 @@ namespace LAS::FrameworkSetup{
             std::cerr << "Error finding or creating [" << filePaths.logDir << "]";
             return false;
         }
-        if(!LAS::ensureDirectory(filePaths.moduleDir)){
-            std::cerr << "Error finding or creating [" << filePaths.moduleDir << "]";
+        if(!LAS::ensureDirectory(filePaths.moduleLibDir)){
+            std::cerr << "Error finding or creating [" << filePaths.moduleLibDir << "]";
+            return false;
+        }
+        if(!LAS::ensureDirectory(filePaths.moduleFilesDir)){
+            std::cerr << "Error finding or creating [" << filePaths.moduleFilesDir << "]";
             return false;
         }
         if(!LAS::ensureDirectory(filePaths.dotLASDir)){

@@ -41,54 +41,70 @@ ModulePtr ModuleManager::getModule(std::string title) const{
 bool ModuleManager::containsModule(std::string title) const{
     return modules.contains(title);
 }
-StringVector ModuleManager::loadModules(ImGuiContext& context, std::string directory){
-    if(moduleDirectory.empty())
-        directory = moduleDirectory;
+StringVector ModuleManager::loadModules(const std::string& moduleFilesDirectory, ImGuiContext& context, std::string loadDirectory){
+    if(loadDirectory.empty())
+        loadDirectory = moduleDirectory;
+    
+    const   std::filesystem::path   qualifiedDirectory  {LAS::TextManip::ensureSlash(loadDirectory)};   // Path with slashes
+            StringVector            failedToLoad        {};                                             // Initialize empty return variable
 
-    std::string     moduleNameSuffix    {"LASModule_"};         // Every module name must have this key present to be added
-    StringVector    failedToLoad        {};                     // Initialize empty return variable
-
-    directory = LAS::TextManip::ensureSlash(directory);              // Ensure slash at the end
-    const std::filesystem::path qualifiedDirectory{directory};       // Path with slashes
-
-
-    // Throw exception if the directory doesn't exist
     if(!std::filesystem::exists(qualifiedDirectory)){
         throw std::filesystem::filesystem_error("Directory for modules does not exist", qualifiedDirectory, std::error_code());
     }
 
-    // Create what to pass
-    EnvironmentInfo pass {directory, context, logger};
-
-    std::vector<ModulePtr> modules;
+    // Iterate over directory and attempt to load each file
 	for(auto const& file : std::filesystem::directory_iterator(qualifiedDirectory)){
-        bool failed {false};
-        // Ensure file contains substring to know that it's an LASModule
-        std::string fileName {file.path()};
-        if(fileName.find(moduleNameSuffix) != fileName.npos){
-            ModulePtr moduleBuffer {LAS::Modules::bindFiletoModule(fileName, logger, context)}; // Creates Module buffer
-        
-            if(moduleBuffer){
-                if(moduleBuffer->load(pass)){       // Pass info across DLL boundary
-                    if(!addModule(moduleBuffer))    // Add to known modules
-                        failed = true;
-                }
-                else
-                    failed = true;
-            }            else
-                failed = true;
-        }
-        else{
-           failed = true;
-        }
-
-        if(failed){
-            failedToLoad.push_back(fileName);
-        }
+        if(!loadModule(moduleFilesDirectory, context, file.path()))
+            failedToLoad.push_back(file.path());
 	}
 
     return failedToLoad;
 }
+bool ModuleManager::loadModule  (std::string parentDirectory, ImGuiContext& context, const std::string& fileName){
+    const   std::string moduleNamePrefix    {"LASModule_"};         // Every module name must have this key present to be added
+
+    if(fileName.find(moduleNamePrefix) == fileName.npos)
+        return false;
+    
+    ModulePtr moduleBuffer{LAS::Modules::bindFiletoModule(fileName, logger, context)};
+        
+    if(!moduleBuffer)
+        return false;
+
+    if(!moduleBuffer->loadModuleInfo()){
+        logger->log("Failed loading module info from Module [" + moduleBuffer->getTitle() + "]", Tags{"ERROR", "Module Manager"});
+        return false;
+    }
+   
+    std::string formattedTitle { LAS::TextManip::ensureAlNumNoSpaces(moduleBuffer->getTitle())};
+    parentDirectory    = LAS::TextManip::ensureSlash(parentDirectory);
+
+    std::string moduleFilesDirectory    {LAS::TextManip::ensureSlash(parentDirectory) + LAS::TextManip::ensureSlash(formattedTitle)};
+    std::string moduleRCFilePath        { moduleFilesDirectory + '.' + formattedTitle + "-rc"};
+
+    if(!LAS::ensureDirectory(moduleFilesDirectory)){
+        logger->log("Could not find or create directory [" + moduleFilesDirectory + "] for Module + [" + moduleBuffer->getTitle() + "]", Tags{"ERROR", "Module Manager"});
+        return false;
+    }
+    if(!LAS::ensureFile(moduleRCFilePath)){
+        logger->log("Could not find or create file [" + moduleRCFilePath + "] for Module + [" + moduleBuffer->getTitle() + "]", Tags{"ERROR", "Module Manager"});
+        return false;
+    }
+
+    // Pass environment info only if all files could be created
+    EnvironmentInfo envInfo {moduleFilesDirectory, context, logger};
+    if(!moduleBuffer->loadEnvInfo(envInfo)){
+        logger->log("Failed loading environment info from Module [" + moduleBuffer->getTitle() + "]", Tags{"ERROR", "Module Manager"});
+        return false;
+    }
+
+    if(!addModule(moduleBuffer)){
+        logger->log("could not add module [" + moduleBuffer->getTitle() + "]", Tags{"ERROR", "Module Manager"});
+        return false;
+    }
+    return true;
+}
+
 const StringVector ModuleManager::getModuleNames() const{
     StringVector names;
     for(auto module : modules){

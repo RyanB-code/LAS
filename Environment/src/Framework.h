@@ -25,7 +25,8 @@ namespace LAS{
         std::string dotLASDir;
 
         std::string logDir;
-        std::string moduleDir;
+        std::string moduleLibDir;
+        std::string moduleFilesDir;
 
         std::string rcPath;
         std::string commandHistoryPath;
@@ -68,7 +69,7 @@ namespace LAS{
         bool setupInternalWindows   ();
         void setupCommands          ();                            // This is where to instantiate commands
 
-        bool loadModules            (const std::string& modulesDirectory);
+        bool loadModules            (const std::string& moduleLibDirectory, const std::string& moduleFilesDirectory);
         void loadModuleWindows      ();
         void loadAllModuleCommands  ();                                 
         bool loadModuleCommands     (const std::string& moduleName, StringVector& commandsNotLoaded);
