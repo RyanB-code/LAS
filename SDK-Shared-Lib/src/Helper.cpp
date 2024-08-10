@@ -32,6 +32,25 @@ namespace LAS::TextManip{
         }
         return text;
     }
+    std::string ensureNoSpaces  (const std::string& text){
+        std::string textBuf;
+        for(const char& c : text){
+            if(c == ' ')
+                textBuf += '-';
+        }
+        return textBuf;
+    }
+    std::string ensureAlNumNoSpaces (const std::string& text){
+        std::string textBuf;
+        for(const char& c : text){
+            if(std::isalnum(c))
+                textBuf += c;
+            if(c == ' ')
+                textBuf += '-';
+        }
+        return textBuf;
+    }
+
 }
 
 namespace LAS::TextManip::Logging{
