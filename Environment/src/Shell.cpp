@@ -280,8 +280,9 @@ bool Shell::handleCommandQueue(bool writeToHistory){
     for (/*Nothing*/; !commandQueue.empty(); commandQueue.pop()){
 
         // Buffer variables
-        std::vector<std::string>    arguments   { };
-        std::stringstream           inputStream { };
+        std::vector<std::string>    arguments       { };
+        std::stringstream           inputStream     { };
+        bool                        executeCommand  { true };
         
         inputStream << commandQueue.front();            // Read the string
 
@@ -292,6 +293,8 @@ bool Shell::handleCommandQueue(bool writeToHistory){
 
         // Create alias if in proper format
         if(rawInput.size() >= 5 && rawInput.substr(0,6) == "alias "){ // Need the space in there
+            executeCommand = false;
+
             try{
                 auto alias {ShellHelper::createAlias(rawInput.substr(6, rawInput.size()))};
                 
@@ -301,46 +304,46 @@ bool Shell::handleCommandQueue(bool writeToHistory){
             catch(std::invalid_argument& e){
                 reportToAllOutputs(std::string{e.what()} + "\nAlias is not in correct format.\n");
             }
-
-            commandQueue.pop();
-            break;
         }
 
-        // Replace if alias was found
-        std::string aliasValue {findAlias(rawInput)};
-        if(aliasValue != "")
-            inputStream.str(aliasValue);
+        if(executeCommand){
+             // Replace if alias was found
+            std::string aliasValue {findAlias(rawInput)};
+            if(aliasValue != "")
+                inputStream.str(aliasValue);
 
+            // Parse the line
+            std::string buffer;
+            while (inputStream >> std::quoted(buffer)) {    // Separate by quotes or spaces
+                arguments.push_back(buffer);                // Add the quoted token or separated by space token
+            }
 
-        // Parse the line
-        std::string buffer;
-        while (inputStream >> std::quoted(buffer)) {    // Separate by quotes or spaces
-            arguments.push_back(buffer);                // Add the quoted token or separated by space token
-        }
+            // Ensure at least 2 arguments
+            if(arguments.size() < 2){
+                reportToAllOutputs("Invalid number of arguments.\n");
+                commandQueue.pop();
+                break;
+            }
 
-        if(arguments.size() < 2){
-            reportToAllOutputs("Invalid number of arguments.\n");
-            commandQueue.pop();
-            break;
-        }
+            // Parse and execute the command in the respective command group
+            std::string firstArg {arguments[0]};
+            try{
+                auto& group  {getGroup(firstArg) };     // Sets the group
+                arguments.erase(arguments.begin());     // Removes the group from arg list
 
-        std::string firstArg {arguments[0]};
-        try{
-            auto& group  {getGroup(firstArg) };     // Sets the group
-            arguments.erase(arguments.begin());     // Removes the group from arg list
+                std::string command {arguments [0]};    // Contains first actual command to be run
+                arguments.erase(arguments.begin());     // Removes the command key from arg list, leaving just the arguments
 
-            std::string command {arguments [0]};    // Contains first actual command to be run
-            arguments.erase(arguments.begin());     // Removes the command key from arg list, leaving just the arguments
-
-            // Verify command exists
-            if(group.contains(command))
-                reportToAllOutputs(group.at(command)->execute(arguments).second);   // Execute command and pass to every output
-            else
-                 reportToAllOutputs("Command \"" + command + "\" not found in group \"" + firstArg + "\".\n");
-        }
-        catch(std::out_of_range& e){
-            reportToAllOutputs("Could not find command group \"" + firstArg + "\".\n");
-        }
+                // Verify command exists
+                if(group.contains(command))
+                    reportToAllOutputs(group.at(command)->execute(arguments).second);   // Execute command and pass to every output
+                else
+                    reportToAllOutputs("Command \"" + command + "\" not found in group \"" + firstArg + "\".\n");
+            }
+            catch(std::out_of_range& e){
+                reportToAllOutputs("Could not find command group \"" + firstArg + "\".\n");
+            }
+        } // End of if(!aliasCreated)
     }
 
     return true;   
