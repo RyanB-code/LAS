@@ -50,6 +50,8 @@ namespace LAS{
     };
 
     namespace Modules{
-        ModulePtr bindFiletoModule(std::string path, const LoggerPtr& logger, ImGuiContext& context);
+        ModulePtr   bindFiletoModule        (const std::string& path, const LoggerPtr& logger, const ImGuiContext& context);
+        bool        verifyModuleInformation (const EnvironmentInfo& envInfo, const ModulePtr& module);
+        bool        ensureModuleFiles       (std::string parentDirectory, std::string moduleTitle);
     }
 }

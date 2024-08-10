@@ -3,11 +3,13 @@
 using namespace LAS;
 
 Module::Module( const LoggerPtr&             setLogger,
-                LAS::Modules::loadFunction   setLoad, 
-                LAS::Modules::voidNoParams   setCleanup) :
-        logger      {setLogger},
-        loadPtr     {setLoad},
-        cleanupPtr  {setCleanup}
+                LAS::Modules::LoadModuleInfo            setLoadModuleInfo,
+                LAS::Modules::LoadEnvironmentInfo       setLoadEnvironmentInfo,
+                LAS::Modules::VoidNoParams              setCleanup) :
+        logger              {setLogger},
+        loadModuleInfoPtr   {setLoadModuleInfo},
+        loadEnvInfoPtr      {setLoadEnvironmentInfo},
+        cleanupPtr          {setCleanup}
 {
 
 }
@@ -27,29 +29,19 @@ const ModuleInfo& Module::getInfo() const{
 std::vector<CommandPtr>& Module::getCommands(){
     return moduleInfo.commands;
 }
-
-
-
-
-bool Module::load(const EnvironmentInfo& whatToPass){
-    if(!loadPtr(whatToPass, moduleInfo))
-        return false;
-
-    if(moduleInfo.title.empty())
-        return false;
-
-    std::string groupName {moduleInfo.commandGroupName};
-    if(groupName.empty())
-        return false;
-    
-    for(const auto& c : groupName){
-        if(!std::isalnum(c))
-            return false;
-    }
-
-    return true;
-}
 void Module::cleanup(){
     if(cleanupPtr)
         cleanupPtr();
+}
+bool Module::loadModuleInfo(){
+    if(!loadModuleInfoPtr(moduleInfo))
+        return false;
+    else
+        return true;
+}
+bool Module::loadEnvInfo(const EnvironmentInfo& envInfo){
+    if(!loadEnvInfoPtr(envInfo))
+        return false;
+    else
+        return true;
 }

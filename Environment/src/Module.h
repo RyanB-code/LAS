@@ -16,15 +16,17 @@ namespace LAS{
     using ModulePtr = std::shared_ptr<Module>;
 
     namespace Modules{
-        typedef bool(*loadFunction)(EnvironmentInfo, ModuleInfo&);      // Function pointer for LASM_load()
-        typedef void(*voidNoParams)();                                  // Function pointer LASM_cleanup()
+        typedef bool(*LoadModuleInfo)       (ModuleInfo&);      
+        typedef bool(*LoadEnvironmentInfo)  (const EnvironmentInfo&); 
+        typedef void(*VoidNoParams)         (); 
     };
 
     class Module{
     public:
-        explicit Module( const LoggerPtr&             setLogger,
-                LAS::Modules::loadFunction   setLoad, 
-                LAS::Modules::voidNoParams   setCleanup);
+        explicit Module( const LoggerPtr&               setLogger,
+                LAS::Modules::LoadModuleInfo            setLoadModuleInfo,
+                LAS::Modules::LoadEnvironmentInfo       setLoadEnvironmentInfo,
+                LAS::Modules::VoidNoParams              setCleanup);
         ~Module();
 
         std::string     getTitle()          const;
@@ -33,14 +35,17 @@ namespace LAS{
         const ModuleInfo&   getInfo()       const;
         std::vector<CommandPtr>&   getCommands();
 
-        bool    load(const EnvironmentInfo& whatToPass);
+        bool    loadModuleInfo();
+        bool    loadEnvInfo(const EnvironmentInfo& envInfo);
         void    cleanup();
+        
 
     private:
         ModuleInfo moduleInfo {};
         const LoggerPtr& logger;
 
-        LAS::Modules::loadFunction loadPtr       {};
-        LAS::Modules::voidNoParams cleanupPtr    {};
+        LAS::Modules::LoadModuleInfo        loadModuleInfoPtr   {};
+        LAS::Modules::LoadEnvironmentInfo   loadEnvInfoPtr      {};
+        LAS::Modules::VoidNoParams          cleanupPtr          {};
     };
 }

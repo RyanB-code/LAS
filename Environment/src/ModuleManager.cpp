@@ -121,20 +121,55 @@ bool ModuleManager::setModuleDirectory(const std::string& directory){
 
 // MARK: LASCore Namespace 
 namespace LAS::Modules{
-    ModulePtr bindFiletoModule(std::string path, const LoggerPtr& logger, ImGuiContext& context){
+
+    ModulePtr bindFiletoModule(const std::string& path, const LoggerPtr& logger, const ImGuiContext& context){
         void* lib {dlopen(path.c_str(), RTLD_LAZY)};    // Map the shared object file
 
         if(!lib)
             return nullptr;     // Do not continue if library could not be opened
 
         // Bind the API funcions
-        loadFunction load       {reinterpret_cast<loadFunction>(dlsym(lib, "LASM_load"))};
-        voidNoParams cleanup    {reinterpret_cast<voidNoParams>(dlsym(lib, "LASM_cleanup"))};
+        LoadModuleInfo      loadModuleInfo    {reinterpret_cast<LoadModuleInfo>     (dlsym(lib, "LASM_loadModuleInfo"))};
+        LoadEnvironmentInfo loadEnvInfo       {reinterpret_cast<LoadEnvironmentInfo>(dlsym(lib, "LASM_loadEnvironmentInfo"))};
+        VoidNoParams        cleanup           {reinterpret_cast<VoidNoParams>       (dlsym(lib, "LASM_cleanup"))};
 
         // Do not continue if binding failed
-        if(!load || !cleanup)
+        if(!loadModuleInfo || !loadEnvInfo ||!cleanup)
             return nullptr;
 
-        return std::make_shared<Module>(logger, load, cleanup);       
+        return std::make_shared<Module>(logger, loadModuleInfo, loadEnvInfo, cleanup);       
     }
+    bool verifyModuleInformation(const EnvironmentInfo& envInfo, const ModulePtr& module) {
+        if(!module)
+            return false;
+
+        if(module->getTitle().empty())
+            return false;
+
+        std::string groupName {module->getGroupName()};
+        if(groupName.empty())
+            return false;
+        
+        for(const auto& c : groupName){
+            if(!std::isalnum(c))
+                return false;
+        }
+
+        return true;
+    }
+    bool ensureModuleFiles (std::string moduleFilesDirectory, std::string moduleTitle){
+        
+        moduleFilesDirectory = LAS::TextManip::ensureSlash(moduleFilesDirectory);
+
+        std::string moduleDirectory { moduleFilesDirectory + moduleTitle + '/'};
+        std::string moduleRCFile    { moduleDirectory + '.' + moduleTitle + "-rc"};
+
+        if(!LAS::ensureDirectory(moduleDirectory))
+            return false;
+        if(!LAS::ensureFile(moduleRCFile))
+            return false;
+
+        return true;
+    }
+
 }
