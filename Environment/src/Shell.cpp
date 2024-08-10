@@ -462,7 +462,9 @@ namespace LAS::ShellHelper{
         
         std::ofstream rcFile {path, std::ios::trunc};
 
-        rcFile << "# Life Application Suite Configuration File\n# Any commands entered here will be executed upon each startup" << std::endl;
+        rcFile << "# Life Application Suite Configuration File\n# Any commands entered here will be executed upon each startup\n" << std::endl;
+        rcFile << "# Added by default\nalias man=\"las man\"" << std::endl;
+
         rcFile.close();
 
         return true;
