@@ -40,7 +40,8 @@ namespace LAS{
 
 
         [[nodiscard]]
-        StringVector loadModules(ImGuiContext& context, std::string directory="");
+        StringVector    loadModules (const std::string& moduleFilesDirectory, ImGuiContext& context, std::string loadDirectory="");
+        bool            loadModule  (std::string moduleFilesDirectory, ImGuiContext& context, const std::string& fileName);
 
     private:
         std::unordered_map<std::string, ModulePtr> modules{};
