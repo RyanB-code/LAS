@@ -12,7 +12,9 @@ namespace LAS{
     bool ensureFile         (const std::string& path);
 
     namespace TextManip {
-        std::string ensureSlash(std::string text);
+        std::string ensureSlash         (std::string text);
+        std::string ensureNoSpaces      (const std::string& text);
+        std::string ensureAlNumNoSpaces (const std::string& text);
 
         namespace Logging{
             std::string printTime(const std::chrono::system_clock::time_point& time)    noexcept;   // HH:MM:SS
