@@ -41,12 +41,13 @@ ModulePtr ModuleManager::getModule(std::string title) const{
 bool ModuleManager::containsModule(std::string title) const{
     return modules.contains(title);
 }
-StringVector ModuleManager::loadModules(const std::string& moduleFilesDirectory, ImGuiContext& context, std::string loadDirectory){
+void ModuleManager::loadAllModules(const std::string& moduleFilesDirectory, ImGuiContext& context, StringVector& modulesNotLoaded, std::string loadDirectory){
+    modulesNotLoaded.erase(modulesNotLoaded.begin(), modulesNotLoaded.end());
+
     if(loadDirectory.empty())
         loadDirectory = moduleDirectory;
     
     const   std::filesystem::path   qualifiedDirectory  {LAS::TextManip::ensureSlash(loadDirectory)};   // Path with slashes
-            StringVector            failedToLoad        {};                                             // Initialize empty return variable
 
     if(!std::filesystem::exists(qualifiedDirectory)){
         throw std::filesystem::filesystem_error("Directory for modules does not exist", qualifiedDirectory, std::error_code());
@@ -55,10 +56,10 @@ StringVector ModuleManager::loadModules(const std::string& moduleFilesDirectory,
     // Iterate over directory and attempt to load each file
 	for(auto const& file : std::filesystem::directory_iterator(qualifiedDirectory)){
         if(!loadModule(moduleFilesDirectory, context, file.path()))
-            failedToLoad.push_back(file.path());
+            modulesNotLoaded.push_back(file.path());
 	}
 
-    return failedToLoad;
+    return;
 }
 bool ModuleManager::loadModule  (std::string parentDirectory, ImGuiContext& context, const std::string& fileName){
     const   std::string moduleNamePrefix    {"LASModule_"};         // Every module name must have this key present to be added

@@ -232,16 +232,16 @@ bool Framework::setupInternalWindows(){
 
     return true;
 }
-
+// MARK: Load Functions
 bool Framework::loadModules(const std::string& moduleLibDirectory, const std::string& moduleFilesDirectory) {
-
     if(!ImGui::GetCurrentContext()){
         logger->log("No ImGuiContext found", Tags{"ERROR", "Framework"});
         return false;
     }
 
     try{
-        StringVector modulesThatFailedToLoad {moduleManager->loadModules(moduleFilesDirectory, *ImGui::GetCurrentContext(), moduleLibDirectory)}; 
+        StringVector modulesThatFailedToLoad {};
+        moduleManager->loadAllModules(moduleFilesDirectory, *ImGui::GetCurrentContext(), modulesThatFailedToLoad, moduleLibDirectory); 
 
         // This is just for logging what failed to load
         if(modulesThatFailedToLoad.size() > 0){
