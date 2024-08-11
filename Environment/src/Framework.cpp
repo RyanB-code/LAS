@@ -59,7 +59,7 @@ bool Framework::setup(){
 
     // Non fatal if these fail
     loadAllModuleCommands();
-    loadModuleWindows();
+    loadAllModuleWindows();
     setupCommands();
 
     
@@ -99,7 +99,7 @@ void Framework::run(){
 }
 
 // MARK: PRIVATE FUNCTIONS
-
+// MARK: Setup Functions
 bool Framework::setupShell(const std::string& rcPath, const std::string& commandHistoryPath){
     using namespace LAS;
     ShellPtr lasShell { new Shell{} };
@@ -262,6 +262,32 @@ bool Framework::loadModules(const std::string& moduleLibDirectory, const std::st
 
     return true;
 }
+void Framework::loadAllModuleWindows(){
+    int couldntLoad {0};
+    
+    for(auto window : moduleManager->getAllWindows()){
+        if(!displayManager->addWindow(window))
+            ++couldntLoad;
+    }
+    if(couldntLoad > 0){
+        std::ostringstream msg;
+        msg << "There were [" << couldntLoad << "] windows that could not be loaded from modules";
+        logger->log(msg.str(), Tags{"Non Fatal", "Framework"});
+    }
+    else
+        logger->log("All windows successfully loaded from all modules", Tags{"OK"});
+}
+bool Framework::loadModuleWindow(const std::string& name){
+    if(!moduleManager->containsModule(name))
+        return false;
+    
+    if(!displayManager->addWindow(moduleManager->getModule(name)->getWindow())){
+        logger->log("Failed to load window for module [" + name +"]", Tags{"ERROR", "Display Manager", "Module Manager"});
+        return false;
+    }
+    
+    return true;
+}
 void Framework::loadAllModuleCommands(){  
     StringVector moduleNames {moduleManager->getModuleNames()};
 
@@ -298,21 +324,7 @@ bool Framework::loadModuleCommands(const std::string& moduleName, StringVector& 
 
     return true;
 }
-void Framework::loadModuleWindows(){
-    int couldntLoad {0};
-    
-    for(auto window : moduleManager->getAllWindows()){
-        if(!displayManager->addWindow(window))
-            ++couldntLoad;
-    }
-    if(couldntLoad > 0){
-        std::ostringstream msg;
-        msg << "There were [" << couldntLoad << "] windows that could not be loaded from modules";
-        logger->log(msg.str(), Tags{"Non Fatal", "Framework"});
-    }
-    else
-        logger->log("All windows successfully loaded from all modules", Tags{"OK"});
-}
+
 void Framework::readAllModuleRCFiles(){
     StringVector names {moduleManager->getModuleNames()};
 
