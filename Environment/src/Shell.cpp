@@ -348,35 +348,6 @@ bool Shell::handleCommandQueue(bool writeToHistory){
 
     return true;   
 }
-bool Shell::readRCFile(const std::string& path){
-
-    if(std::filesystem::exists(path)){
-        std::ifstream rcFile {path}; 
-        std::string line;
-
-        // Read line by line
-        while (std::getline(rcFile, line)){
-            std::stringstream inputStream{};
-            inputStream << line;
-            std::string buffer {inputStream.str()};
-
-            // Filter out comments, newlines, and empty lines. Add the rest to commandQueue
-            if(!buffer.starts_with("#") && !buffer.starts_with('\n') && !buffer.empty())
-                commandQueue.push(buffer);
-        }
-        return true;
-    }
-    else{
-        std::ofstream newRCFile {path, std::ios::trunc};
-
-        if(!std::filesystem::exists(path)){
-            std::cerr << "Could not create new configuration file at [" << path << "]\n";
-            return false;
-        }
-        rcPath = path;
-        return ShellHelper::defaultInitializeRCFile(rcPath);
-    }
-}
 bool Shell::getAllGroupsManuals(std::ostringstream& os) const {
     for(const auto& group : commands){
         os << group.first << " Manual:\n";
@@ -453,17 +424,50 @@ bool Shell::setCommandHistoryPath (const std::string& path){
     commandHistoryPath = path;
     return true;
 }
+bool Shell::readRCFile(std::string path){
+    if(path.empty())
+        path = getRCPath();
+    
+    return ShellHelper::readRCFile(path, commandQueue);
+}
+
 
 // MARK: Shell Helper
 namespace LAS::ShellHelper{
-    bool defaultInitializeRCFile(const std::string& path){
+    bool readRCFile(const std::string& path, std::queue<std::string>& queue){
+
         if(!std::filesystem::exists(path))
             return false;
-        
+
+        std::ifstream rcFile {path}; 
+        std::string line;
+
+        // Read line by line
+        while (std::getline(rcFile, line)){
+            std::stringstream inputStream{};
+            inputStream << line;
+            std::string buffer {inputStream.str()};
+
+            // Filter out comments, newlines, and empty lines. Add the rest to commandQueue
+            if(!buffer.starts_with("#") && !buffer.starts_with('\n') && !buffer.empty())
+                queue.push(buffer);
+        }
+
+        return true;
+    }
+    bool defaultInitializeRCFile(const std::string& path){
+        std::ofstream newRCFile {path, std::ios::trunc};
+
+        if(!std::filesystem::exists(path))
+            return false;
+
         std::ofstream rcFile {path, std::ios::trunc};
 
-        rcFile << "# Life Application Suite Configuration File\n# Any commands entered here will be executed upon each startup\n" << std::endl;
-        rcFile << "# Added by default\nalias man=\"las man\"" << std::endl;
+        rcFile <<   "# Life Application Suite Configuration File\n"
+                    "# Any commands entered here will be executed upon each startup\n";
+
+        rcFile <<   "# Added by default\n"
+                    "alias man=\"las man\"\n"; 
 
         rcFile.close();
 
