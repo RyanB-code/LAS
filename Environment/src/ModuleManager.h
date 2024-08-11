@@ -38,7 +38,6 @@ namespace LAS{
         std::string         getModuleDirectory() const;
         bool                setModuleDirectory(const std::string& directory);
 
-
         [[nodiscard]]
         StringVector    loadModules (const std::string& moduleFilesDirectory, ImGuiContext& context, std::string loadDirectory="");
         bool            loadModule  (std::string moduleFilesDirectory, ImGuiContext& context, const std::string& fileName);
