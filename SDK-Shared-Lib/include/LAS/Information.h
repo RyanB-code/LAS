@@ -17,6 +17,7 @@ struct ModuleInfo    {
 };
 struct EnvironmentInfo     {
     std::string     directory{};
+    std::string     rcFilePath{};
     
     ImGuiContext&   context;
     LoggerPtr       logger;

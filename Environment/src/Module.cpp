@@ -16,15 +16,36 @@ Module::Module( const LoggerPtr&             setLogger,
 Module::~Module(){
     cleanup();
 }
+bool Module::setDirectory(std::string directory){
+    std::string qualifiedDirectory = LAS::TextManip::ensureSlash(directory);              // Ensure slash at the end
 
+    if(!std::filesystem::exists(qualifiedDirectory))
+        return false;
+    
+    directory = qualifiedDirectory;
+    return true;
+}
+bool Module::setRCFilePath(const std::string& path){
+    if(!std::filesystem::exists(path))
+        return false;
+    
+    rcFilePath = path;
+    return true;
+}
 std::string Module::getTitle() const{
     return moduleInfo.title;
 }
 std::string Module::getGroupName() const{
     return moduleInfo.commandGroupName;
 }
-const ModuleInfo& Module::getInfo() const{
-    return moduleInfo;
+std::string Module::getDirectory() const{
+    return directory;
+}
+std::string Module::getRCFilePath() const{
+    return rcFilePath;
+}
+WindowPtr Module::getWindow() const{
+    return moduleInfo.window;
 }
 std::vector<CommandPtr>& Module::getCommands(){
     return moduleInfo.commands;
@@ -42,6 +63,9 @@ bool Module::loadModuleInfo(){
 bool Module::loadEnvInfo(const EnvironmentInfo& envInfo){
     if(!loadEnvInfoPtr(envInfo))
         return false;
-    else
+   
+    if(setDirectory(envInfo.directory) && setRCFilePath(envInfo.rcFilePath))
         return true;
+    
+    return false;
 }

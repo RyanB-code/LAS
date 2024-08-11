@@ -92,7 +92,7 @@ bool ModuleManager::loadModule  (std::string parentDirectory, ImGuiContext& cont
     }
 
     // Pass environment info only if all files could be created
-    EnvironmentInfo envInfo {moduleFilesDirectory, context, logger};
+    EnvironmentInfo envInfo {moduleFilesDirectory, moduleRCFilePath, context, logger};
     if(!moduleBuffer->loadEnvInfo(envInfo)){
         logger->log("Failed loading environment info from Module [" + moduleBuffer->getTitle() + "]", Tags{"ERROR", "Module Manager"});
         return false;
@@ -116,7 +116,7 @@ WindowList ModuleManager::getAllWindows()    const{
     WindowList list;
 
     for(auto module : modules){
-        list.push_back(module.second->getInfo().window);
+        list.push_back(module.second->getWindow());
     }
 
     return list;
@@ -131,8 +131,7 @@ bool ModuleManager::setModuleDirectory(const std::string& directory){
         return false;
     
     moduleDirectory = qualifiedDirectory;
-
-    return std::filesystem::exists(qualifiedDirectory);
+    return true;
 }
 
 // MARK: LASCore Namespace 

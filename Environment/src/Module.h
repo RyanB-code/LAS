@@ -29,19 +29,26 @@ namespace LAS{
                 LAS::Modules::VoidNoParams              setCleanup);
         ~Module();
 
-        std::string     getTitle()          const;
-        std::string     getGroupName()      const;
-        
-        const ModuleInfo&   getInfo()       const;
-        std::vector<CommandPtr>&   getCommands();
+        bool    setDirectory    (std::string directory);
+        bool    setRCFilePath   (const std::string& path);
+
+        std::string                 getTitle()          const;
+        std::string                 getGroupName()      const;
+        std::string                 getDirectory()      const;
+        std::string                 getRCFilePath()     const;
+        WindowPtr                   getWindow()         const;
+        std::vector<CommandPtr>&    getCommands();
 
         bool    loadModuleInfo();
         bool    loadEnvInfo(const EnvironmentInfo& envInfo);
         void    cleanup();
         
-
     private:
         ModuleInfo moduleInfo {};
+
+        std::string directory;
+        std::string rcFilePath;
+
         const LoggerPtr& logger;
 
         LAS::Modules::LoadModuleInfo        loadModuleInfoPtr   {};
