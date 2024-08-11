@@ -51,4 +51,12 @@ namespace LAS::Commands{
         const std::weak_ptr<ModuleManager>  moduleManager;
         const std::weak_ptr<Logger>         logger;
     };
+
+    class Echo : public Command {
+    public:
+        Echo ();
+        ~Echo();
+    
+        std::pair<int, std::ostringstream> execute(const StringVector&) override;
+    };
 }
