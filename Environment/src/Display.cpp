@@ -145,7 +145,6 @@ void DisplayManager::drawWindows(){
             }
             ImGui::EndMenu();
         }
-
         ImGui::EndMainMenuBar();
     }
 
