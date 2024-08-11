@@ -60,11 +60,17 @@ bool Framework::setup(){
     // Non fatal if these fail
     loadAllModuleCommands();
     loadModuleWindows();
-
     setupCommands();
 
-    if(!shell->readRCFile(filePaths.rcPath))
-        return false;
+    
+    if(!shell->readRCFile(filePaths.rcPath)){
+        if(!ShellHelper::defaultInitializeRCFile(filePaths.rcPath)){
+            logger->log("Could not find or create new RC file at [" + filePaths.rcPath + "]", Tags{"ERROR", "SHELL"});
+            return false;
+        }
+    }
+    
+    readAllModuleRCFiles();
 
     // Handle RC file commands
     if(shell)
@@ -306,6 +312,27 @@ void Framework::loadModuleWindows(){
     }
     else
         logger->log("All windows successfully loaded from all modules", Tags{"OK"});
+}
+void Framework::readAllModuleRCFiles(){
+    StringVector names {moduleManager->getModuleNames()};
+
+    for(const auto& s : names){
+        readModuleRCFile(s);
+    }
+}
+bool Framework::readModuleRCFile (const std::string& name){
+    if(!moduleManager->containsModule(name))
+        return false; 
+
+    ModulePtr moduleBuffer {moduleManager->getModule(name)};
+
+    std::queue<std::string> commandLines;
+    if(LAS::ShellHelper::readRCFile(moduleBuffer->getRCFilePath(), commandLines)){
+        for (/*Nothing*/; !commandLines.empty(); commandLines.pop()){
+            shell->addToQueue(commandLines.front());
+        }
+    }
+    return true;
 }
 
 

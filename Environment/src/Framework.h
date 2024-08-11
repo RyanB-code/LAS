@@ -74,5 +74,7 @@ namespace LAS{
         void loadAllModuleCommands  ();                                 
         bool loadModuleCommands     (const std::string& moduleName, StringVector& commandsNotLoaded);
 
+        void readAllModuleRCFiles   ();
+        bool readModuleRCFile       (const std::string& name);
     };
 }
