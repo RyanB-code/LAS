@@ -82,8 +82,6 @@ namespace LAS{
         void addToQueue         (const std::string& entry);
         bool handleCommandQueue (bool writeToHistory=true);
 
-        bool readRCFile         (const std::string& path);          // Creates default RC file if it does not exist
-
         bool getAllGroupsManuals    (std::ostringstream& os)                                const;
         bool getGroupManual         (std::ostringstream& os, const std::string& groupName)  const;
 
@@ -91,8 +89,10 @@ namespace LAS{
         std::string                     getRCPath()                 const;
         std::string                     getCommandHistoryPath()     const;
 
-        bool                setRCPath               (const std::string& path);
-        bool                setCommandHistoryPath   (const std::string& path);
+        bool setRCPath               (const std::string& path);
+        bool setCommandHistoryPath   (const std::string& path);
+
+        bool readRCFile(std::string path="");
     private:
         std::unordered_map  <std::string, std::unordered_map<std::string, CommandPtr>>  commands;
         std::unordered_map  <std::string, std::string>                                  aliases;
@@ -107,6 +107,7 @@ namespace LAS{
     };
 
     namespace ShellHelper{
+        bool        readRCFile              (const std::string& path, std::queue<std::string>& queue);
         bool        defaultInitializeRCFile (const std::string& path);
         bool        writeToCommandHistory   (const std::string& path, const std::string& text);
         uint16_t    linesInFile             (const std::string& path);
