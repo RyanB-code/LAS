@@ -127,8 +127,10 @@ void Framework::setupCommands(){
 
     // Instantiate commands
     std::unique_ptr<Set>            set             {std::make_unique<Set>      (displayManager, moduleManager, logger)};
-    std::unique_ptr<Manual>         manual          {std::make_unique<Manual>   (shell)};
+    std::unique_ptr<Manual>         manual          {std::make_unique<Manual>   (shell) };
     std::unique_ptr<Print>          print           {std::make_unique<Print>    (displayManager, moduleManager, logger)};
+    std::unique_ptr<Echo>           echo            {std::make_unique<Echo>     () };
+
 
     // Add to known commands
     if(!shell->addCommand(commandGroupName, std::move(set))){
@@ -144,6 +146,11 @@ void Framework::setupCommands(){
     if(!shell->addCommand(commandGroupName, std::move(print))){
         std::ostringstream msg;
         msg << "Command [" << print->getKey() << "] could not be added.\n";
+        logger->log(msg.str(), Tags{"Shell"});
+    }
+    if(!shell->addCommand(commandGroupName, std::move(echo))){
+        std::ostringstream msg;
+        msg << "Command [" << echo->getKey() << "] could not be added.\n";
         logger->log(msg.str(), Tags{"Shell"});
     }
 }

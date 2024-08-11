@@ -270,3 +270,26 @@ std::pair<int, std::ostringstream> Print::execute(const StringVector& args) {
 
     return pair(0, os.str());
 }
+
+Echo::Echo() : Command {"echo", "Echos to all outputs"} 
+{
+
+}
+Echo::~Echo(){
+
+}
+std::pair<int, std::ostringstream> Echo::execute(const StringVector& args) {
+    std::ostringstream text;
+
+    if(args.empty()){
+        return pair(0, "\n");
+    }
+    
+    for(std::string s : args){
+        text << s << " ";
+    }
+
+    text << "\n";
+
+    return pair(0, text.str());
+}
