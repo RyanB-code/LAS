@@ -38,9 +38,8 @@ namespace LAS{
         std::string         getModuleDirectory() const;
         bool                setModuleDirectory(const std::string& directory);
 
-        [[nodiscard]]
-        StringVector    loadModules (const std::string& moduleFilesDirectory, ImGuiContext& context, std::string loadDirectory="");
-        bool            loadModule  (std::string moduleFilesDirectory, ImGuiContext& context, const std::string& fileName);
+        void        loadAllModules  (const std::string& moduleFilesDirectory, ImGuiContext& context, StringVector& modulesNotLoaded, std::string loadDirectory=""); // Clears the StringVector first
+        bool        loadModule      (std::string moduleFilesDirectory, ImGuiContext& context, const std::string& fileName);
 
     private:
         std::unordered_map<std::string, ModulePtr> modules{};
