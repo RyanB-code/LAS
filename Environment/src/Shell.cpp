@@ -39,13 +39,18 @@ void ConsoleWindow::draw(){
 
 
     if(ImGui::BeginChild("Options", ImVec2(windowSize.x-20, 40), ImGuiChildFlags_Border)){
+        if(ImGui::Button("Clear", ImVec2{50,20}))
+            textHistory.str("");
+
+        ImGui::SameLine();
+        ImGui::Checkbox("Auto Scroll", &autoScroll);
+
+        ImGui::SameLine();
         static bool showDemo {false};
         ImGui::Checkbox("Show Demo Window", &showDemo);
         if(showDemo)
             ImGui::ShowDemoWindow();
 
-        ImGui::SameLine();
-        ImGui::Checkbox("Auto Scroll", &autoScroll);
         ImGui::EndChild();
     }
     ImGui::SeparatorText("Console");
@@ -70,13 +75,16 @@ void ConsoleWindow::draw(){
     static bool     fetchHistory            {false}; 
 
     if(ImGui::IsWindowFocused()){
-        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow))){
+        if (ImGui::IsKeyPressed(ImGuiKey_LeftCtrl) && ImGui::IsKeyPressed(ImGuiKey_L))
+            textHistory.str("");
+
+        if (ImGui::IsKeyPressed(ImGuiKey_UpArrow)){
             if(offsetFromEnd < 256)
                 ++offsetFromEnd;    
             fetchHistory = true;
         }
 
-        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow))){
+        if (ImGui::IsKeyPressed(ImGuiKey_DownArrow)){
             if(offsetFromEnd > 0)
                 --offsetFromEnd;
             else if(offsetFromEnd == 0){
