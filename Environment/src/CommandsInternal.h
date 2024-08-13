@@ -59,4 +59,17 @@ namespace LAS::Commands{
     
         std::pair<int, std::ostringstream> execute(const StringVector&) override;
     };
+
+    class ModuleControl : public Command{
+    public:
+        ModuleControl   (   std::weak_ptr<DisplayManager>,
+                            std::weak_ptr<ModuleManager>
+                        );
+        ~ModuleControl();
+
+        std::pair<int, std::ostringstream> execute(const StringVector&) override;
+    private:
+        const std::weak_ptr<DisplayManager> displayManager;
+        const std::weak_ptr<ModuleManager>  moduleManager;
+    };
 }
