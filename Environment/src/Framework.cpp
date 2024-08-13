@@ -42,7 +42,7 @@ bool Framework::setup(){
     // --------------------------------------------------
 
     if(!moduleManager){
-        if(!setupModuleManager(filePaths.moduleLibDir))
+        if(!setupModuleManager(filePaths.moduleLibDir, filePaths.moduleFilesDir))
             return false;
     }
     
@@ -54,7 +54,7 @@ bool Framework::setup(){
         return false;
 
 
-    if(!loadModules(filePaths.moduleLibDir, filePaths.moduleFilesDir))
+    if(!loadAllModules(filePaths.moduleLibDir, filePaths.moduleFilesDir))
         return false;
 
     // Non fatal if these fail
@@ -132,10 +132,11 @@ void Framework::setupCommands(){
     using namespace LAS::Commands;
 
     // Instantiate commands
-    std::unique_ptr<Set>            set             {std::make_unique<Set>      (displayManager, moduleManager, logger)};
-    std::unique_ptr<Manual>         manual          {std::make_unique<Manual>   (shell) };
-    std::unique_ptr<Print>          print           {std::make_unique<Print>    (displayManager, moduleManager, logger)};
-    std::unique_ptr<Echo>           echo            {std::make_unique<Echo>     () };
+    std::unique_ptr<Set>            set             {std::make_unique<Set>              (displayManager, moduleManager, logger)};
+    std::unique_ptr<Manual>         manual          {std::make_unique<Manual>           (shell) };
+    std::unique_ptr<Print>          print           {std::make_unique<Print>            (displayManager, moduleManager, logger)};
+    std::unique_ptr<Echo>           echo            {std::make_unique<Echo>             () };
+    std::unique_ptr<ModuleControl>  modulectl       {std::make_unique<ModuleControl>    (displayManager, moduleManager) };
 
 
     // Add to known commands
@@ -159,6 +160,11 @@ void Framework::setupCommands(){
         msg << "Command [" << echo->getKey() << "] could not be added.\n";
         logger->log(msg.str(), Tags{"Shell"});
     }
+    if(!shell->addCommand(commandGroupName, std::move(modulectl))){
+        std::ostringstream msg;
+        msg << "Command [" << modulectl->getKey() << "] could not be added.\n";
+        logger->log(msg.str(), Tags{"Shell"});
+    }
 }
 bool Framework::setupLogger(const std::string& logDir){
     LogSettingsPtr  logSettings {new LogSettings{}};                            // Uses default settings values
@@ -179,12 +185,16 @@ bool Framework::setupLogger(const std::string& logDir){
     logger->log("Logger setup successful", Tags{"OK"});
     return true;
 }
-bool Framework::setupModuleManager(const std::string& moduleDir){
+bool Framework::setupModuleManager(const std::string& moduleLoadDir, const std::string& moduleFilesDir){
     moduleManager = std::make_shared<ModuleManager>( ModuleManager{logger});
     logger->log("Module Manager setup successful", Tags{"OK"});
 
-    if(!moduleManager->setModuleDirectory(moduleDir)){
-        logger->log("Failed to set module directory", Tags{"Module Manager"});
+    if(!moduleManager->setModuleLoadDirectory(moduleLoadDir)){
+        logger->log("Failed to set module load directory", Tags{"Module Manager"});
+        return false;
+    }
+    if(!moduleManager->setModuleFilesDirectory(moduleFilesDir)){
+        logger->log("Failed to set module files directory", Tags{"Module Manager"});
         return false;
     }
 
@@ -233,7 +243,7 @@ bool Framework::setupInternalWindows(){
     return true;
 }
 // MARK: Load Functions
-bool Framework::loadModules(const std::string& moduleLibDirectory, const std::string& moduleFilesDirectory) {
+bool Framework::loadAllModules(const std::string& moduleLibDirectory, const std::string& moduleFilesDirectory) {
     if(!ImGui::GetCurrentContext()){
         logger->log("No ImGuiContext found", Tags{"ERROR", "Framework"});
         return false;
@@ -241,7 +251,7 @@ bool Framework::loadModules(const std::string& moduleLibDirectory, const std::st
 
     try{
         StringVector modulesThatFailedToLoad {};
-        moduleManager->loadAllModules(moduleFilesDirectory, *ImGui::GetCurrentContext(), modulesThatFailedToLoad, moduleLibDirectory); 
+        moduleManager->loadAllModules(*ImGui::GetCurrentContext(), modulesThatFailedToLoad, moduleLibDirectory, moduleFilesDirectory); 
 
         // This is just for logging what failed to load
         if(modulesThatFailedToLoad.size() > 0){

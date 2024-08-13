@@ -33,7 +33,7 @@ Set::Set(   std::weak_ptr<DisplayManager> setDM,
                                 "--show-log-tag  <bool>   \t\tToggle showing of log tags\n"
                                 "--show-log-msg  <bool>   \t\tToggle showing of log messages\n"
                                 "--show-log-location <bool>   \t\tToggle showing of log location\n"
-                                "--module-directory [optional] <directory>\tChange directory where modules are loaded from\n\tOptional: -c creates directory specified"},
+                    },
             displayManager  {setDM},
             moduleManager   {setMM},
             logger          {setLogger}
@@ -151,37 +151,6 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
         else
             return pairInvalidArgument(args[1]);
     }
-    else if(args[0] == "--module-directory"){
-        bool setDirectory {false};
-
-        // Option to create directory
-        if(args.size() >= 3){
-            if(args[1] == "-c"){
-                if(std::filesystem::exists(args[2]))
-                    setDirectory = true;
-                else{
-                    LAS::TextManip::ensureSlash(args[2]);
-                    if(std::filesystem::create_directory(args[2]))
-                        setDirectory = true;
-                }
-            }
-            else
-                return pairInvalidArgument(args[1]);
-        }
-        else if(args.size() == 2){
-            setDirectory = true;
-        }
-
-
-        if(setDirectory){
-            if(tempModuleManager->setModuleDirectory(args[2]))
-                return pairNormal();
-            else
-                return pairErrorWithMessage("Failed to set module directory to \"" + args[2] + "\"\n");
-        }
-
-        return pairErrorWithMessage("Failed to set module directory\n");
-    }
     else{
         return pairInvalidArgument(args[0]);
     }
@@ -262,7 +231,7 @@ std::pair<int, std::ostringstream> Print::execute(const StringVector& args) {
     }
     if(addModuleSettings){
         os <<   "Module Manager Settings:\n"  
-                "\tModule Directory: " << tempModuleManager->getModuleDirectory() << "\n";
+                "\tModule Directory: " << tempModuleManager->getModuleLoadDirectory() << "\n";
     }
     if(addDisplaySettings)
         os <<   "Display Settings:\n"
@@ -293,3 +262,117 @@ std::pair<int, std::ostringstream> Echo::execute(const StringVector& args) {
 
     return pair(0, text.str());
 }
+ModuleControl::ModuleControl(   std::weak_ptr<DisplayManager>   setDisplayManager,
+                                std::weak_ptr<ModuleManager>    setModuleManager
+                            )
+    :   Command {"modulectl",   "Controls module functions\n"
+                                "<action> <command> [optional]\n"
+                                "set\t\t\tApplies changes\n" 
+                                "\t\tmodule-load-directory [option] <directory>\tChange directory where modules are loaded from\n\t\t\tOptional: -c creates directory specified\n"               
+                },
+                                displayManager  {setDisplayManager},
+                                moduleManager   {setModuleManager}
+{
+
+}
+ModuleControl::~ModuleControl(){
+
+}
+std::pair<int, std::ostringstream> ModuleControl::execute(const StringVector& args){
+    std::shared_ptr<DisplayManager> tempDisplayManager { displayManager.lock()};
+    std::shared_ptr<ModuleManager>  tempModuleManager  { moduleManager.lock()};
+
+    if(!tempDisplayManager|| !tempModuleManager)
+        return pairErrorWithMessage("\tCould not access necessary items\n");
+
+    // 0 = verb, 1 = what, 2 = option/dir, 3 = directory
+    
+    bool setDirectory       {false};
+    bool createDirectory    { false };
+    bool reload             { false };  
+
+    // Parse and handle arguments
+    if(args[0] == "set"){  
+        if(args[1] == "module-load-directory")
+            setDirectory = true;
+    }
+    else if (args[0] == "reload-all"){
+        reload = true;
+    }
+    else
+        return pairInvalidArgument(args[0]);
+
+
+    // Conditional actions
+    if(setDirectory){
+        // Check for optional
+        std::string arg2 {args[2]};
+        if(arg2.starts_with('-')){
+            if(arg2.contains('c'))
+                createDirectory = true;
+            if(arg2.contains('r'))
+                reload = true;
+        }
+        
+        if(createDirectory && args.size() >= 4){
+            if(!std::filesystem::exists(args[3])){
+                LAS::TextManip::ensureSlash(args[3]);
+
+                // Attempt to create
+                if(!std::filesystem::create_directory(args[3]))
+                   return pairErrorWithMessage("Could not create directory [" + args[3] + "]\nProcess aborted\n");
+            }
+
+            // Set directory
+            if(!tempModuleManager->setModuleLoadDirectory(args[3]))
+                return pairErrorWithMessage("Failed to set module directory to \"" + args[3] + "\"\nProcess aborted\n");
+        }
+        else{
+            // No optional found
+            if(!tempModuleManager->setModuleLoadDirectory(args[3]))
+                return pairErrorWithMessage("Failed to set module directory to \"" + args[3] + "\"\n");
+        }
+    }
+
+    if(reload){
+        tempDisplayManager->closeAllModuleWindows();
+        tempDisplayManager->clearAllModuleWindows();
+        tempModuleManager->clearNonUtilityModules();
+
+        // Load Modules
+        StringVector notLoaded{};
+        tempModuleManager->loadAllModules(*ImGui::GetCurrentContext(), notLoaded);
+
+        // Load Windows
+        int windowsNotLoaded{0};
+        for(auto window : tempModuleManager->getAllWindows()){
+            if(!tempDisplayManager->addWindow(window))
+                ++windowsNotLoaded;
+        }
+
+        // Log Modules loaded
+        std::ostringstream msg;
+        if(!notLoaded.empty()){
+            msg << "There were [" << notLoaded.size() << "] modules that could not be loaded.\nLocations: ";
+            for(const auto& s : notLoaded){
+                msg << "[" << s << "], ";
+            }
+            msg << '\n';
+        }
+        else
+            msg << "All modules were successfully loaded\n";
+
+        // Log Windows loaded
+        if(windowsNotLoaded > 0){
+            std::ostringstream msg;
+            msg << "There were [" << windowsNotLoaded << "] windows that could not be loaded from modules\n";
+        }
+        else
+            msg << "All windows successfully loaded from all modules\n";
+
+        return pair(0, msg.str());
+    }
+
+    return pairErrorWithMessage("Ill formed command\n");
+}
+

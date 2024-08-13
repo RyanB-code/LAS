@@ -64,12 +64,12 @@ namespace LAS{
 
         bool setupShell             (const std::string& rcPath, const std::string& commandHistoryPath);
         bool setupLogger            (const std::string& logDir);
-        bool setupModuleManager     (const std::string& moduleDir);
+        bool setupModuleManager     (const std::string& moduleLoadDir, const std::string& moduleFilesDir);
         bool setupDisplay           ();
         bool setupInternalWindows   ();
         void setupCommands          ();                            // This is where to instantiate commands
 
-        bool loadModules            (const std::string& moduleLibDirectory, const std::string& moduleFilesDirectory);
+        bool loadAllModules         (const std::string& moduleLibDirectory, const std::string& moduleFilesDirectory);
         void loadAllModuleWindows   ();
         bool loadModuleWindow       (const std::string& name);
         void loadAllModuleCommands  ();                                 
