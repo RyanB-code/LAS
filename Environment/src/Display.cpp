@@ -79,6 +79,24 @@ bool DisplayManager::removeWindow(LAS::Window& window){
         return true;
     }
 }
+void DisplayManager::closeAllModuleWindows(){
+    std::map<uint8_t, WindowPtr>::iterator itr;
+    for(itr = windows.begin(); itr != windows.end(); ++itr){
+        if(itr->second->getMenuOption() == LAS::MenuOption::MODULE){
+            itr->second->shown = false;
+        }
+    }
+}
+
+void DisplayManager::clearAllModuleWindows(){
+    std::map<uint8_t, WindowPtr>::iterator itr;
+    for(itr = windows.begin(); itr != windows.end(); ++itr){
+        if(itr->second->getMenuOption() == LAS::MenuOption::MODULE){
+            windows.erase(itr);
+        }
+    }
+}
+
 
 
 
