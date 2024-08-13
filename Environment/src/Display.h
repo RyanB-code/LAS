@@ -35,6 +35,9 @@ namespace LAS{
         bool removeWindow   (uint8_t ID);
         bool removeWindow   (LAS::Window& window);
 
+        void closeAllModuleWindows();
+        void clearAllModuleWindows();
+
     private:
         const LoggerPtr&      logger;
 
