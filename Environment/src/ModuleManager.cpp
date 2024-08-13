@@ -41,11 +41,13 @@ ModulePtr ModuleManager::getModule(std::string title) const{
 bool ModuleManager::containsModule(std::string title) const{
     return modules.contains(title);
 }
-void ModuleManager::loadAllModules(const std::string& moduleFilesDirectory, ImGuiContext& context, StringVector& modulesNotLoaded, std::string loadDirectory){
+void ModuleManager::loadAllModules(ImGuiContext& context, StringVector& modulesNotLoaded, std::string loadDirectory, std::string filesDirectory){
     modulesNotLoaded.erase(modulesNotLoaded.begin(), modulesNotLoaded.end());
 
     if(loadDirectory.empty())
-        loadDirectory = moduleDirectory;
+        loadDirectory = moduleLoadDirectory;
+    if(filesDirectory.empty())
+        filesDirectory = moduleFilesDirectory;
     
     const   std::filesystem::path   qualifiedDirectory  {LAS::TextManip::ensureSlash(loadDirectory)};   // Path with slashes
 
@@ -55,14 +57,14 @@ void ModuleManager::loadAllModules(const std::string& moduleFilesDirectory, ImGu
 
     // Iterate over directory and attempt to load each file
 	for(auto const& file : std::filesystem::directory_iterator(qualifiedDirectory)){
-        if(!loadModule(moduleFilesDirectory, context, file.path()))
+        if(!loadModule(filesDirectory, context, file.path()))
             modulesNotLoaded.push_back(file.path());
 	}
 
     return;
 }
 bool ModuleManager::loadModule  (std::string parentDirectory, ImGuiContext& context, const std::string& fileName){
-    const   std::string moduleNamePrefix    {"LASModule_"};         // Every module name must have this key present to be added
+    static constexpr  std::string moduleNamePrefix    {"LASModule_"};         // Every module name must have this key present to be added
 
     if(fileName.find(moduleNamePrefix) == fileName.npos)
         return false;
@@ -122,17 +124,42 @@ WindowList ModuleManager::getAllWindows()    const{
 
     return list;
 }
-std::string ModuleManager::getModuleDirectory() const{
-    return moduleDirectory;
+std::string ModuleManager::getModuleLoadDirectory() const{
+    return moduleLoadDirectory;
 }
-bool ModuleManager::setModuleDirectory(const std::string& directory){
+bool ModuleManager::setModuleLoadDirectory(const std::string& directory){
     std::string qualifiedDirectory = LAS::TextManip::ensureSlash(directory);              // Ensure slash at the end
 
     if(!std::filesystem::exists(qualifiedDirectory))
         return false;
     
-    moduleDirectory = qualifiedDirectory;
+    moduleLoadDirectory = qualifiedDirectory;
     return true;
+}
+std::string ModuleManager::getModuleFilesDirectory() const{
+    return moduleFilesDirectory;
+}
+bool ModuleManager::setModuleFilesDirectory(const std::string& directory){
+    std::string qualifiedDirectory = LAS::TextManip::ensureSlash(directory);              // Ensure slash at the end
+
+    if(!std::filesystem::exists(qualifiedDirectory))
+        return false;
+    
+    moduleFilesDirectory = qualifiedDirectory;
+    return true;
+}
+void ModuleManager::clearNonUtilityModules(){
+    std::unordered_map<std::string, ModulePtr>::iterator itr;
+
+    std::vector<std::unordered_map<std::string, ModulePtr>::iterator> modulesToErase{};
+
+    for(itr = modules.begin(); itr != modules.end(); ++itr){
+        if(itr->second->getWindow()->getMenuOption() != LAS::MenuOption::UTILITY)
+           modulesToErase.push_back(itr);
+    }
+
+    for(auto i : modulesToErase)
+        modules.erase(i);
 }
 
 // MARK: LASCore Namespace 

@@ -29,23 +29,27 @@ namespace LAS{
         bool removeModule   (std::string title);
         bool containsModule (std::string title)   const;
 
-
         ModulePtr           getModule(std::string title)        const;
         const StringVector  getModuleNames()                    const;
 
         WindowList          getAllWindows()                     const;
 
-        std::string         getModuleDirectory() const;
-        bool                setModuleDirectory(const std::string& directory);
+        std::string         getModuleLoadDirectory  () const;
+        std::string         getModuleFilesDirectory () const;
+        bool                setModuleLoadDirectory  (const std::string& directory);
+        bool                setModuleFilesDirectory (const std::string& directory);
 
-        void        loadAllModules  (const std::string& moduleFilesDirectory, ImGuiContext& context, StringVector& modulesNotLoaded, std::string loadDirectory=""); // Clears the StringVector first
-        bool        loadModule      (std::string moduleFilesDirectory, ImGuiContext& context, const std::string& fileName);
+        void loadAllModules  (ImGuiContext& context, StringVector& modulesNotLoaded, std::string loadDirectory="", std::string filesDirectory=""); // Clears the StringVector first
+        bool loadModule      (std::string moduleFilesDirectory, ImGuiContext& context, const std::string& fileName);
+
+        void clearNonUtilityModules    ();
 
     private:
         std::unordered_map<std::string, ModulePtr> modules{};
         const LoggerPtr& logger;
 
-        std::string moduleDirectory;
+        std::string moduleLoadDirectory;
+        std::string moduleFilesDirectory;
     };
 
     namespace Modules{
