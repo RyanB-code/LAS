@@ -77,6 +77,9 @@ void ConsoleWindow::draw(){
     if(ImGui::IsWindowFocused()){
         if (ImGui::IsKeyPressed(ImGuiKey_LeftCtrl) && ImGui::IsKeyPressed(ImGuiKey_L))
             textHistory.str("");
+            
+        if (ImGui::IsKeyPressed(ImGuiKey_RightCtrl) && ImGui::IsKeyPressed(ImGuiKey_L))
+            textHistory.str("");
 
         if (ImGui::IsKeyPressed(ImGuiKey_UpArrow)){
             if(offsetFromEnd < 256)
