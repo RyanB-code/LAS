@@ -9,7 +9,13 @@
 #include "LAS/Window.h"
 
 namespace LAS::Information{
+    struct Version{
+        uint8_t major;
+        uint8_t minor;
+        uint8_t patch;
+    };
     struct ModuleInfo {
+        Version                 sdkVersion          {};
         std::string             title               {};
         std::string             commandGroupName    {};
         Windowing::WindowPtr    window              {};

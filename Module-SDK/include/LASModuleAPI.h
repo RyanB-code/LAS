@@ -5,6 +5,8 @@
 #include <LAS/Logging.h>
 #include <LAS/Commands.h>
 #include <LAS/Information.h>
+#include <LAS/SDK.h>
+
 
 #include <imgui/imgui.h>
 #include <iostream>

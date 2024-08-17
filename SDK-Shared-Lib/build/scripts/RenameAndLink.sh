@@ -48,8 +48,8 @@ ln -s /mnt/NAS/1-Project-Related/Project-Source-Directories/LAS/SDK-Shared-Lib/b
 cp  $shortFileName /mnt/NAS/1-Project-Related/Project-Source-Directories/LAS/Environment/lib/ 1>/dev/null 2>&1
 cp  $shortFileName /mnt/NAS/1-Project-Related/Project-Source-Directories/LAS/Module-SDK/lib/ 1>/dev/null 2>&1
 
+# Move from binary folder here to Environment/bin with real soname
+mv /mnt/NAS/1-Project-Related/Project-Source-Directories/LAS/SDK-Shared-Lib/bin/$finalRealName /mnt/NAS/1-Project-Related/Project-Source-Directories/LAS/Environment/bin/$finalSOName 1>/dev/null 2>&1
+
 # Delete when done
 rm -rf $shortFileName 1>/dev/null 2>&1
-
-# Move the link from binary folder here to Environment/bin with real soname
-mv /mnt/NAS/1-Project-Related/Project-Source-Directories/LAS/SDK-Shared-Lib/bin/$finalRealName /mnt/NAS/1-Project-Related/Project-Source-Directories/LAS/Environment/bin/$finalSOName 1>/dev/null 2>&1
