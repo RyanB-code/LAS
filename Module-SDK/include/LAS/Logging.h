@@ -13,7 +13,6 @@
 #include <format>
 
 
-
 namespace LAS::Logging {
 
     std::string printTime       (const std::chrono::system_clock::time_point& time)     noexcept;   // HH:MM:SS
