@@ -364,8 +364,7 @@ namespace LAS::FrameworkSetup{
     std::string createLogFile(const std::string& parentDir){
         std::chrono::zoned_time now { std::chrono::current_zone(), std::chrono::system_clock::now() };
 
-        using namespace LAS::TextManip::Logging;
-        std::string fileName {parentDir + std::format("{:%F} {}", now, printTime(now) + ".log")};  // Outputs in format YYY-MM-DD HH:MM::SS.log
+        std::string fileName {parentDir + std::format("{:%F} {}", now, Logging::printTime(now) + ".log")};  // Outputs in format YYY-MM-DD HH:MM::SS.log
 
         if(!ensureFile(fileName))
             return "";
