@@ -17,6 +17,9 @@
 #include </usr/include/GL/glext.h>
 #include </usr/include/GL/glxext.h>
 
+using namespace LAS::Logging;
+using namespace LAS::Windowing;
+
 
 namespace LAS{
 
@@ -33,7 +36,7 @@ namespace LAS{
 
         bool addWindow      (const WindowPtr& window);
         bool removeWindow   (uint8_t ID);
-        bool removeWindow   (LAS::Window& window);
+        bool removeWindow   (Windowing::Window& window);
 
         void closeAllModuleWindows();
         void clearAllModuleWindows();

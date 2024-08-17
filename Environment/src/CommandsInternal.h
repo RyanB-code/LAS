@@ -10,6 +10,8 @@
 #include <LAS/Logging.h>
 #include <LAS/Helper.h>
 
+using namespace LAS::Logging;
+
 // For testing command functionality
 namespace LAS::Commands{
 

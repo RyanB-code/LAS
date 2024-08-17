@@ -1,5 +1,7 @@
 #include <LAS/Logging.h>
 
+using namespace LAS::Logging;
+
 // MARK: Log
 Log::Log(std::string setMsg, std::string setTag, std::source_location setLocation, Timepoint setTimestamp)
     :   msg {setMsg},

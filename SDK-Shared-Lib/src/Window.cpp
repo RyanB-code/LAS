@@ -1,6 +1,6 @@
 #include <LAS/Window.h>
 
-using namespace LAS;
+using namespace LAS::Windowing;
 
 Window::Window(std::string setTitle, MenuOption setMenuOption)
     :   title {setTitle},

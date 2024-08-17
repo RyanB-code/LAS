@@ -5,9 +5,9 @@
 #include <filesystem>
 #include <fstream>
 
-using StringVector      = std::vector<std::string>;
+using StringVector = std::vector<std::string>;
 
-namespace LAS{
+namespace LAS {
     bool ensureDirectory    (const std::string& path);
     bool ensureFile         (const std::string& path);
 
@@ -15,10 +15,5 @@ namespace LAS{
         std::string ensureSlash         (std::string text);
         std::string ensureNoSpaces      (const std::string& text);
         std::string ensureAlNumNoSpaces (const std::string& text);
-
-        namespace Logging{
-            std::string printTime(const std::chrono::system_clock::time_point& time)    noexcept;   // HH:MM:SS
-            std::string printLocation(const std::source_location& location)             noexcept;   // <File Name> | <Function Name> | <Line> 
-        }
     }
 }

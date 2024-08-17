@@ -10,6 +10,10 @@
 #include <memory>
 #include <string>
 
+using namespace LAS::Information;
+using namespace LAS::Logging;
+using namespace LAS::Windowing;
+
 namespace LAS{
 
     class Module;

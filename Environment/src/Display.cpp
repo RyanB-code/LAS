@@ -70,7 +70,7 @@ bool DisplayManager::removeWindow(uint8_t ID){
         return true;
     }
 }
-bool DisplayManager::removeWindow(LAS::Window& window){
+bool DisplayManager::removeWindow(Windowing::Window& window){
     if(!windows.contains(window.getID())){
         return false;
     }
@@ -82,7 +82,7 @@ bool DisplayManager::removeWindow(LAS::Window& window){
 void DisplayManager::closeAllModuleWindows(){
     std::map<uint8_t, WindowPtr>::iterator itr;
     for(itr = windows.begin(); itr != windows.end(); ++itr){
-        if(itr->second->getMenuOption() == LAS::MenuOption::MODULE){
+        if(itr->second->getMenuOption() == Windowing::MenuOption::MODULE){
             itr->second->shown = false;
         }
     }
@@ -91,7 +91,7 @@ void DisplayManager::closeAllModuleWindows(){
 void DisplayManager::clearAllModuleWindows(){
     std::map<uint8_t, WindowPtr>::iterator itr;
     for(itr = windows.begin(); itr != windows.end(); ++itr){
-        if(itr->second->getMenuOption() == LAS::MenuOption::MODULE){
+        if(itr->second->getMenuOption() == Windowing::MenuOption::MODULE){
             windows.erase(itr);
         }
     }
@@ -151,14 +151,14 @@ void DisplayManager::drawWindows(){
 
         if(ImGui::BeginMenu("Modules")){
             for(auto window : windows){
-                if(window.second && window.second->getMenuOption() == LAS::MenuOption::MODULE)
+                if(window.second && window.second->getMenuOption() == Windowing::MenuOption::MODULE)
                     ImGui::MenuItem(window.second->getTitle(), NULL, &window.second->shown);
             }
             ImGui::EndMenu();
         }
         if(ImGui::BeginMenu("Utilities")){
             for(auto window : windows){
-                if(window.second && window.second->getMenuOption() == LAS::MenuOption::UTILITY)
+                if(window.second && window.second->getMenuOption() == Windowing::MenuOption::UTILITY)
                     ImGui::MenuItem(window.second->getTitle(), NULL, &window.second->shown);
             }
             ImGui::EndMenu();

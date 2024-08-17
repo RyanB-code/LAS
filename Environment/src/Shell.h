@@ -41,7 +41,7 @@ namespace LAS{
         uint8_t ID;
     };
 
-    class ConsoleWindow : public Window, public ShellOutput {
+    class ConsoleWindow : public Windowing::Window, public ShellOutput {
     public:
         explicit ConsoleWindow(std::queue<std::string>& setQueue);
         ~ConsoleWindow();
