@@ -15,7 +15,16 @@ std::string LAS::SDK::getInformation(){
     os << "Life Application Suite SDK\n";
     os << "Developed by Bradley Ryan (C) 2024\n";
     os << "Version "    << getVersion()     << "\n";
-    os << "Built on "   << __TIMESTAMP__    << "\n"; 
 
     return os.str();
+}
+
+uint8_t LAS::SDK::getVersionMajor(){
+    return LAS_SDK_VERSION_MAJOR;
+}
+uint8_t LAS::SDK::getVersionMinor(){
+    return LAS_SDK_VERSION_MINOR;
+}
+uint8_t LAS::SDK::getVersionPatch(){
+    return LAS_SDK_VERSION_PATCH;
 }
