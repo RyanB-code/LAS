@@ -1,5 +1,7 @@
 #include "LoggingInternal.h"
 
+using namespace LAS::Logging;
+
 LogToFile::LogToFile()
 {
 
@@ -19,7 +21,7 @@ std::string LogToFile::getPath() const {
     return path;
 }
 bool LogToFile::log(const Log& log, const LogSettings& logSettings) const {
-    using namespace LAS::TextManip::Logging;
+    using namespace LAS::Logging;
 
     if(!std::filesystem::exists(path))
         return false;
@@ -63,7 +65,7 @@ bool LogToFile::log(const Log& log, const LogSettings& logSettings) const {
 
 // MARK: Log Window
 LogWindow::LogWindow(const LogSettingsPtr& setLogSettings) 
-    :       LAS::Window{"Log Viewer", LAS::MenuOption::UTILITY}, 
+    :       Windowing::Window{"Log Viewer", Windowing::MenuOption::UTILITY}, 
             logSettings {setLogSettings}
 {
 
@@ -121,7 +123,7 @@ void LogWindow::draw() {
         ImGui::BeginChild("Logs", ImVec2(0,0), ImGuiChildFlags_None, ImGuiWindowFlags_HorizontalScrollbar);
 
         for(const auto& log : logHistory){
-            using namespace LAS::TextManip::Logging;
+            using namespace LAS::Logging;
             std::ostringstream os{};    // Buffer to store formatted log
 
             if (logSettings->showTime)

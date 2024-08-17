@@ -1,5 +1,7 @@
 #include <LAS/Commands.h>
 
+using namespace LAS;
+
 Command::Command(std::string setKey , std::string setDescription)
     :   key         { setKey },
         description {setDescription }

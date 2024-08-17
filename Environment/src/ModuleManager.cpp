@@ -154,7 +154,7 @@ void ModuleManager::clearNonUtilityModules(){
     std::vector<std::unordered_map<std::string, ModulePtr>::iterator> modulesToErase{};
 
     for(itr = modules.begin(); itr != modules.end(); ++itr){
-        if(itr->second->getWindow()->getMenuOption() != LAS::MenuOption::UTILITY)
+        if(itr->second->getWindow()->getMenuOption() != Windowing::MenuOption::UTILITY)
            modulesToErase.push_back(itr);
     }
 

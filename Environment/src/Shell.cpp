@@ -2,6 +2,7 @@
 
 
 using namespace LAS;
+using namespace LAS::Windowing;
 
 // MARK: Shell Output
 ShellOutput::ShellOutput()

@@ -1,6 +1,8 @@
 #include "CommandsInternal.h"
 
+using namespace LAS;
 using namespace LAS::Commands;
+using namespace LAS::CommandHelper;
 
 Manual::Manual(std::weak_ptr<Shell> setShell)
     :   Command {"man", "Show manual pages"},

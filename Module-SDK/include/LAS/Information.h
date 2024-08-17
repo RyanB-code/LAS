@@ -8,17 +8,18 @@
 #include "LAS/Commands.h"
 #include "LAS/Window.h"
 
-struct ModuleInfo    {
-    std::string     title               {};
-    std::string     commandGroupName    {};
-    WindowPtr       window              {};
-
-    std::vector<CommandPtr> commands {};
-};
-struct EnvironmentInfo     {
-    std::string     directory{};
-    std::string     rcFilePath{};
-    
-    ImGuiContext&   context;
-    LoggerPtr       logger;
-};
+namespace LAS::Information{
+    struct ModuleInfo {
+        std::string             title               {};
+        std::string             commandGroupName    {};
+        Windowing::WindowPtr    window              {};
+        std::vector<CommandPtr> commands            {};
+    };
+    struct EnvironmentInfo {
+        std::string     directory   {};
+        std::string     rcFilePath  {};
+        
+        ImGuiContext&       context;
+        Logging::LoggerPtr  logger;
+    };
+}

@@ -9,8 +9,7 @@
 #include <imgui/imgui.h>
 
 
-namespace LAS{
-
+namespace LAS::Windowing{
     enum class MenuOption{
         MODULE,
         UTILITY
@@ -35,7 +34,9 @@ namespace LAS{
             uint8_t ID;
             MenuOption menuOption;
     };
+
+    using WindowPtr     = std::shared_ptr<Window>;
+    using WindowList    = std::vector<WindowPtr>;
 }
 
-using WindowPtr = std::shared_ptr<LAS::Window>;
-using WindowList = std::vector<WindowPtr>;
+

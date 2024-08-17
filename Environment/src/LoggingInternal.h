@@ -3,41 +3,43 @@
 #include <LAS/Logging.h>
 #include <LAS/Window.h>
 
-class LogToFile final : public LogOutput{
-public:
-    LogToFile();
-    ~LogToFile();
+namespace LAS::Logging{
+    class LogToFile final : public LogOutput{
+    public:
+        LogToFile();
+        ~LogToFile();
 
-    std::string getPath() const;
-    bool setPath(std::string setPath);      // Sets the path to the file, will not create file
+        std::string getPath() const;
+        bool setPath(std::string setPath);      // Sets the path to the file, will not create file
 
-    bool log (const Log& log, const LogSettings& logSettings) const override;
-private:
-    std::string path;
-};
+        bool log (const Log& log, const LogSettings& logSettings) const override;
+    private:
+        std::string path;
+    };
 
-class LogWindow : public LAS::Window {
-public:
-    explicit LogWindow(const LogSettingsPtr&);
-    ~LogWindow();
+    class LogWindow : public Windowing::Window {
+    public:
+        explicit LogWindow(const LogSettingsPtr&);
+        ~LogWindow();
 
-    void draw() override;
+        void draw() override;
 
-    void addLog(const Log&);
+        void addLog(const Log&);
 
-private:
-    std::vector<Log> logHistory;
-    LogSettingsPtr logSettings;
-};
+    private:
+        std::vector<Log> logHistory;
+        LogSettingsPtr logSettings;
+    };
 
-class LogToWindow final : public LogOutput {
-public:
-    explicit LogToWindow(std::shared_ptr<LogWindow>);
-    ~LogToWindow();
+    class LogToWindow final : public LogOutput {
+    public:
+        explicit LogToWindow(std::shared_ptr<LogWindow>);
+        ~LogToWindow();
 
-    bool log(const Log&, const LogSettings&) const override;
-    std::shared_ptr<LogWindow> getWindow();
+        bool log(const Log&, const LogSettings&) const override;
+        std::shared_ptr<LogWindow> getWindow();
 
-private:
-    const std::shared_ptr<LogWindow> window;
-};
+    private:
+        const std::shared_ptr<LogWindow> window;
+    };
+}
