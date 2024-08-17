@@ -5,10 +5,13 @@
 #include "Module.h"
 #include "LoggingInternal.h"
 #include "Shell.h"
+#include "Config.h"
 
 #include <LAS/Commands.h>
 #include <LAS/Logging.h>
 #include <LAS/Helper.h>
+#include <LAS/SDK.h>
+
 
 using namespace LAS::Logging;
 
@@ -73,5 +76,13 @@ namespace LAS::Commands{
     private:
         const std::weak_ptr<DisplayManager> displayManager;
         const std::weak_ptr<ModuleManager>  moduleManager;
+    };
+
+    class Information : public Command{
+    public:
+        Information     ();
+        ~Information    ();
+
+        std::pair<int, std::ostringstream> execute(const StringVector&) override;
     };
 }

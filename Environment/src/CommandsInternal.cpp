@@ -4,6 +4,10 @@ using namespace LAS;
 using namespace LAS::Commands;
 using namespace LAS::CommandHelper;
 
+namespace LAS::Commands{
+
+
+
 Manual::Manual(std::weak_ptr<Shell> setShell)
     :   Command {"man", "Show manual pages"},
         shell   {setShell}
@@ -242,6 +246,7 @@ std::pair<int, std::ostringstream> Print::execute(const StringVector& args) {
     return pair(0, os.str());
 }
 
+// MARK: Echo
 Echo::Echo() : Command {"echo", "Echos to all outputs"} 
 {
 
@@ -264,6 +269,8 @@ std::pair<int, std::ostringstream> Echo::execute(const StringVector& args) {
 
     return pair(0, text.str());
 }
+
+// MARK: Module Control
 ModuleControl::ModuleControl(   std::weak_ptr<DisplayManager>   setDisplayManager,
                                 std::weak_ptr<ModuleManager>    setModuleManager
                             )
@@ -377,4 +384,22 @@ std::pair<int, std::ostringstream> ModuleControl::execute(const StringVector& ar
 
     return pairErrorWithMessage("Ill formed command\n");
 }
+// MARK: Information
+Information::Information() : Command {"info", "Displays build information.\n"}
+{
 
+}
+Information::~Information(){
+    
+}
+std::pair<int, std::ostringstream> Information::execute(const StringVector&) {
+    std::ostringstream os;
+    os << LAS::Environment::getInformation();
+    os << "Built using LAS-SDK " << LAS::SDK::getVersion() << "\n";
+    return pair(0, os.str());
+}
+
+
+
+
+} // end of LAS::Commands

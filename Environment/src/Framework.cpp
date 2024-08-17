@@ -128,15 +128,17 @@ bool Framework::setupShell(const std::string& rcPath, const std::string& command
 
     return true;
 }
+// MARK:: Add Commands
 void Framework::setupCommands(){
     using namespace LAS::Commands;
 
     // Instantiate commands
-    std::unique_ptr<Set>            set             {std::make_unique<Set>              (displayManager, moduleManager, logger)};
-    std::unique_ptr<Manual>         manual          {std::make_unique<Manual>           (shell) };
-    std::unique_ptr<Print>          print           {std::make_unique<Print>            (displayManager, moduleManager, logger)};
-    std::unique_ptr<Echo>           echo            {std::make_unique<Echo>             () };
-    std::unique_ptr<ModuleControl>  modulectl       {std::make_unique<ModuleControl>    (displayManager, moduleManager) };
+    std::unique_ptr<Set>                            set         {std::make_unique<Set>                          (displayManager, moduleManager, logger)};
+    std::unique_ptr<Manual>                         manual      {std::make_unique<Manual>                       (shell) };
+    std::unique_ptr<Print>                          print       {std::make_unique<Print>                        (displayManager, moduleManager, logger)};
+    std::unique_ptr<Echo>                           echo        {std::make_unique<Echo>                         () };
+    std::unique_ptr<ModuleControl>                  modulectl   {std::make_unique<ModuleControl>                (displayManager, moduleManager) };
+    std::unique_ptr<LAS::Commands::Information>     info        {std::make_unique<LAS::Commands::Information>   () };
 
 
     // Add to known commands
@@ -163,6 +165,11 @@ void Framework::setupCommands(){
     if(!shell->addCommand(commandGroupName, std::move(modulectl))){
         std::ostringstream msg;
         msg << "Command [" << modulectl->getKey() << "] could not be added.\n";
+        logger->log(msg.str(), Tags{"Shell"});
+    }
+    if(!shell->addCommand(commandGroupName, std::move(info))){
+        std::ostringstream msg;
+        msg << "Command [" << info->getKey() << "] could not be added.\n";
         logger->log(msg.str(), Tags{"Shell"});
     }
 }
