@@ -147,9 +147,12 @@ bool DisplayManager::initImgui(){
     
 }
 void DisplayManager::drawWindows(){
-    if(ImGui::BeginMainMenuBar()){
 
+    // Draw the menu options
+    if(ImGui::BeginMainMenuBar()){
         if(ImGui::BeginMenu("Modules")){
+            ImGui::MenuItem("(Loaded Modules)", NULL, false, false);
+            
             for(auto window : windows){
                 if(window.second && window.second->getMenuOption() == Windowing::MenuOption::MODULE)
                     ImGui::MenuItem(window.second->getTitle(), NULL, &window.second->shown);
@@ -157,6 +160,8 @@ void DisplayManager::drawWindows(){
             ImGui::EndMenu();
         }
         if(ImGui::BeginMenu("Utilities")){
+            ImGui::MenuItem("(LAS Tools)", NULL, false, false);
+
             for(auto window : windows){
                 if(window.second && window.second->getMenuOption() == Windowing::MenuOption::UTILITY)
                     ImGui::MenuItem(window.second->getTitle(), NULL, &window.second->shown);
@@ -165,7 +170,8 @@ void DisplayManager::drawWindows(){
         }
         ImGui::EndMainMenuBar();
     }
-
+    
+    // Draw the modules
     for(auto window : windows){
         if(window.second && window.second->shown)
             window.second->draw();
