@@ -22,8 +22,9 @@ bool ModuleManager::addModule(const ModulePtr& module){
 }
 bool ModuleManager::removeModule(std::string title){
     if(modules.contains(title)){
-       modules.erase(title);
-       return !modules.contains(title); // Return the inverse of contain() -> ie if modules still contains a member of the key (contains returns true), the return variable will be false since the erase did not work correctly
+        modules.at(title)->cleanup();
+        modules.erase(title);
+        return !modules.contains(title); // Return the inverse of contain() -> ie if modules still contains a member of the key (contains returns true), the return variable will be false since the erase did not work correctly
     }
     else{
         // Return true if the element already doesn't exist
@@ -158,8 +159,10 @@ void ModuleManager::clearNonUtilityModules(){
            modulesToErase.push_back(itr);
     }
 
-    for(auto i : modulesToErase)
+    for(auto i : modulesToErase){
+        i->second->cleanup();
         modules.erase(i);
+    }
 }
 
 // MARK: LASCore Namespace 
