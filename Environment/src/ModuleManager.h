@@ -50,6 +50,8 @@ namespace LAS{
 
         std::string moduleLoadDirectory;
         std::string moduleFilesDirectory;
+
+        static constexpr std::string moduleNameSuffix    {".lasm"};    // Every module must end with this to attempt to be added
     };
 
     namespace Modules{

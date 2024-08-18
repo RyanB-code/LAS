@@ -65,9 +65,8 @@ void ModuleManager::loadAllModules(ImGuiContext& context, StringVector& modulesN
     return;
 }
 bool ModuleManager::loadModule  (std::string parentDirectory, ImGuiContext& context, const std::string& fileName){
-    static constexpr  std::string moduleNamePrefix    {"LASModule_"};         // Every module name must have this key present to be added
 
-    if(fileName.find(moduleNamePrefix) == fileName.npos)
+    if(!fileName.ends_with(moduleNameSuffix))
         return false;
     
     ModulePtr moduleBuffer{LAS::Modules::bindFiletoModule(fileName, logger, context)};
