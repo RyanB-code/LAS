@@ -55,11 +55,15 @@ bool DisplayManager::addWindow(const WindowPtr& window){
     if(!window)
         return false;
 
-    if(windows.contains(window->getID())){
+    if(windows.contains(window->getID()))
         return false;
+    
+    for(const auto& w : windows){
+        if(w.second->getTitle() == window->getTitle())
+            return false;
     }
-    else
-        return windows.emplace(window->getID(), window).second;
+
+    return windows.emplace(window->getID(), window).second;
 }
 bool DisplayManager::removeWindow(uint8_t ID){
     if(!windows.contains(ID)){
