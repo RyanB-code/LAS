@@ -282,8 +282,8 @@ bool Framework::loadAllModules(const std::string& moduleLibDirectory, const std:
 void Framework::loadAllModuleWindows(){
     int couldntLoad {0};
     
-    for(auto window : moduleManager->getAllWindows()){
-        if(!displayManager->addWindow(window))
+    for(const auto& name : moduleManager->getModuleNames()){
+        if(!loadModuleWindow(name))
             ++couldntLoad;
     }
     if(couldntLoad > 0){
@@ -299,7 +299,7 @@ bool Framework::loadModuleWindow(const std::string& name){
         return false;
     
     if(!displayManager->addWindow(moduleManager->getModule(name)->getWindow())){
-        logger->log("Failed to load window for module [" + name +"]", Tags{"ERROR", "Display Manager", "Module Manager"});
+        logger->log("Failed to load window for module [" + name +"]. Module ID or window name collision", Tags{"ERROR", "Display Manager", "Module Manager"});
         return false;
     }
     
