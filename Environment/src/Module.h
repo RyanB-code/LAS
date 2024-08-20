@@ -36,6 +36,7 @@ namespace LAS{
         bool    setDirectory    (std::string directory);
         bool    setRCFilePath   (const std::string& path);
 
+        const Version&              getSDKVersion()     const;
         std::string                 getTitle()          const;
         std::string                 getGroupName()      const;
         std::string                 getDirectory()      const;
