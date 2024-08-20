@@ -28,4 +28,6 @@ namespace LAS::Information{
         ImGuiContext&       context;
         Logging::LoggerPtr  logger;
     };
+
+    std::string versionToStr (const Version& ver);
 }
