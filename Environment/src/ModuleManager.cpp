@@ -66,31 +66,80 @@ void ModuleManager::loadAllModules(ImGuiContext& context, StringVector& modulesN
 }
 bool ModuleManager::loadModule  (std::string parentDirectory, ImGuiContext& context, const std::string& fileName){
 
+    // Reject if not named correctly
     if(!fileName.ends_with(moduleNameSuffix))
         return false;
     
-    ModulePtr moduleBuffer{LAS::Modules::bindFiletoModule(fileName, logger, context)};
-        
+    ModulePtr moduleBuffer      {LAS::Modules::bindFiletoModule(fileName, logger, context)};
+
     if(!moduleBuffer)
         return false;
 
+    // This writes library information to the buffer
     if(!moduleBuffer->loadModuleInfo()){
         logger->log("Failed loading module info from Module [" + moduleBuffer->getTitle() + "]", Tags{"ERROR", "Module Manager"});
         return false;
     }
-   
+
+    // Verify module information
+    std::ostringstream fatalMsg;
+    switch(Modules::verifyModuleInformation(moduleBuffer)){
+        case 0:
+            // Success
+            break;
+         case 1:
+            logger->log("Module buffer does not exist. From file [" + fileName + "]", Tags{"ERROR", "Module Manager"});
+            return false;
+            break;
+        case 2:
+            logger->log("Module title empty from file [" + fileName + "]", Tags{"ERROR", "Module Manager"});
+            return false;
+            break;
+        case 3:
+            logger->log("Command group is empty from Module [" + moduleBuffer->getTitle() + "]", Tags{"ERROR", "Module Manager"});
+            return false;
+            break;
+        case 4:
+            logger->log("Command group name rejected from Module [" + moduleBuffer->getTitle() + "]", Tags{"ERROR", "Module Manager"});
+            return false;
+            break;
+        case 5:
+            logger->log("Module SDK version and Environment SDK version mismatch from Module [" + moduleBuffer->getTitle() + "]. Issues may occur.", Tags{"WARNING", "Module Manager"});
+            break;
+        case 6:
+            fatalMsg    << "Fatal version mismatch. Environment SDK is " << LAS::SDK::getVersion() 
+                        << ". Module [" << moduleBuffer->getTitle() 
+                        << "] SDK version is " << LAS::Information::versionToStr(moduleBuffer->getSDKVersion());
+            logger->log( fatalMsg.str(), Tags{"ERROR", "Module Manager"});
+            return false;
+            break;
+        default:
+            logger->log("Failure to verify information for file [" + fileName + "]", Tags{"ERROR", "Module Manager"});
+            return false;
+            break;
+    }
+
     std::string formattedTitle { LAS::TextManip::ensureAlNumNoSpaces(moduleBuffer->getTitle())};
-    parentDirectory    = LAS::TextManip::ensureSlash(parentDirectory);
+    parentDirectory = LAS::TextManip::ensureSlash(parentDirectory);
+
+    std::string rcPathTitle = {formattedTitle};
+
+    // Makes rcPath all lower case
+    for(auto& c : rcPathTitle){
+        if(std::isalpha(c))
+            c = std::tolower(c);
+    }
 
     std::string moduleFilesDirectory    {LAS::TextManip::ensureSlash(parentDirectory) + LAS::TextManip::ensureSlash(formattedTitle)};
-    std::string moduleRCFilePath        { moduleFilesDirectory + '.' + formattedTitle + "-rc"};
+    std::string moduleRCFilePath        {moduleFilesDirectory + '.' + rcPathTitle + "-rc"};
 
+    // Check directories can be made
     if(!LAS::ensureDirectory(moduleFilesDirectory)){
-        logger->log("Could not find or create directory [" + moduleFilesDirectory + "] for Module + [" + moduleBuffer->getTitle() + "]", Tags{"ERROR", "Module Manager"});
+        logger->log("Could not find or create directory [" + moduleFilesDirectory + "] for Module [" + moduleBuffer->getTitle() + "]", Tags{"ERROR", "Module Manager"});
         return false;
     }
     if(!LAS::ensureFile(moduleRCFilePath)){
-        logger->log("Could not find or create file [" + moduleRCFilePath + "] for Module + [" + moduleBuffer->getTitle() + "]", Tags{"ERROR", "Module Manager"});
+        logger->log("Could not find or create file [" + moduleRCFilePath + "] for Module [" + moduleBuffer->getTitle() + "]", Tags{"ERROR", "Module Manager"});
         return false;
     }
 
@@ -102,7 +151,7 @@ bool ModuleManager::loadModule  (std::string parentDirectory, ImGuiContext& cont
     }
 
     if(!addModule(moduleBuffer)){
-        logger->log("could not add module [" + moduleBuffer->getTitle() + "]", Tags{"ERROR", "Module Manager"});
+        logger->log("Could not add module [" + moduleBuffer->getTitle() + "]", Tags{"ERROR", "Module Manager"});
         return false;
     }
     return true;
@@ -184,20 +233,40 @@ namespace LAS::Modules{
 
         return std::make_shared<Module>(logger, loadModuleInfo, loadEnvInfo, cleanup);       
     }
-    bool verifyModuleInformation(const EnvironmentInfo& envInfo, const ModulePtr& module) {
+    int verifyModuleInformation(const ModulePtr& module) {
         if(!module)
-            return false;
+            return 1;
 
         if(module->getTitle().empty())
-            return false;
+            return 2;
 
         std::string groupName {module->getGroupName()};
         if(groupName.empty())
-            return false;
+            return 3;
         
         for(const auto& c : groupName){
             if(!std::isalnum(c))
-                return false;
+                if(c != '-')
+                    return 4;
+        }
+
+        const Version sdkVersion    {LAS::SDK::getVersionMajor(), LAS::SDK::getVersionMinor(), LAS::SDK::getVersionPatch()};
+        const Version moduleVersion {module->getSDKVersion()};
+        std::ostringstream msg;
+
+        switch (Modules::compareVersions(sdkVersion, moduleVersion)){
+        case 0:
+            return 0;
+            break;
+         case 1:
+            return 5;
+            break;
+        case 2:
+            return 6;
+            break;
+        default:
+            return -1;
+            break;
         }
 
         return true;
@@ -215,6 +284,18 @@ namespace LAS::Modules{
             return false;
 
         return true;
+    }
+    int compareVersions (const Version& base, const Version& compare){
+        if(base.major != compare.major)
+            return 2;
+
+        if(base.minor >= compare.minor)
+            return 0;
+        
+        if(base.minor < compare.minor)
+            return 1;
+
+        return 2;
     }
 
 }

@@ -4,6 +4,7 @@
 
 #include <LAS/Helper.h>
 #include <LAS/Logging.h>
+#include <LAS/SDK.h>
 
 #include <imgui/imgui_internal.h>   // Needed for ImGuiContext passing to Module
 
@@ -56,7 +57,9 @@ namespace LAS{
 
     namespace Modules{
         ModulePtr   bindFiletoModule        (const std::string& path, const LoggerPtr& logger, const ImGuiContext& context);
-        bool        verifyModuleInformation (const EnvironmentInfo& envInfo, const ModulePtr& module);
         bool        ensureModuleFiles       (std::string parentDirectory, std::string moduleTitle);
+        int         compareVersions         (const Version& base, const Version& compare);      // 0 = success, 1 = warning mismatch, 2 = fatal mismatch
+        int         verifyModuleInformation (const ModulePtr& module);                          // 0 = success, 1 = bad ptr, 2 = title empty, 3 = group empty, 4 = bad group name, 5 = version warning, 6 = fatal version mismatch               
+
     }
 }
