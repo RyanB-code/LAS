@@ -1,0 +1,38 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cppbuild",
+			"label": "C/C++: g++ build active file",
+			"command": "/usr/bin/g++",
+			"args": [
+				"-fdiagnostics-color=always",		// Use color in the terminal
+				"-Wall",							// Produce warning messages for everything
+				"-std=c++23",						// Use C++23
+
+				"-I${workspaceFolder}/include",		// Search for header files in the include directory
+				"-L${workspaceFolder}/lib",			// Search for compiled archives in the lib directory
+
+				"-lLAS-SDK.so",
+
+				"-g",								// Compiles and links with debugging information from GDB
+				"${workspaceFolder}/src/*.cpp",		// Use all .cpp files in the src directory
+				
+				"-o",														// Output the files
+				"${workspaceFolder}/bin/Shooter-Central.lasm",	// Name the output file the Workspace Folder. Put the output file in the builds directory
+				
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"			// Change directory to builds folder
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"detail": "compiler: /usr/bin/g++"
+		}
+	]
+}
