@@ -1,0 +1,156 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cppbuild",
+			"label": "1. Compile without linking",
+			"command": "/usr/bin/g++",
+			"args": [
+				"-fdiagnostics-color=always",		// Use color in the terminal
+				"-fsanitize=address,undefined",		// Say whats happening during segaults
+
+				"-fvisibility=default",				// Functions are automatically exported
+				"-Bsymbolic",						// Wont allow symbolic binding of exported funcions with the GOT
+
+				"-I${workspaceFolder}/include",		// Search for header files in the include directory
+				"-L${workspaceFolder}/lib",			// Search for compiled archives in the lib directory
+				
+				"-g",								// Compiile with debug information
+				"-c",								// Compiles
+				"-fpic", 							// Compile with constrained global offset table for position independent code
+				"-Wall",							// Produce warning messages for everything
+				"-std=c++23",						// Use C++23
+
+				"${workspaceFolder}/src/*.cpp",			// Use all .cpp files in src directory
+				"${workspaceFolder}/src/imgui/*.cpp",	// Use all .cpp files in src/imgui directory
+
+					
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/build/intermediate"			// Change directory to build folder
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"detail": "Compile without linking"
+		},
+		{
+			"type": "shell",
+			"label": "2a. Delete all files in bin/ directory",	// This is future proofing so when the version number changes I wont have to manually delete the old version
+			"command": "find",
+			"args": [
+				"-type",
+				"f",								
+				"-name",
+				"'*libLAS-SDK*'",
+				"-delete"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/bin"
+			},
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"detail": "Delete all files in directory"
+		},
+		{
+			"type": "cppbuild",
+			"label": "2b. Link object files into SO file",
+			"command": "/usr/bin/g++",
+			"args": [
+				"-fdiagnostics-color=always",		// Use color in the terminal	
+				"-shared",							// Make shared object
+
+				"-Wl,-soname,libLAS-SDK.so.0",		// Embeds soname into file
+
+				"-o", 								// Output the files
+				"libLAS-SDK.so",					// Name the output library (gets renamed later)
+
+				"${workspaceFolder}/build/intermediate/*.o",	// Use all the object files in the build/ibj files directory		
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/bin"		// Change directory to bin folder
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"detail": "Link object files"
+		},
+		{
+			"type": "shell",
+			"label": "2c. Rename SO file with version information",
+			"command": "./RenameAndLink.sh",
+			"options": {
+				"cwd": "${workspaceFolder}/build/scripts"
+			},
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"detail": "Rename the .so file"
+		},
+		{
+			"type": "shell",
+			"label": "3. Copy All Include Files to Environment/include",
+			"command": "cp",
+			"args": [
+				"-r",
+				".",								// Copy all files inside include directory
+				"../../Environment/include", 		// Move to Environment/include
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/include"
+			},
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"detail": "Copy headers"
+		},
+		{
+			"type": "shell",
+			"label": "4. Copy All Include Files to ModuleAPI/include",
+			"command": "cp",
+			"args": [
+				"-r",
+				".",							// Copy all files inside include directory
+				"../../ModuleAPI/include", 	
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/include"		// Change directory to bin folder
+			},
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"detail": "Copy headers"
+		},
+
+
+		// MARK: Perform All Tasks
+		{
+			"label": "Perform All Tasks",
+			"dependsOrder": "sequence",
+			"dependsOn" : [	"1. Compile without linking", 
+							"2a. Delete all files in bin/ directory", 
+							"2b. Link object files into SO file",
+							"2c. Rename SO file with version information",
+						 	"3. Copy All Include Files to Environment/include",
+							"4. Copy All Include Files to ModuleAPI/include"
+						],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		}
+	]
+}

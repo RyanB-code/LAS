@@ -1,0 +1,97 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cppbuild",
+			"label": "1. Compile without linking",
+			"command": "/usr/bin/g++",
+			"args": [
+				"-fdiagnostics-color=always",		// Use color in the terminal
+				"-fsanitize=address,undefined",		// Say whats happening during segaults
+
+				
+				"-fvisibility=default",				// Functions are automatically exported
+				"-Bsymbolic",						// Wont allow symbolic binding of exported funcions with the GOT
+
+				"-Wall",							// Produce warning messages for everything
+				"-std=c++23",						// Use C++23
+
+				"-I${workspaceFolder}/include",		// Search for header files in the include directory
+				"-L${workspaceFolder}/lib",			// Search for compiled archives in the lib directory
+
+				"-lLAS-SDK",						// Use the .so library for compilation
+
+				"-g",								// Compiles with debug information
+				"-c",								// Compiles
+				"-fpic", 							// Compile with constrained global offset table for position independent code
+
+				"${workspaceFolder}/src/*.cpp",		// Use all .cpp files in src directory
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/builds"			// Change directory to builds folder
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"detail": "Compile without linking"
+		},
+		{
+			"type": "cppbuild",
+			"label": "2. Link object files",
+			"command": "/usr/bin/g++",
+			"args": [
+				"-fdiagnostics-color=always",		// Use color in the terminal	
+				"-shared",							// Make shared object
+
+				"-o", 								// Output the files
+				"TestingModule.lasm",				// Name the output library
+
+				"-fpic",
+				"${workspaceFolder}/builds/*.o",	// Use all the object files in the builds directory		
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/bin"		// Change directory to bin folder
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"detail": "Link object files"
+		},
+		{
+			"type": "shell",
+			"label": "3. Copy Built .so to Environment/bin/Module Libraries",
+			"command": "cp",
+			"args": [
+				"*.lasm",										// Copy all .so files
+				"../../../Environment/bin/Module Libraries/", 	// Move to Environment/bin/Module Libraries
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/bin"		// Change directory to bin folder
+			},
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"detail": "Copy .so file"
+		},
+		{
+			"label": "Perform All Tasks",
+			"dependsOrder": "sequence",
+			"dependsOn" : [	"1. Compile without linking", "2. Link object files", 
+							"3. Copy Built .so to Environment/bin/Module Libraries"
+						],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		}
+	]
+}
