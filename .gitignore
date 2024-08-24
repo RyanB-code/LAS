@@ -1,7 +1,5 @@
-.vscode
 bin
 *.ini
 builds
-Module-SDK/lib/libLAS-SDK.so
-Environment/lib/libLAS-SDK.so
+lib
 *.o
