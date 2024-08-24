@@ -3,6 +3,8 @@
 #include <LAS/Logging.h>
 #include <LAS/Window.h>
 
+#include <iostream>
+
 namespace LAS::Logging{
     class LogToFile final : public LogOutput{
     public:

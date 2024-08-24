@@ -23,10 +23,6 @@ std::string LogToFile::getPath() const {
 bool LogToFile::log(const Log& log, const LogSettings& logSettings) const {
     using namespace LAS::Logging;
 
-    if(!std::filesystem::exists(path))
-        return false;
-
-
     std::ostringstream os{};    // Buffer to store formatted log
 
     if (logSettings.showTime)
@@ -55,6 +51,12 @@ bool LogToFile::log(const Log& log, const LogSettings& logSettings) const {
 
     // Indent
     os << std::endl;
+
+    if(!std::filesystem::exists(path)){
+        std::cerr   << "Could not find log file \"" << path << "\". The following was meant for file: \n"
+                    << os.str() << "\n";
+        return false;
+    }
 
     std::ofstream file {path, std::ios_base::app};
     file << os.str();
