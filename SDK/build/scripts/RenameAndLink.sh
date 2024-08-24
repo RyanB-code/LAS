@@ -23,7 +23,7 @@ done
 
 cd ../../bin/
 
-shortFileName=libLAS-SDK.so
+shortFileName=libLAS-SDK.so # This is what ever the build shared object library is called
 finalRealName=libLAS-SDK.so.$major.$minor.$patch
 finalSOName=libLAS-SDK.so.$major
 
@@ -42,14 +42,54 @@ fi
 cd ~
 
 # Create link from binary to vanilla soname
-ln -s /mnt/NAS/1-Project-Related/Project-Source-Directories/LAS/SDK-Shared-Lib/bin/$finalRealName $shortFileName 1>/dev/null 2>&1
+ln -s /mnt/NAS/1-Project-Related/Project-Source-Directories/LAS/SDK/bin/$finalRealName $shortFileName 1>/dev/null 2>&1
+if [[ $? -eq 0 ]]; then
+    echo "Linking successful"
+else
+    echo "Failed to link short name and real name"
+    exit 2
+fi
 
 # Copy to lib folder for compilation to Environment and Module-SDK
 cp  $shortFileName /mnt/NAS/1-Project-Related/Project-Source-Directories/LAS/Environment/lib/ 1>/dev/null 2>&1
-cp  $shortFileName /mnt/NAS/1-Project-Related/Project-Source-Directories/LAS/Module-SDK/lib/ 1>/dev/null 2>&1
+if [[ $? -eq 0 ]]; then
+    echo "Copied to Environment/lib"
+else
+    echo "Could not copy to Environment/lib"
 
+    # Delete .so from home directory when done
+    rm -rf $shortFileName 1>/dev/null 2>&1
+
+    exit 2
+fi
+
+cp  $shortFileName /mnt/NAS/1-Project-Related/Project-Source-Directories/LAS/Modules/Test-Module/lib/ 1>/dev/null 2>&1
+if [[ $? -eq 0 ]]; then
+    echo "Copied to Test-Module/lib"
+else
+    echo "Could not copy to Test-Module/lib"
+
+    # Delete .so from home directory when done
+    rm -rf $shortFileName 1>/dev/null 2>&1
+
+    exit 2
+fi
+
+cp  $shortFileName /mnt/NAS/1-Project-Related/Project-Source-Directories/LAS/Modules/Shooter-Central/lib/ 1>/dev/null 2>&1
+if [[ $? -eq 0 ]]; then
+    echo "Copied to Shooter-Central/lib"
+else
+    echo "Could not copy to Shooter-Central/lib"
+
+    # Delete .so from home directory when done
+    rm -rf $shortFileName 1>/dev/null 2>&1
+    exit 2
+fi
+
+# =======================================================
 # Move from binary folder here to Environment/bin with real soname
-mv /mnt/NAS/1-Project-Related/Project-Source-Directories/LAS/SDK-Shared-Lib/bin/$finalRealName /mnt/NAS/1-Project-Related/Project-Source-Directories/LAS/Environment/bin/$finalSOName 1>/dev/null 2>&1
+mv /mnt/NAS/1-Project-Related/Project-Source-Directories/LAS/SDK/bin/$finalRealName /mnt/NAS/1-Project-Related/Project-Source-Directories/LAS/Environment/bin/$finalSOName 1>/dev/null 2>&1
 
-# Delete when done
+# =======================================================
+# Delete .so from home directory when done
 rm -rf $shortFileName 1>/dev/null 2>&1
