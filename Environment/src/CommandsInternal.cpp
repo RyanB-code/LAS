@@ -395,7 +395,7 @@ Information::~Information(){
 std::pair<int, std::ostringstream> Information::execute(const StringVector&) {
     std::ostringstream os;
     os << LAS::Environment::getInformation();
-    os << "Built using LAS-SDK " << LAS::SDK::getVersion() << "\n";
+    os << "LAS-SDK version " << LAS::SDK::getVersion() << "\n";
     return pair(0, os.str());
 }
 
