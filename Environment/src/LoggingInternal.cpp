@@ -20,7 +20,7 @@ bool LogToFile::setPath(std::string setPath){
 std::string LogToFile::getPath() const {
     return path;
 }
-bool LogToFile::log(const Log& log, const LogSettings& logSettings) const {
+void LogToFile::log(const Log& log, const LogSettings& logSettings) const {
     using namespace LAS::Logging;
 
     std::ostringstream os{};    // Buffer to store formatted log
@@ -55,14 +55,14 @@ bool LogToFile::log(const Log& log, const LogSettings& logSettings) const {
     if(!std::filesystem::exists(path)){
         std::cerr   << "Could not find log file \"" << path << "\". The following was meant for file: \n"
                     << os.str() << "\n";
-        return false;
+        return;
     }
 
     std::ofstream file {path, std::ios_base::app};
     file << os.str();
     file.close();
 
-    return true;
+    return;
 }
 
 // MARK: Log Window
@@ -178,9 +178,9 @@ LogToWindow::LogToWindow(std::shared_ptr<LogWindow> setWindow)
 LogToWindow::~LogToWindow(){
 
 }
-bool LogToWindow::log(const Log& log, const LogSettings& logSettings) const {
+void LogToWindow::log(const Log& log, const LogSettings& logSettings) const {
     window->addLog(log);
-    return true;
+    return;
 }
 std::shared_ptr<LogWindow> LogToWindow::getWindow(){
     return window;
