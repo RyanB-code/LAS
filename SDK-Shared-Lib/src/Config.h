@@ -1,5 +1,0 @@
-#pragma once
-
-#define LAS_SDK_VERSION_MAJOR 0
-#define LAS_SDK_VERSION_MINOR 1
-#define LAS_SDK_VERSION_PATCH 0
