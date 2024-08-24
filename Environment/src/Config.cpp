@@ -11,8 +11,9 @@ std::string LAS::Environment::getInformation(){
     std::ostringstream os;
     
     os << "Life Application Suite\n";
-    os << "Developed by Bradley Ryan (C) 2024\n";
-    os << "Version "    << getVersion()     << "\n";
+    os << "Developed by Bradley Ryan (C) 2024\n\n";
+
+    os << "Environment version " << getVersion() << "\n";
 
     return os.str();
 }
