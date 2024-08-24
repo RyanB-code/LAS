@@ -62,7 +62,7 @@ namespace LAS::Logging {
         LogOutput ();
         virtual ~LogOutput ();
 
-        virtual bool log (const Log& log, const LogSettings& logSettings) const = 0;
+        virtual void log (const Log& log, const LogSettings& logSettings) const = 0;
         uint8_t getID() const;
 
     private:

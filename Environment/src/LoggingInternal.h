@@ -14,7 +14,7 @@ namespace LAS::Logging{
         std::string getPath() const;
         bool setPath(std::string setPath);      // Sets the path to the file, will not create file
 
-        bool log (const Log& log, const LogSettings& logSettings) const override;
+        void log (const Log& log, const LogSettings& logSettings) const override;
     private:
         std::string path;
     };
@@ -38,7 +38,7 @@ namespace LAS::Logging{
         explicit LogToWindow(std::shared_ptr<LogWindow>);
         ~LogToWindow();
 
-        bool log(const Log&, const LogSettings&) const override;
+        void log(const Log&, const LogSettings&) const override;
         std::shared_ptr<LogWindow> getWindow();
 
     private:
