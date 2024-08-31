@@ -6,7 +6,8 @@
 
 #include <string>
 #include <stdint.h>
-#include <unordered_map>
+#include <unordered_map> 
+#include <vector>
 
 namespace ShooterCentral{
     class Framework final {
@@ -14,9 +15,18 @@ namespace ShooterCentral{
         Framework();
         ~Framework();
 
+        bool addGun     (GunPtr gun);
+        bool removeGun  (const std::string& key);
+
+        void addDrill   (Drill drill);
+         
+        bool addAmmoToStockpile         (uint64_t amount,   AmmoPtr ammo);
+        bool removeAmmoFromStockPile    (uint64_t amount,   const std::string& key);
+
     private:
-        std::unordered_map<std::string, Gun>    guns;
-        std::vector<Drill>                      drills;
-        std::vector<std::pair<uint64_t, Ammo>>  ammoStockpile;
+        std::unordered_map<std::string, Gun>                            guns;
+        std::unordered_map<std::string, std::pair<uint64_t, AmmoPtr>>   ammoStockpile;
+
+        std::vector<Drill> drills;
     };
 }

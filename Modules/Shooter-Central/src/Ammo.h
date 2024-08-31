@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 #include <string>
-#include <vector>
+#include <memory>
 
 namespace ShooterCentral{  
 
@@ -39,4 +39,6 @@ namespace ShooterCentral{
         CartridgeType   cartridgeType;     
         uint8_t         grainWeight;
     };
+
+    using AmmoPtr = std::shared_ptr<Ammo>;
 }
