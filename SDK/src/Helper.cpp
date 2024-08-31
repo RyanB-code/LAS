@@ -50,5 +50,12 @@ namespace LAS::TextManip{
         }
         return textBuf;
     }
+    std::string ensureNewline (std::string text ){
+        // Ensure newline
+        if(text.back() != '\n'){
+            text += '\n';
+        }
+        return text;
+    }
 
 }
