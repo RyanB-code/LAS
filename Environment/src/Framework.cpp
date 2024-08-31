@@ -47,7 +47,7 @@ bool Framework::setup(){
     }
     
     if(!displayManager){
-        if(!setupDisplay())
+        if(!setupDisplay(filePaths.imGuiIniPath))
             return false;
     }
     if(!setupInternalWindows())
@@ -213,10 +213,10 @@ bool Framework::setupModuleManager(const std::string& moduleLoadDir, const std::
 
     return true;
 }
-bool Framework::setupDisplay(){
+bool Framework::setupDisplay(const std::string& imGuiIniPath){
     displayManager = std::make_shared<DisplayManager>(logger);
 
-    if(!displayManager->init()){
+    if(!displayManager->init(imGuiIniPath)){
         logger->log("Error setting up necessary display libraries", Tags{"ERROR", "Display Manager"});
         return false;
     }
@@ -431,6 +431,8 @@ namespace LAS::FrameworkSetup{
         filePaths.commandHistoryPath    = filePaths.dotLASDir + ".las-history";
         filePaths.logDir                = filePaths.dotLASDir + "logs/";
 
+        filePaths.imGuiIniPath          = filePaths.dotLASDir + "imgui.ini";
+
 
         // Get the correct directory for the settings file
         try{
@@ -456,6 +458,10 @@ namespace LAS::FrameworkSetup{
         }
         if(!LAS::ensureDirectory(filePaths.dotLASDir)){
             std::cerr << "Error finding or creating [" << filePaths.dotLASDir << "]";
+            return false;
+        }
+        if(!LAS::ensureFile(filePaths.imGuiIniPath)){
+            std::cerr << "Error finding or creating [" << filePaths.imGuiIniPath << "]";
             return false;
         }
 

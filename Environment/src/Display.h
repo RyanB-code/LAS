@@ -30,7 +30,7 @@ namespace LAS{
         explicit DisplayManager(const LoggerPtr& setLogger);
         ~DisplayManager();
 
-        bool init();
+        bool init(const std::string& imGuiIniPath);
         bool refresh();
         void shutdown();
 
@@ -41,8 +41,14 @@ namespace LAS{
         void closeAllModuleWindows();
         void clearAllModuleWindows();
 
+        bool        setIniPath  (const std::string& path, bool createNewFile=true); // Creates new file if not found
+        std::string getIniPath  () const;
+
+        bool saveWindowConfig   () const;
+
     private:
-        const LoggerPtr&      logger;
+        const LoggerPtr&        logger;
+        std::string             iniPath;
 
         std::map<uint8_t, WindowPtr> windows;
 
@@ -51,7 +57,7 @@ namespace LAS{
 
 
         bool initGLFW();
-        bool initImgui();
+        bool initImgui(std::string iniPath="");
 
         void drawWindows();
 

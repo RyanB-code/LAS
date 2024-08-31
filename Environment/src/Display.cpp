@@ -10,11 +10,16 @@ DisplayManager::DisplayManager(const LoggerPtr& setLogger)
 DisplayManager::~DisplayManager(){
     shutdown();
 }
-bool DisplayManager::init(){
+bool DisplayManager::init(const std::string& imGuiIniPath){
+    if(!setIniPath(imGuiIniPath)){
+        logger->log("Could not find/create ImGui INI file at [" + imGuiIniPath + "]", Tags{"ImGui Setup", "ERROR"});
+        return false;
+    }
+
     if(!initGLFW())
         return false;
 
-    if(!initImgui())
+    if(!initImgui(imGuiIniPath))
         return false;
 
     return true;    
@@ -29,10 +34,10 @@ bool DisplayManager::refresh(){
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        ImGui::DockSpaceOverViewport();     // Sets up docking for the entire window
 
         // MY RENDERING CODE HERE
         drawWindows();
-
 
         glClear(GL_COLOR_BUFFER_BIT);       // Does all the rendering
 
@@ -101,6 +106,33 @@ void DisplayManager::clearAllModuleWindows(){
     }
 }
 
+bool DisplayManager::setIniPath (const std::string& path, bool createNewFile){
+    if(std::filesystem::exists(path)){
+        iniPath = path;
+        return true;
+    }
+
+    if(!createNewFile)
+        return false;
+    
+    std::ofstream newIniFile {path, std::ios::trunc};
+
+    if(!std::filesystem::exists(path))
+        return false;
+
+    iniPath = path;
+    return true;
+}
+std::string DisplayManager::getIniPath() const{
+    return iniPath;
+}
+bool DisplayManager:: saveWindowConfig() const{
+    if(iniPath.empty())
+        return false;
+
+    ImGui::SaveIniSettingsToDisk(iniPath.c_str());
+    return true;
+}
 
 
 
@@ -129,13 +161,24 @@ bool DisplayManager::initGLFW(){
 
     return true;
 }
-bool DisplayManager::initImgui(){
+bool DisplayManager::initImgui(std::string iniFilePath){
+    if(iniFilePath.empty())
+        iniFilePath = iniPath;
+
+    if(!std::filesystem::exists(iniFilePath)){
+        logger->log("Could not find ImGui INI file at [" + iniFilePath + "]", Tags{"ImGui Setup", "ERROR"});
+        return false;
+    }
+
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
 
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
+
+    io.IniFilename = NULL;                                    // Disables automatic loading and saving of imgui.ini
+    ImGui::LoadIniSettingsFromDisk(iniPath.c_str());
 
     // Setup Platform/Renderer backends
 
@@ -150,8 +193,7 @@ bool DisplayManager::initImgui(){
     return true;
     
 }
-void DisplayManager::drawWindows(){
-
+void DisplayManager::drawWindows(){    
     // Draw the menu options
     if(ImGui::BeginMainMenuBar()){
         if(ImGui::BeginMenu("Modules")){
