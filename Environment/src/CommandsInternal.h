@@ -32,7 +32,8 @@ namespace LAS::Commands{
     public:
         Set(    std::weak_ptr<DisplayManager>,
                 std::weak_ptr<ModuleManager>,
-                std::weak_ptr<Logger>  
+                std::weak_ptr<Logger>,
+                std::weak_ptr<Shell>  
         );
         ~Set();
 
@@ -41,6 +42,7 @@ namespace LAS::Commands{
         const std::weak_ptr<DisplayManager> displayManager;
         const std::weak_ptr<ModuleManager>  moduleManager;
         const std::weak_ptr<Logger>         logger;
+        const std::weak_ptr<Shell>          shell;
     };
 
     class Print : public Command {
@@ -68,7 +70,8 @@ namespace LAS::Commands{
     class ModuleControl : public Command{
     public:
         ModuleControl   (   std::weak_ptr<DisplayManager>,
-                            std::weak_ptr<ModuleManager>
+                            std::weak_ptr<ModuleManager>,
+                            std::weak_ptr<Shell>
                         );
         ~ModuleControl();
 
@@ -76,6 +79,8 @@ namespace LAS::Commands{
     private:
         const std::weak_ptr<DisplayManager> displayManager;
         const std::weak_ptr<ModuleManager>  moduleManager;
+        const std::weak_ptr<Shell>          shell;
+
     };
 
     class Information : public Command{
@@ -84,5 +89,15 @@ namespace LAS::Commands{
         ~Information    ();
 
         std::pair<int, std::ostringstream> execute(const StringVector&) override;
+    };
+    
+    class Reload : public Command{
+    public:
+        Reload(std::weak_ptr<Shell>);
+        ~Reload();
+        
+        std::pair<int, std::ostringstream> execute(const StringVector&) override;
+    private:
+        const std::weak_ptr<Shell> shell;
     };
 }

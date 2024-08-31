@@ -409,18 +409,19 @@ std::string Shell::getRCPath() const{
 std::string Shell::getCommandHistoryPath() const{
     return commandHistoryPath;
 }
-bool Shell::setRCPath (const std::string& path){
+bool Shell::setRCPath (const std::string& path, bool createNewFile){
     if(std::filesystem::exists(path)){
         rcPath = path;
         return true;
     }
 
+    if(!createNewFile)
+        return false;
+    
     std::ofstream newRCFile {path, std::ios::trunc};
 
-    if(!std::filesystem::exists(path)){
-        std::cerr << "Could not create new configuration file at [" << path << "]\n";
+    if(!std::filesystem::exists(path))
         return false;
-    }
 
     rcPath = path;
     return ShellHelper::defaultInitializeRCFile(rcPath);
