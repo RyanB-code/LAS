@@ -287,11 +287,11 @@ ModuleControl::ModuleControl(   std::weak_ptr<DisplayManager>   setDisplayManage
                             )
     :   Command {"modulectl",   "Interact with the module controller\n"
                                 "<action> <command> [optional]\n"
-                                "set\t\t\tApplies changes\n" 
+                                "set <arg>\t\t\tApplies changes\n" 
                                 "\t\tmodule-load-directory [option] <directory>\tChange directory where modules are loaded from\n\t\t\tOptional: -c creates directory specified\n"
                                 "list-modules\t\tLists all modules by name\n"
                                 "reload-all  \t\tReloads all modules from file\n"
-                                "reload <name>\tRe-runs a module's RC file\n"               
+                                "reload <name> \tRe-runs a module's RC file\n"               
                 },
                                 displayManager  {setDisplayManager},
                                 moduleManager   {setModuleManager},
