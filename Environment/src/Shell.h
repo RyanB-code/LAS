@@ -73,6 +73,7 @@ namespace LAS{
         bool addAlias           (const std::string& key, const std::string& value);
         bool removeAlias        (const std::string& key);
         std::string findAlias   (const std::string& key);
+        void removeAllAliases   ();
 
         bool addOutput          (const ShellOutputPtr& output);
         bool removeOutput       (const uint8_t& getID);
