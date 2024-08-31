@@ -140,6 +140,7 @@ void Framework::setupCommands(){
     std::unique_ptr<ModuleControl>                  modulectl   {std::make_unique<ModuleControl>                (displayManager, moduleManager, shell) };
     std::unique_ptr<LAS::Commands::Information>     info        {std::make_unique<LAS::Commands::Information>   () };
     std::unique_ptr<Reload>                         reload      {std::make_unique<Reload>                       (shell) };
+    std::unique_ptr<DisplayControl>                 displayctl  {std::make_unique<DisplayControl>               (displayManager) };
 
 
     // Add to known commands
@@ -176,6 +177,11 @@ void Framework::setupCommands(){
     if(!shell->addCommand(commandGroupName, std::move(reload))){
         std::ostringstream msg;
         msg << "Command [" << reload->getKey() << "] could not be added.\n";
+        logger->log(msg.str(), Tags{"Shell"});
+    }
+    if(!shell->addCommand(commandGroupName, std::move(displayctl))){
+        std::ostringstream msg;
+        msg << "Command [" << displayctl->getKey() << "] could not be added.\n";
         logger->log(msg.str(), Tags{"Shell"});
     }
 }
