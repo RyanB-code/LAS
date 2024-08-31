@@ -285,7 +285,7 @@ ModuleControl::ModuleControl(   std::weak_ptr<DisplayManager>   setDisplayManage
                                 std::weak_ptr<ModuleManager>    setModuleManager,
                                 std::weak_ptr<Shell>            setShell
                             )
-    :   Command {"modulectl",   "Controls module functions\n"
+    :   Command {"modulectl",   "Interact with the module controller\n"
                                 "<action> <command> [optional]\n"
                                 "set\t\t\tApplies changes\n" 
                                 "\t\tmodule-load-directory [option] <directory>\tChange directory where modules are loaded from\n\t\t\tOptional: -c creates directory specified\n"
@@ -320,7 +320,9 @@ std::pair<int, std::ostringstream> ModuleControl::execute(const StringVector& ar
     bool reloadByName       { false };
 
     // Parse and handle arguments
-    if(args[0] == "set"){  
+    if(args.empty())
+        return pairErrorWithMessage("This command requires at least one argument\n");
+    else if(args[0] == "set"){  
         if(args[1] == "module-load-directory")
             setDirectory = true;
     }
@@ -443,7 +445,7 @@ std::pair<int, std::ostringstream> Information::execute(const StringVector&) {
     return pair(0, os.str());
 }
 
-// MARK: RELOAD
+// MARK: Reload
 Reload::Reload(std::weak_ptr<Shell> setShell)
     :   Command {"reload", "Runs the Environment's .las-rc file\n"},
         shell   {setShell}
@@ -466,6 +468,36 @@ std::pair<int, std::ostringstream> Reload::execute(const StringVector& args){
         return pairErrorWithMessage("\tFailure to read RC file at \"" + tempShell->getRCPath() + "\"\n");
     else
         return pairNormal();
+
+}
+// MARK: Display Control
+DisplayControl::DisplayControl( std::weak_ptr<DisplayManager> setDisplayManager ) 
+    :   Command         { "displayctl", "Interact with the display controller\n"
+                                "save-config \t\tSaves the window configuration\n"
+                        },
+        displayManager  { setDisplayManager }
+{
+
+}
+DisplayControl::~DisplayControl(){
+
+}
+std::pair<int, std::ostringstream> DisplayControl::execute(const StringVector& args){
+    std::shared_ptr<DisplayManager> tempDisplayManager { displayManager.lock() };
+
+    if(!tempDisplayManager)
+        return pairErrorWithMessage("\tCould not access necessary display manager\n");
+
+    if(args.empty())
+        return pairErrorWithMessage("This command requires at least one argument\n");
+    else if(args[0] == "save-config"){
+        if(tempDisplayManager->saveWindowConfig())
+            return pairNormal();
+        else
+            return pairErrorWithMessage("Could not save window configuration\n");
+    }
+
+    return pairErrorWithMessage("Ill formed command\n");
 
 }
 

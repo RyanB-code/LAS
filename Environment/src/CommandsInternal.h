@@ -100,4 +100,13 @@ namespace LAS::Commands{
     private:
         const std::weak_ptr<Shell> shell;
     };
+    class DisplayControl : public Command{
+    public:
+        DisplayControl( std::weak_ptr<DisplayManager> );
+        ~DisplayControl();
+
+        std::pair<int, std::ostringstream> execute(const StringVector&) override;
+    private:
+        const std::weak_ptr<DisplayManager> displayManager;
+    };  
 }
