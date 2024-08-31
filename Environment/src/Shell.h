@@ -90,7 +90,7 @@ namespace LAS{
         std::string                     getRCPath()                 const;
         std::string                     getCommandHistoryPath()     const;
 
-        bool setRCPath               (const std::string& path);
+        bool setRCPath               (const std::string& path, bool createNewFile=true);
         bool setCommandHistoryPath   (const std::string& path);
 
         bool readRCFile(std::string path="");

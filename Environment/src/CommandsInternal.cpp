@@ -31,18 +31,21 @@ std::pair<int, std::ostringstream> Manual::execute(const StringVector&){
 // MARK: Set
 Set::Set(   std::weak_ptr<DisplayManager> setDM,
             std::weak_ptr<ModuleManager>  setMM,
-            std::weak_ptr<Logger>         setLogger) 
+            std::weak_ptr<Logger>         setLogger,
+            std::weak_ptr<Shell>          setShell ) 
         :   Command {"set",     "<setting> <value>\n"
-                                "--log-tag-text-box-size <int>\tSets the text box size for log tags\n"
-                                "--log-msg-text-box-size <int>\tSets the text box size for log messages\n"
-                                "--show-log-time <bool>   \t\tToggle showing of log times\n"
-                                "--show-log-tag  <bool>   \t\tToggle showing of log tags\n"
-                                "--show-log-msg  <bool>   \t\tToggle showing of log messages\n"
-                                "--show-log-location <bool>   \t\tToggle showing of log location\n"
+                                "log-tag-text-box-size <int>\tSets the text box size for log tags\n"
+                                "log-msg-text-box-size <int>\tSets the text box size for log messages\n"
+                                "show-log-time <bool>   \t\tToggle showing of log times\n"
+                                "show-log-tag  <bool>   \t\tToggle showing of log tags\n"
+                                "show-log-msg  <bool>   \t\tToggle showing of log messages\n"
+                                "show-log-location <bool>   \tToggle showing of log location\n"
+                                "rc-file-path <path>    \t\tSet desired RC file for the LAS Environment. It will not create file in path specified if not found\n"
                     },
             displayManager  {setDM},
             moduleManager   {setMM},
-            logger          {setLogger}
+            logger          {setLogger},
+            shell           {setShell}
 {
 
 }
@@ -53,6 +56,7 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
     std::shared_ptr<DisplayManager> tempDisplayManager { displayManager.lock()};
     std::shared_ptr<ModuleManager>  tempModuleManager  { moduleManager.lock()};
     std::shared_ptr<Logger>         tempLogger         { logger.lock()};
+    std::shared_ptr<Shell>          tempShell          { shell.lock() };
 
     if(!tempDisplayManager|| !tempModuleManager || !tempLogger)
         return pair(-1, "\tCould not access necessary items\n");
@@ -65,7 +69,7 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
         return returnBuf;
     }
 
-    if(args[0] == "--log-tag-text-box-size"){
+    if(args[0] == "log-tag-text-box-size"){
         try{
             int size {std::stoi(args[1])};
             if(size < 5 )
@@ -83,7 +87,7 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
         }
         return returnBuf;
     }
-    else if(args[0] == "--log-msg-text-box-size"){
+    else if(args[0] == "log-msg-text-box-size"){
         try{
             int size {std::stoi(args[1])};
             if(size < 30 )
@@ -101,7 +105,7 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
         }
         return returnBuf;
     }
-    else if(args[0] == "--show-log-time"){
+    else if(args[0] == "show-log-time"){
         if(stringValueTrue(args[1])){
             auto settings = tempLogger->getLogSettings();
             settings->showTime = true;
@@ -115,7 +119,7 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
         else
             return pairInvalidArgument(args[1]);
     }
-    else if(args[0] == "--show-log-tag"){
+    else if(args[0] == "show-log-tag"){
         if(stringValueTrue(args[1])){
             auto settings = tempLogger->getLogSettings();
             settings->showTags = true;
@@ -129,7 +133,7 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
         else
             return pairInvalidArgument(args[1]);
     }
-    else if(args[0] == "--show-log-msg"){
+    else if(args[0] == "show-log-msg"){
         if(stringValueTrue(args[1])){
             auto settings = tempLogger->getLogSettings();
             settings->showMsg = true;
@@ -143,7 +147,7 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
         else
             return pairInvalidArgument(args[1]);
     }
-    else if(args[0] == "--show-log-location"){
+    else if(args[0] == "show-log-location"){
         if(stringValueTrue(args[1])){
             auto settings = tempLogger->getLogSettings();
             settings->showLocation = true;
@@ -157,6 +161,12 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
         else
             return pairInvalidArgument(args[1]);
     }
+    else if(args[0] == "rc-file-path"){
+        if(tempShell->setRCPath(args[1], false))
+            return pairNormal();
+        else
+            return pairErrorWithMessage("Could not set RC file path to \"" + args[1] + "\"\n");
+    }   
     else{
         return pairInvalidArgument(args[0]);
     }
@@ -272,15 +282,20 @@ std::pair<int, std::ostringstream> Echo::execute(const StringVector& args) {
 
 // MARK: Module Control
 ModuleControl::ModuleControl(   std::weak_ptr<DisplayManager>   setDisplayManager,
-                                std::weak_ptr<ModuleManager>    setModuleManager
+                                std::weak_ptr<ModuleManager>    setModuleManager,
+                                std::weak_ptr<Shell>            setShell
                             )
     :   Command {"modulectl",   "Controls module functions\n"
                                 "<action> <command> [optional]\n"
                                 "set\t\t\tApplies changes\n" 
-                                "\t\tmodule-load-directory [option] <directory>\tChange directory where modules are loaded from\n\t\t\tOptional: -c creates directory specified\n"               
+                                "\t\tmodule-load-directory [option] <directory>\tChange directory where modules are loaded from\n\t\t\tOptional: -c creates directory specified\n"
+                                "list-modules\t\tLists all modules by name\n"
+                                "reload-all  \t\tReloads all modules from file\n"
+                                "reload <name>\tRe-runs a module's RC file\n"               
                 },
                                 displayManager  {setDisplayManager},
-                                moduleManager   {setModuleManager}
+                                moduleManager   {setModuleManager},
+                                shell           {setShell}
 {
 
 }
@@ -290,24 +305,32 @@ ModuleControl::~ModuleControl(){
 std::pair<int, std::ostringstream> ModuleControl::execute(const StringVector& args){
     std::shared_ptr<DisplayManager> tempDisplayManager { displayManager.lock()};
     std::shared_ptr<ModuleManager>  tempModuleManager  { moduleManager.lock()};
+    std::shared_ptr<Shell>          tempShell           { shell.lock()};
 
-    if(!tempDisplayManager|| !tempModuleManager)
+
+    if(!tempDisplayManager|| !tempModuleManager || !tempShell)
         return pairErrorWithMessage("\tCould not access necessary items\n");
 
     // 0 = verb, 1 = what, 2 = option/dir, 3 = directory
     
-    bool setDirectory       {false};
+    bool setDirectory       { false };
     bool createDirectory    { false };
     bool reload             { false };  
+    bool listModules        { false };
+    bool reloadByName       { false };
 
     // Parse and handle arguments
     if(args[0] == "set"){  
         if(args[1] == "module-load-directory")
             setDirectory = true;
     }
-    else if (args[0] == "reload-all"){
+    else if (args[0] == "reload-all")
         reload = true;
+    else if (args[0] == "reload" && args.size() > 1){
+        reloadByName = true;
     }
+    else if (args[0] == "list-modules")
+        listModules = true;
     else
         return pairInvalidArgument(args[0]);
 
@@ -382,6 +405,27 @@ std::pair<int, std::ostringstream> ModuleControl::execute(const StringVector& ar
         return pair(0, msg.str());
     }
 
+    if(reloadByName){
+        if(!tempModuleManager->containsModule(args[1]))
+            return pairErrorWithMessage("Could not find module \"" + args[1] + "\"\n");
+
+        std::string moduleRCFilePath {tempModuleManager->getModule(args[1])->getRCFilePath()};
+        std::queue<std::string> lines;
+
+        LAS::ShellHelper::readRCFile(moduleRCFilePath, lines);          // Read RC file 
+        for (/*Nothing*/; !lines.empty(); lines.pop())                  // Add to command queue
+            tempShell->addToQueue(lines.front());
+        return pairNormal();        
+    }
+
+    if(listModules){
+        std::ostringstream os;
+        for(auto& s : tempModuleManager->getModuleNames()){
+            os << s << "\n";
+        }
+        return pair(0, os.str());
+    }
+
     return pairErrorWithMessage("Ill formed command\n");
 }
 // MARK: Information
@@ -399,7 +443,31 @@ std::pair<int, std::ostringstream> Information::execute(const StringVector&) {
     return pair(0, os.str());
 }
 
+// MARK: RELOAD
+Reload::Reload(std::weak_ptr<Shell> setShell)
+    :   Command {"reload", "Runs the Environment's .las-rc file\n"},
+        shell   {setShell}
+{
 
+}
+Reload::~Reload(){
+
+}
+std::pair<int, std::ostringstream> Reload::execute(const StringVector& args){
+    std::shared_ptr<Shell> tempShell { shell.lock() };
+
+    if(!tempShell)
+        return pairErrorWithMessage("\tCould not access necessary shell\n");
+
+    // Reset all aliases
+    tempShell->removeAllAliases();
+
+    if(!tempShell->readRCFile())
+        return pairErrorWithMessage("\tFailure to read RC file at \"" + tempShell->getRCPath() + "\"\n");
+    else
+        return pairNormal();
+
+}
 
 
 } // end of LAS::Commands
