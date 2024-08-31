@@ -65,7 +65,7 @@ bool LASM_loadModuleInfo(ModuleInfo& moduleInfo){
 
     return true;
 }
- bool LASM_loadEnvironmentInfo    (const EnvironmentInfo& envInfo){
+ bool LASM_init    (const EnvironmentInfo& envInfo){
     logger = envInfo.logger;
 
     std::cout << "From [" << TITLE << "]:\n";
