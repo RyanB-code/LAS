@@ -1,7 +1,11 @@
 #pragma once
 
+#include "Ammo.h"
+
 #include <string>
 #include <stdint.h>
+#include <memory>
+#include <unordered_map>
 
 //MARK: GUN
 namespace ShooterCentral{
@@ -16,13 +20,22 @@ namespace ShooterCentral{
 
     class Gun final {
     public:
-        Gun();
+        Gun(std::string setName, WeaponType setWeaponType);
         ~Gun();
+
+        std::string getName()       const;
+        uint64_t    getRoundCount() const;
+        WeaponType  getWeaponType() const;
+
+        void        addToRoundCount(uint64_t add, const Ammo& ammoUsed);
+
     private:
         std::string name;
-        uint8_t     totalRounds;
+        uint64_t    totalRounds;
         WeaponType  weaponType;
 
-        // UNFINISHED
+        std::unordered_map<std::string, std::pair <uint64_t, const Ammo&>> ammoTracker;
     };
+
+        using GunPtr = std::shared_ptr<Gun>;
 }

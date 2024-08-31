@@ -22,12 +22,7 @@ namespace ShooterCentral{
         std::string         courseOfFireDescription;
     };
 
-    class Drill{
-    public:
-        Drill(std::string setName, CourseOfFire setCOF, bool setDryFire, bool setLiveFire);
-        virtual ~Drill();
-
-    private:
+    struct Drill{
         std::string         name;
         CourseOfFire        courseOfFire;
         bool                canBeDryFire;
