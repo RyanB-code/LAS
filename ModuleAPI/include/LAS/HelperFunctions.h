@@ -13,6 +13,8 @@ namespace LAS {
 
     namespace TextManip {
         std::string ensureSlash         (std::string text);
+        std::string ensureNewline       (std::string text );
+
         std::string ensureNoSpaces      (const std::string& text);
         std::string ensureAlNumNoSpaces (const std::string& text);
     }
