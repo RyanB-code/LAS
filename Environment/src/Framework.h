@@ -30,6 +30,8 @@ namespace LAS{
 
         std::string rcPath;
         std::string commandHistoryPath;
+
+        std::string imGuiIniPath;
     };
     
     namespace FrameworkSetup{
@@ -65,7 +67,7 @@ namespace LAS{
         bool setupShell             (const std::string& rcPath, const std::string& commandHistoryPath);
         bool setupLogger            (const std::string& logDir);
         bool setupModuleManager     (const std::string& moduleLoadDir, const std::string& moduleFilesDir);
-        bool setupDisplay           ();
+        bool setupDisplay           (const std::string& iniFilePath);
         bool setupInternalWindows   ();
         void setupCommands          ();                            // This is where to instantiate commands
 
