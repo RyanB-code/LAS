@@ -1,5 +1,7 @@
 #pragma once
 
+#include "HelperFunctions.h"
+
 #include <string>
 #include <memory>
 #include <vector>

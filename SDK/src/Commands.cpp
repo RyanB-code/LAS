@@ -23,7 +23,7 @@ namespace LAS{
         std::pair<int, std::ostringstream> pair(int value, const std::string& msg){
             std::pair<int, std::ostringstream> returnBuf;
             returnBuf.first = value;
-            returnBuf.second << msg;
+            returnBuf.second << LAS::TextManip::ensureNewline(msg);
             return returnBuf;
         }
         std::pair<int, std::ostringstream> pairNormal(){
@@ -35,14 +35,14 @@ namespace LAS{
         std::pair<int, std::ostringstream> pairInvalidArgument(const std::string& arg){
             std::pair<int, std::ostringstream> returnBuf;
             returnBuf.first = -1;
-            returnBuf.second << "\tInvalid argument \"" << arg << "\"\n";
+            returnBuf.second << "Invalid argument \"" << arg << "\"\n";
 
             return returnBuf;
         }
         std::pair<int, std::ostringstream> pairErrorWithMessage(const std::string& msg){
             std::pair<int, std::ostringstream> returnBuf;
             returnBuf.first = -1;
-            returnBuf.second << "\t" << msg << "\n";
+            returnBuf.second << LAS::TextManip::ensureNewline(msg);
             return returnBuf;
         }
 
