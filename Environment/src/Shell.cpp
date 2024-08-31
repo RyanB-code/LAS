@@ -168,7 +168,7 @@ bool ConsoleWindow::addToCommandHistory (const std::string& text){
 }
 
 
-// MARK: Shell
+// MARK: SHELL
 Shell::Shell(std::shared_ptr<ConsoleWindow> setWindow)
     : window{setWindow}
 {
@@ -218,6 +218,7 @@ bool Shell::addCommand(const std::string& groupName, CommandPtr command){
         return false;               // If the group could not be found
     }
 }
+// MARK: ALIASES
 bool Shell::addAlias(const std::string& key, const std::string& value){
     if(aliases.contains(key))
         return false;
@@ -239,7 +240,10 @@ std::string Shell::findAlias(const std::string& key){
 
     return "";
 }
-
+void Shell::removeAllAliases(){
+    aliases.erase(aliases.begin(), aliases.end());
+}
+// MARK: OUTPUTS
 bool Shell::addOutput(const ShellOutputPtr& output){
     for(const auto& o : outputs){
         // Do not add if IDs are same
@@ -281,7 +285,7 @@ void Shell::reportToAllOutputs (const std::ostringstream& msg) const{
         output->output(msg);
     }
 }
-
+// MARK: COMMAND QUEUE
 void Shell::addToQueue(const std::string& entry){
     if(!entry.empty())
         commandQueue.push(entry);
@@ -360,6 +364,7 @@ bool Shell::handleCommandQueue(bool writeToHistory){
 
     return true;   
 }
+// MARK: MANUALS
 bool Shell::getAllGroupsManuals(std::ostringstream& os) const {
     for(const auto& group : commands){
         os << group.first << " Manual:\n";
