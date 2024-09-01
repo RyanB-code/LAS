@@ -22,7 +22,7 @@ namespace LAS::Windowing{
 
             bool shown { false };
 
-            virtual void draw();
+            virtual void draw() = 0;
 
             const char* getTitle()      const;
             uint8_t     getID()         const;
