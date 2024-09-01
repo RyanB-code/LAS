@@ -26,7 +26,5 @@ uint8_t Window::getID() const {
 MenuOption Window::getMenuOption() const {
     return menuOption;
 }
-void Window::draw() {
-    return;
-}
+
 
