@@ -33,14 +33,14 @@ namespace ShooterCentral{
         EventType       getEventType()      const;
         EventLocation   getEventLocation()  const;
 
-        bool            addGun(GunPtr gun, std::vector<std::pair <uint64_t, const Ammo&>> roundsShot);
+        bool            addGun(GunPtr gun, AmmoPtr ammo, uint64_t rounds);
 
     private:
-        std::string                                                     name;
-        EventLocation                                                   location;
-        EventType                                                       eventType;
-        std::unordered_map<std::string, std::tuple<uint64_t, GunPtr>>   gunsUsed;
-        std::string                                                     notes;
+        std::string                                         name;
+        EventLocation                                       location;
+        EventType                                           eventType;
+        std::vector<std::tuple<GunPtr, AmmoPtr, uint64_t>>  gunsUsed;
+        std::string                                         notes;
         
     };
 

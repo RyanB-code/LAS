@@ -27,14 +27,14 @@ namespace ShooterCentral{
         uint64_t    getRoundCount() const;
         WeaponType  getWeaponType() const;
 
-        void        addToRoundCount(uint64_t add, const Ammo& ammoUsed);
+        bool        addToRoundCount(AmmoPtr ammoType, uint64_t roundsShot);
 
     private:
         std::string name;
         uint64_t    totalRounds;
         WeaponType  weaponType;
 
-        std::unordered_map<std::string, std::pair <uint64_t, const Ammo&>> ammoTracker;
+        std::unordered_map<std::string, std::pair <AmmoPtr, uint64_t>> ammoTracker;
     };
 
         using GunPtr = std::shared_ptr<Gun>;

@@ -4,6 +4,7 @@
 
 #include <string>
 #include <stdint.h>
+#include <memory>
 
 namespace ShooterCentral{
     struct TargetConfiguration{
@@ -28,4 +29,6 @@ namespace ShooterCentral{
         bool                canBeDryFire;
         bool                canBeLiveFire;
     };
+
+    using DrillPtr = std::shared_ptr<Drill>;
 }

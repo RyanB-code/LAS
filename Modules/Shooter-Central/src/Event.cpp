@@ -25,16 +25,14 @@ EventType Event::getEventType() const{
 EventLocation Event::getEventLocation() const{
     return location;
 }
-bool Event::addGun(GunPtr gun, std::vector<std::pair <uint64_t, const Ammo&>> roundsShot){
-    if(!gun)
+bool Event::addGun(GunPtr gun, AmmoPtr ammo, uint64_t rounds){
+    if(!gun || !ammo || rounds == 0)
         return false;
     
-    if(gunsUsed.contains(gun->getName()))
-        return false;
-
     // Add to round counter for gun
+    if(!gun->addToRoundCount(ammo, rounds))
+        return false;
     
-    
-    gunsUsed.try_emplace(gun->getName(), gun);
-    return gunsUsed.contains(gun->getName());        // verify gun has been added successfully by checking and returning
+    gunsUsed.push_back(std::tuple{gun, ammo, rounds});
+    return true;
 }
