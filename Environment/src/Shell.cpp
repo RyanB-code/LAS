@@ -32,126 +32,115 @@ ConsoleWindow::~ConsoleWindow(){
 
 }
 void ConsoleWindow::draw(){
-    ImGui::Begin(title.c_str(), &shown);
-    
-    ImVec2 windowSize           {ImGui::GetWindowSize()};
-    static bool autoScroll      {true};
-    static bool scrollToBottom  {false};
+    if(ImGui::Begin(title.c_str(), &shown)){
+        ImVec2 windowSize           {ImGui::GetWindowSize()};
+        static bool autoScroll      {true};
+        static bool scrollToBottom  {false};
 
 
-    if(ImGui::BeginChild("Options", ImVec2(windowSize.x-20, 40), ImGuiChildFlags_Border)){
-        if(ImGui::Button("Clear", ImVec2{50,20}))
-            textHistory.str("");
+        if(ImGui::BeginChild("Options", ImVec2(windowSize.x-20, 40), ImGuiChildFlags_Border)){
+            if(ImGui::Button("Clear", ImVec2{50,20}))
+                textHistory.str("");
 
-        ImGui::SameLine();
-        ImGui::Checkbox("Auto Scroll", &autoScroll);
+            ImGui::SameLine();
+            ImGui::Checkbox("Auto Scroll", &autoScroll);
 
-        ImGui::SameLine();
-        static bool showDemo {false};
-        ImGui::Checkbox("Show Demo Window", &showDemo);
-        if(showDemo)
-            ImGui::ShowDemoWindow();
+            ImGui::SameLine();
+            static bool showDemo {false};
+            ImGui::Checkbox("Show Demo Window", &showDemo);
+            if(showDemo)
+                ImGui::ShowDemoWindow();
 
-        ImGui::EndChild();
-    }
-    ImGui::SeparatorText("Console");
+            ImGui::EndChild();
+        }
+        ImGui::SeparatorText("Console");
 
-    const float footerHeightToReserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
-    if (ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footerHeightToReserve), ImGuiChildFlags_None, ImGuiWindowFlags_HorizontalScrollbar)) {
-       
-       ImGui::TextUnformatted(textHistory.str().c_str());
+        const float footerHeightToReserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
+        if (ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footerHeightToReserve), ImGuiChildFlags_None, ImGuiWindowFlags_HorizontalScrollbar)) {
 
-        if (scrollToBottom || (autoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY()))
-            ImGui::SetScrollHereY(1.0f);
-        scrollToBottom  = false;
-    }
-    ImGui::EndChild();
-    ImGui::Separator();
+            ImGui::TextUnformatted(textHistory.str().c_str());
 
-    bool reclaimTextBoxFocus {false};
-    static char inputBuf[256]; // Holds the buffer for inputting commands
-
-    // Scroll command history
-    static size_t   offsetFromEnd           { 0 };
-    static bool     fetchHistory            {false}; 
-
-    if(ImGui::IsWindowFocused()){
-        if (ImGui::IsKeyPressed(ImGuiKey_LeftCtrl) && ImGui::IsKeyPressed(ImGuiKey_L))
-            textHistory.str("");
-            
-        if (ImGui::IsKeyPressed(ImGuiKey_RightCtrl) && ImGui::IsKeyPressed(ImGuiKey_L))
-            textHistory.str("");
-
-        if (ImGui::IsKeyPressed(ImGuiKey_UpArrow)){
-            if(offsetFromEnd < 256)
-                ++offsetFromEnd;    
-            fetchHistory = true;
+            if (scrollToBottom || (autoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY()))
+                ImGui::SetScrollHereY(1.0f);
+            scrollToBottom  = false;
+            ImGui::EndChild();
         }
 
-        if (ImGui::IsKeyPressed(ImGuiKey_DownArrow)){
-            if(offsetFromEnd > 0)
-                --offsetFromEnd;
-            else if(offsetFromEnd == 0){
-                // Reset text box to nothing
-                ImGui::ClearActiveID();                             // Clears the inputText field to accept input
-                memset(inputBuf, 0, 256*(sizeof inputBuf[0]) );     // Clears the input buffer
+        bool reclaimTextBoxFocus {false};
+        static char inputBuf[256]; // Holds the buffer for inputting commands
+
+        // Scroll command history
+        static size_t   offsetFromEnd           { 0 };
+        static bool     fetchHistory            {false}; 
+
+        if(ImGui::IsWindowFocused()){
+            if (ImGui::IsKeyPressed(ImGuiKey_LeftCtrl) && ImGui::IsKeyPressed(ImGuiKey_L))
+                textHistory.str("");
+            if (ImGui::IsKeyPressed(ImGuiKey_RightCtrl) && ImGui::IsKeyPressed(ImGuiKey_L))
+                textHistory.str("");
+            if (ImGui::IsKeyPressed(ImGuiKey_UpArrow)){
+                if(offsetFromEnd < 256)
+                    ++offsetFromEnd;    
+                fetchHistory = true;
+            }
+            if (ImGui::IsKeyPressed(ImGuiKey_DownArrow)){
+                if(offsetFromEnd > 0)
+                    --offsetFromEnd;
+                else if(offsetFromEnd == 0){
+                    // Reset text box to nothing
+                    ImGui::ClearActiveID();                             // Clears the inputText field to accept input
+                    memset(inputBuf, 0, 256*(sizeof inputBuf[0]) );     // Clears the input buffer
+                    reclaimTextBoxFocus = true;
+                }
+                fetchHistory = true;
+            }
+
+            if(fetchHistory){
+                size_t sizeOfCommandHistory { commandHistory.size() };
+
+                if(offsetFromEnd < 0)
+                // Write to text box
+                if(offsetFromEnd > 0 && offsetFromEnd <= sizeOfCommandHistory){
+                    ImGui::ClearActiveID();                             // Clears the inputText field to accept input
+                    memset(inputBuf, 0, 256*(sizeof inputBuf[0]) );     // Clears the input buffer
+
+                    size_t commandIndex {sizeOfCommandHistory - offsetFromEnd};
+                    
+                    std::string stringCommandBuf {commandHistory[commandIndex]};    // Retrieves the command in the list of command history
+                    stringCommandBuf.copy(inputBuf, stringCommandBuf.length());     // Set input buffer
+                }
                 reclaimTextBoxFocus = true;
+                fetchHistory = false;
             }
-            fetchHistory = true;
         }
 
-        if(fetchHistory){
-            size_t sizeOfCommandHistory { commandHistory.size() };
 
-            if(offsetFromEnd < 0)
-                offsetFromEnd = 0;
-            else if(offsetFromEnd > sizeOfCommandHistory)
-                offsetFromEnd = sizeOfCommandHistory;
+        // Handle input box
+        ImGuiInputTextFlags inputBoxflags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_EscapeClearsAll;
+        if (ImGui::InputText("Input", inputBuf, IM_ARRAYSIZE(inputBuf), inputBoxflags)){
 
-            // Write to text box
-            if(offsetFromEnd > 0 && offsetFromEnd <= sizeOfCommandHistory){
-                ImGui::ClearActiveID();                             // Clears the inputText field to accept input
-                memset(inputBuf, 0, 256*(sizeof inputBuf[0]) );     // Clears the input buffer
+            std::string strBuf{inputBuf};
+            if(!strBuf.empty() && !strBuf.starts_with(' ')){
+                commandHistory.push_back(strBuf);
+                queue.push(strBuf);                             // Push to command queue
 
-                size_t commandIndex {sizeOfCommandHistory - offsetFromEnd};
-                
-                std::string stringCommandBuf {commandHistory[commandIndex]};    // Retrieves the command in the list of command history
-                stringCommandBuf.copy(inputBuf, stringCommandBuf.length());     // Set input buffer
+                // Add to textHistory
+                textHistory << "$ " << strBuf << '\n';
             }
+            if(strBuf.empty())
+                textHistory<<('\n');                            // Hit enter to indent if they user wants without sending to command handler
+
+            scrollToBottom = true;
+            memset(inputBuf, 0, 256*(sizeof inputBuf[0]) );
             reclaimTextBoxFocus = true;
-            fetchHistory = false;
+            offsetFromEnd = 0;                                  // Entering a new command resets the place
         }
+
+        ImGui::SetItemDefaultFocus();
+        if(reclaimTextBoxFocus)
+            ImGui::SetKeyboardFocusHere(-1); // Auto focus previous widget
     }
-
-
-    // Handle input box
-    ImGuiInputTextFlags inputBoxflags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_EscapeClearsAll;
-    if (ImGui::InputText("Input", inputBuf, IM_ARRAYSIZE(inputBuf), inputBoxflags)){
-
-        std::string strBuf{inputBuf};
-        if(!strBuf.empty() && !strBuf.starts_with(' ')){
-            commandHistory.push_back(strBuf);
-            queue.push(strBuf);                             // Push to command queue
-
-            // Add to textHistory
-            textHistory << "$ " << strBuf << '\n';
-        }
-        if(strBuf.empty())
-            textHistory<<('\n');                            // Hit enter to indent if they user wants without sending to command handler
-
-        scrollToBottom = true;
-        memset(inputBuf, 0, 256*(sizeof inputBuf[0]) );
-        reclaimTextBoxFocus = true;
-        offsetFromEnd = 0;                                  // Entering a new command resets the place
-    }
-
-    ImGui::SetItemDefaultFocus();
-    if(reclaimTextBoxFocus)
-        ImGui::SetKeyboardFocusHere(-1); // Auto focus previous widget
-
     ImGui::End();
-
-    return;
 }
 void ConsoleWindow::output(const std::ostringstream& os) {
     textHistory << os.str();
