@@ -40,11 +40,6 @@ bool Framework::setup(){
     // --------------------------------------------------
     // After logging is setup, use logger for messages
     // --------------------------------------------------
-
-    if(!moduleManager){
-        if(!setupModuleManager(filePaths.moduleLibDir, filePaths.moduleFilesDir))
-            return false;
-    }
     
     if(!displayManager){
         if(!setupDisplay(filePaths.imGuiIniPath))
@@ -53,6 +48,16 @@ bool Framework::setup(){
     if(!setupInternalWindows())
         return false;
 
+    // --------------------------------------------------
+    // Up until setupInternalWindows() is called, all logs
+    // are displayed in the log file only since no ImGui
+    // window is present to accept and display logs
+    // --------------------------------------------------    
+
+    if(!moduleManager){
+        if(!setupModuleManager(filePaths.moduleLibDir, filePaths.moduleFilesDir))
+            return false;
+    }
 
     if(!loadAllModules(filePaths.moduleLibDir, filePaths.moduleFilesDir))
         return false;
@@ -466,10 +471,8 @@ namespace LAS::FrameworkSetup{
             std::cerr << "Error finding or creating [" << filePaths.dotLASDir << "]";
             return false;
         }
-        if(!LAS::ensureFile(filePaths.imGuiIniPath)){
-            std::cerr << "Error finding or creating [" << filePaths.imGuiIniPath << "]";
-            return false;
-        }
+        
+        // Do not create imgui.ini file since that will be handled by Display Manager
 
         return true;
     }
