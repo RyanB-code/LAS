@@ -183,9 +183,7 @@ bool DisplayManager::initImgui(std::string iniFilePath){
     // Setup Platform/Renderer backends
 
     // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
-    if(!ImGui_ImplGlfw_InitForOpenGL(window, true) ||
-            !ImGui_ImplOpenGL3_Init() )
-    {
+    if(!ImGui_ImplGlfw_InitForOpenGL(window, true) || !ImGui_ImplOpenGL3_Init() ) {
         logger->log("Could not initialize ImGui with OpenGL/GLFW", Tags{"ImGui Setup", "ERROR"});
         return false;
     }
@@ -198,28 +196,35 @@ void DisplayManager::drawWindows(){
     if(ImGui::BeginMainMenuBar()){
         if(ImGui::BeginMenu("Modules")){
             ImGui::MenuItem("(Loaded Modules)", NULL, false, false);
-            
-            for(auto window : windows){
-                if(window.second && window.second->getMenuOption() == Windowing::MenuOption::MODULE)
-                    ImGui::MenuItem(window.second->getTitle(), NULL, &window.second->shown);
-            }
             ImGui::EndMenu();
         }
         if(ImGui::BeginMenu("Utilities")){
             ImGui::MenuItem("(LAS Tools)", NULL, false, false);
-
-            for(auto window : windows){
-                if(window.second && window.second->getMenuOption() == Windowing::MenuOption::UTILITY)
-                    ImGui::MenuItem(window.second->getTitle(), NULL, &window.second->shown);
-            }
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
     }
-    
-    // Draw the modules
-    for(auto window : windows){
-        if(window.second && window.second->shown)
-            window.second->draw();
+
+    for(auto pair : windows){
+        auto w {pair.second};
+        
+        if(w->shown)
+            w->draw();
+
+        if(ImGui::BeginMainMenuBar()){
+            if(w->getMenuOption() == Windowing::MenuOption::MODULE){
+                if(ImGui::BeginMenu("Modules")){
+                    ImGui::MenuItem(w->getTitle(), NULL, &w->shown);
+                    ImGui::EndMenu();
+                }
+            }
+            else if(w->getMenuOption() == Windowing::MenuOption::UTILITY){
+                if(ImGui::BeginMenu("Utilities")){
+                    ImGui::MenuItem(w->getTitle(), NULL, &w->shown);
+                    ImGui::EndMenu();
+                }
+            }
+            ImGui::EndMainMenuBar();
+        }
     }
 }
