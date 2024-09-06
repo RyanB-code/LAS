@@ -9,7 +9,7 @@
 
 #include <LAS/Commands.h>
 #include <LAS/Logging.h>
-#include <LAS/Helper.h>
+#include <LAS/HelperFunctions.h>
 #include <LAS/SDK.h>
 
 

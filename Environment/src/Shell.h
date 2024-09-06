@@ -5,7 +5,7 @@
 
 #include <imgui/imgui.h>
 #include <LAS/Commands.h>
-#include <LAS/Helper.h>
+#include <LAS/HelperFunctions.h>
 #include <LAS/Window.h>
 
 #include <string>

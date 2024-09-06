@@ -2,7 +2,7 @@
 
 #include "Module.h"
 
-#include <LAS/Helper.h>
+#include <LAS/HelperFunctions.h>
 #include <LAS/Logging.h>
 #include <LAS/SDK.h>
 
