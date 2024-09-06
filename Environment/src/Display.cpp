@@ -120,6 +120,9 @@ bool DisplayManager::setIniPath (const std::string& path, bool createNewFile){
     if(!std::filesystem::exists(path))
         return false;
 
+    // Log that a new file had to be created
+    logger->log("ImGui window configuration at \"" + path + "\" was newly created. Prior window configurations were set to default state.", Tags{"WARNING", "Display Manager"});
+
     iniPath = path;
     return true;
 }
