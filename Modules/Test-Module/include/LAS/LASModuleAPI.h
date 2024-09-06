@@ -6,8 +6,6 @@
 #include <LAS/Information.h>
 #include <LAS/SDK.h>
 
-#include <iostream>
-
 #if __GNUC__ >= 4
     #define MODULE_EXPORT extern "C" __attribute__ ((visibility ("protected")))
 #endif
