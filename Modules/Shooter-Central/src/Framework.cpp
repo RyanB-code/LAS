@@ -9,6 +9,7 @@ Framework::~Framework(){
 
 }
 
+// MARK: Public Functions
 bool Framework::addGun(GunPtr gun){
     if(!gun)
         return false;
@@ -16,8 +17,7 @@ bool Framework::addGun(GunPtr gun){
     if(guns.contains(gun->getName()))
         return false;
     
-    guns.try_emplace(gun->getName());
-    return guns.contains(gun->getName());
+    return guns.try_emplace(gun->getName(), gun).second;
 }
 bool Framework::removeGun(const std::string& key){
     if(!guns.contains(key))
@@ -26,8 +26,41 @@ bool Framework::removeGun(const std::string& key){
     guns.erase(key);
     return !guns.contains(key); // Return the inverse of contain()
 }
-void Framework::addDrill(Drill drill){
-    drills.push_back(drill);
+bool Framework::addDrill(DrillPtr drill){
+     if(!drill)
+        return false;
+
+    std::string name { drill->name};
+
+    if(drills.contains(name))
+        return false;
+
+    return drills.try_emplace(name, drill).second;
+}
+bool Framework::removeDrill(const std::string& key){
+    if(!drills.contains(key))
+        return true;
+
+    drills.erase(key);
+    return !drills.contains(key); // Return the inverse of contain()
+}
+bool Framework::addEvent(EventPtr event){
+     if(!event)
+        return false;
+
+    std::string name { event->getName()};
+
+    if(events.contains(name))
+        return false;
+    
+    return events.try_emplace(name, event).second;
+}
+bool Framework::removeEvent(const std::string& key){
+    if(!events.contains(key))
+        return true;
+
+    events.erase(key);
+    return !events.contains(key); // Return the inverse of contain()
 }
 bool Framework::addAmmoToStockpile(uint64_t amount, AmmoPtr ammo){
     if(ammoStockpile.contains(ammo->name)){
@@ -51,4 +84,7 @@ bool Framework::removeAmmoFromStockPile (uint64_t amountUsed, const std::string&
         ammo.first -= amountUsed;
 
     return true;
+}
+SCWindowPtr Framework::getWindow() const {
+    return window;
 }

@@ -20,15 +20,16 @@ uint64_t Gun::getRoundCount() const{
 WeaponType Gun::getWeaponType() const{
     return weaponType;
 }
-void Gun::addToRoundCount(uint64_t add, const Ammo& ammoUsed){
-    totalRounds += add;
+bool Gun::addToRoundCount(AmmoPtr ammoType, uint64_t roundsShot){
+    if(!ammoType || roundsShot == 0)
+        return false;
 
-    if(ammoTracker.contains(ammoUsed.name)){
-        auto& ammo {ammoTracker.at(ammoUsed.name)};
+    totalRounds += roundsShot;
 
-        ammo.first += add;
+    if(ammoTracker.contains(ammoType->name)){
+        ammoTracker.at(ammoType->name).second += roundsShot; // Add to existing ammo type already used
+        return true;
     }
-    else{
-        ammoTracker.try_emplace(ammoUsed.name), std::pair(add, ammoUsed);
-    }
+    else
+        return ammoTracker.try_emplace(ammoType->name), std::pair{ammoType, roundsShot}.second;
 }
