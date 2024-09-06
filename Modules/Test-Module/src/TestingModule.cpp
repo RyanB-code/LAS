@@ -1,5 +1,7 @@
 #include <LAS/LASModuleAPI.h>
 
+#include <iostream>
+
 using namespace LAS;
 using namespace LAS::Information;
 using namespace LAS::Windowing;
@@ -26,13 +28,12 @@ public:
     }
 
     void draw() override{
-        ImGui::Begin(title.c_str(), &shown);
+        if(ImGui::Begin(title.c_str(), &shown)){
+            ImGui::Text("Text here");
 
-        ImGui::Text("Text here");
-
-        if(ImGui::Button( "Log" ))
-            logger->log(LOG_TEXT, Tags{TITLE});
-
+            if(ImGui::Button( "Log" ))
+                logger->log(LOG_TEXT, Tags{TITLE});
+        }
         ImGui::End();
     }
 };
