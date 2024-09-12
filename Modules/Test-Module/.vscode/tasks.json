@@ -67,7 +67,7 @@
 		},
 		{
 			"type": "shell",
-			"label": "3. Copy Built .so to Environment/bin/Module Libraries",
+			"label": "3. Copy Built .lasm to Environment/bin/Module Libraries",
 			"command": "cp",
 			"args": [
 				"*.lasm",										// Copy all .so files
@@ -80,13 +80,13 @@
 				"kind": "build",
 				"isDefault": false
 			},
-			"detail": "Copy .so file"
+			"detail": "Copy .lasm file"
 		},
 		{
 			"label": "Perform All Tasks",
 			"dependsOrder": "sequence",
 			"dependsOn" : [	"1. Compile without linking", "2. Link object files", 
-							"3. Copy Built .so to Environment/bin/Module Libraries"
+							"3. Copy Built .lasm to Environment/bin/Module Libraries"
 						],
 			"group": {
 				"kind": "build",
