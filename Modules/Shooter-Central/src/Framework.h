@@ -6,6 +6,8 @@
 #include "Event.h"
 #include "Window.h"
 
+#include <LAS/Logging.h>
+
 #include <string>
 #include <stdint.h>
 #include <map> 
@@ -30,6 +32,10 @@ namespace ShooterCentral{
         bool removeAmmoFromStockPile    (uint64_t amount,   const std::string& key);
 
         SCWindowPtr getWindow() const;
+        std::string getCommandGroupName() const;
+
+        bool                    setLogger(LAS::Logging::LoggerPtr setLogger);
+        LAS::Logging::LoggerPtr getLogger() const;
 
     private:
         std::map<std::string, EventPtr>                         events;
@@ -38,5 +44,8 @@ namespace ShooterCentral{
         std::map<std::string, std::pair<uint64_t, AmmoPtr>>     ammoStockpile;
 
         SCWindowPtr window;
+        LAS::Logging::LoggerPtr logger;
+
+        static constexpr  std::string commandGroupName { "sc" };
     };
 }
