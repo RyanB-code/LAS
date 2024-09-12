@@ -2,8 +2,8 @@
 
 using namespace ShooterCentral;
 
-Framework::Framework(){
-
+Framework::Framework() {
+    window = std::make_shared<ShooterCentralWindow>(ShooterCentralWindow{});
 }
 Framework::~Framework(){
 
@@ -87,4 +87,17 @@ bool Framework::removeAmmoFromStockPile (uint64_t amountUsed, const std::string&
 }
 SCWindowPtr Framework::getWindow() const {
     return window;
+}
+std::string Framework::getCommandGroupName() const {
+    return commandGroupName;
+}
+bool Framework::setLogger(LAS::Logging::LoggerPtr setLogger){
+    if(!setLogger)
+        return false;
+    
+    logger = setLogger;
+    return true;
+}
+LAS::Logging::LoggerPtr Framework::getLogger() const {
+    return logger;
 }

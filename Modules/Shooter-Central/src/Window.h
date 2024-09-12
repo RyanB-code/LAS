@@ -1,18 +1,16 @@
 #pragma once
 
-#include "Framework.h"
-
 #include <LAS/Window.h>
 
 namespace ShooterCentral{
-    class ShooterCentralWindow : LAS::Windowing::Window{
+    class ShooterCentralWindow : public LAS::Windowing::Window {
     public:
         ShooterCentralWindow();
         ~ShooterCentralWindow();
 
         void draw() override;
     private:
-        
+        std::string test;
     };
 
     using SCWindowPtr = std::shared_ptr<ShooterCentralWindow>;
