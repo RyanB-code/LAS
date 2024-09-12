@@ -67,17 +67,23 @@ void ModuleManager::loadAllModules(ImGuiContext& context, StringVector& modulesN
 bool ModuleManager::loadModule  (std::string parentDirectory, ImGuiContext& context, const std::string& fileName){
 
     // Reject if not named correctly
-    if(!fileName.ends_with(moduleNameSuffix))
+    if(!fileName.ends_with(moduleNameSuffix)){
+        logger->log("The file [" + fileName + "] was ignored for module loading. Improper name format.", Tags{"Non fatal", "Module Manager"});
         return false;
+    }
     
-    ModulePtr moduleBuffer      {LAS::Modules::bindFiletoModule(fileName, logger, context)};
-
-    if(!moduleBuffer)
+    ModulePtr moduleBuffer;
+    try{
+        moduleBuffer = LAS::Modules::bindFiletoModule(fileName, logger, context);
+    }
+    catch(std::exception& e){
+        logger->log(std::string{e.what()} + " from file [" + fileName + "]", Tags{"Non fatal", "Module Manager"});
         return false;
+    }
 
     // This writes library information to the buffer
     if(!moduleBuffer->loadModuleInfo()){
-        logger->log("Failed loading module info from Module [" + moduleBuffer->getTitle() + "]", Tags{"ERROR", "Module Manager"});
+        logger->log("loadModuleInfo() returned false from Module [" + moduleBuffer->getTitle() + "]. Loading procedure terminated", Tags{"Non fatal", "Module Manager"});
         return false;
     }
 
@@ -220,18 +226,19 @@ namespace LAS::Modules{
         void* lib {dlopen(path.c_str(), RTLD_LAZY)};    // Map the shared object file
 
         if(!lib)
-            return nullptr;     // Do not continue if library could not be opened
+            throw std::runtime_error{"Failed to create handle from shared object file"};     // Do not continue if library could not be opened
 
         // Bind the API funcions
         LoadModuleInfo      loadModuleInfo    {reinterpret_cast<LoadModuleInfo>     (dlsym(lib, "LASM_loadModuleInfo"))};
         LoadEnvironmentInfo loadEnvInfo       {reinterpret_cast<LoadEnvironmentInfo>(dlsym(lib, "LASM_init"))};
         VoidNoParams        cleanup           {reinterpret_cast<VoidNoParams>       (dlsym(lib, "LASM_cleanup"))};
 
-        // Do not continue if binding failed
+        // Do not continue if binding functions failed
         if(!loadModuleInfo || !loadEnvInfo ||!cleanup)
-            return nullptr;
+            throw std::runtime_error{"Failed to find necessary function signatures"};     // Do not continue if library could not be opened
 
-        return std::make_shared<Module>(logger, loadModuleInfo, loadEnvInfo, cleanup);       
+
+        return std::make_shared<Module>(logger, loadModuleInfo, loadEnvInfo, cleanup);
     }
     int verifyModuleInformation(const ModulePtr& module) {
         if(!module)
