@@ -58,6 +58,10 @@
         "typeinfo": "cpp",
         "variant": "cpp",
         "format": "cpp",
-        "map": "cpp"
+        "map": "cpp",
+        "any": "cpp",
+        "forward_list": "cpp",
+        "ranges": "cpp",
+        "valarray": "cpp"
     }
 }
