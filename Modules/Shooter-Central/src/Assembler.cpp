@@ -19,11 +19,7 @@ bool LASM_loadModuleInfo(LAS::Information::ModuleInfo& moduleInfo){
     return true;
 }
 bool LASM_init(const LAS::Information::EnvironmentInfo& envInfo){
-    application.setLogger(envInfo.logger);
-
-    application.getLogger()->log("Test log from lasm_init()", LAS::Logging::Tags{"SC"});
-
-    return true;
+    return application.setup(envInfo.logger, envInfo.directory);
 }
 void LASM_cleanup(){
     application.getLogger()->log("Cleanup from lasm_cleanup()", LAS::Logging::Tags{"SC"});
