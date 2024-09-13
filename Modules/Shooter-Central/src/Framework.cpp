@@ -1,6 +1,7 @@
 #include "Framework.h"
 
 using namespace ShooterCentral;
+using namespace LAS::Logging;
 
 Framework::Framework() {
     window = std::make_shared<ShooterCentralWindow>(ShooterCentralWindow{});
@@ -10,6 +11,22 @@ Framework::~Framework(){
 }
 
 // MARK: Public Functions
+bool Framework::setup(LAS::Logging::LoggerPtr setLoggerPtr, const std::string& directory){
+    if(!setLogger(setLoggerPtr))
+        return false;
+
+    // -------------------------------
+    // USE LOGGING ONCE LOGGER IS VERIFIED
+    // -------------------------------
+
+    if(!fileIO)
+        if(!setupFileIO(directory))
+            return false;
+
+   
+   logger->log("Setup sucessful", Tags{"Routine", "SC"});
+   return true;
+}
 bool Framework::addGun(GunPtr gun){
     if(!gun)
         return false;
@@ -100,4 +117,21 @@ bool Framework::setLogger(LAS::Logging::LoggerPtr setLogger){
 }
 LAS::Logging::LoggerPtr Framework::getLogger() const {
     return logger;
+}
+// MARK: PRIVATE FUNCTIONS
+bool Framework::setupFileIO(std::string directory){
+    fileIO = std::make_shared<FileIO>(logger);
+
+    if(!fileIO->setSaveDirectory(directory)) {
+        logger->log("Directory [" + directory + + "] was rejected.", Tags{"ERROR", "SC"});
+        return false;
+    };
+
+    if(!fileIO->setupSubDirectories()){
+        logger->log("Failed to setup sub-directories", Tags{"ERROR", "SC"});
+        return false;
+    }
+
+
+    return true;
 }

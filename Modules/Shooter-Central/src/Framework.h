@@ -5,6 +5,7 @@
 #include "Drill.h"
 #include "Event.h"
 #include "Window.h"
+#include "FileIO.h"
 
 #include <LAS/Logging.h>
 
@@ -18,6 +19,8 @@ namespace ShooterCentral{
     public:
         Framework();
         ~Framework();
+
+        bool setup(LAS::Logging::LoggerPtr setLoggerPtr, const std::string& directory);   // Call inside LASM_init
 
         bool addGun         (GunPtr gun);
         bool removeGun      (const std::string& key);
@@ -43,9 +46,13 @@ namespace ShooterCentral{
         std::map<std::string, GunPtr>                           guns;
         std::map<std::string, std::pair<uint64_t, AmmoPtr>>     ammoStockpile;
 
-        SCWindowPtr window;
+        FileIOPtr fileIO;
+
+        SCWindowPtr             window;
         LAS::Logging::LoggerPtr logger;
 
         static constexpr  std::string commandGroupName { "sc" };
+
+        bool setupFileIO(std::string directory);
     };
 }
