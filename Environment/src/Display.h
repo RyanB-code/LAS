@@ -24,7 +24,13 @@ using namespace LAS::Windowing;
 namespace LAS{
 
     class DisplayManager;
-    using DisplayManagerPtr = std::shared_ptr<DisplayManager>;  
+    using DisplayManagerPtr = std::shared_ptr<DisplayManager>;
+
+    struct WindowStatus{
+        uint8_t ID;
+        std::string title;
+        bool open;
+    };
     class DisplayManager{
     public:
         explicit DisplayManager(const LoggerPtr& setLogger);
@@ -45,6 +51,14 @@ namespace LAS{
         std::string getIniPath  () const;
 
         bool saveWindowConfig   () const;
+
+        void getAllWindowNames          (StringVector& names) const;            // Will erase all elements in parameter before writing
+        void getAllWindowIDs            (std::vector<uint8_t>& IDs) const;      // Will erase all elements in parameter before writing
+        uint8_t getWindowID             (const std::string& title) const;
+
+        WindowStatus getWindowStatus    (uint8_t ID) const;
+
+        bool setWindowShownStatus   (uint8_t ID, bool shown) const;
 
     private:
         const LoggerPtr&        logger;

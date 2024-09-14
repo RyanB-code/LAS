@@ -136,7 +136,58 @@ bool DisplayManager:: saveWindowConfig() const{
     ImGui::SaveIniSettingsToDisk(iniPath.c_str());
     return true;
 }
+void DisplayManager::getAllWindowNames(StringVector& names) const{
+    if(windows.empty())
+        return;
 
+    if(!names.empty())
+        names.erase(names.begin(), names.end());
+    
+    for(auto& pair : windows)
+        names.push_back(pair.second->getTitle());
+
+    return;
+}
+void DisplayManager::getAllWindowIDs(std::vector<uint8_t>& IDs) const{
+    if(windows.empty())
+        return;
+
+    if(!IDs.empty())
+        IDs.erase(IDs.begin(), IDs.end());
+    
+    for(auto& pair : windows)
+        IDs.push_back(pair.first);
+
+    return;
+}
+WindowStatus DisplayManager::getWindowStatus(const uint8_t ID) const {
+    if(!windows.contains(ID))
+        return WindowStatus{0, "NULL", false};
+
+    WindowStatus statusBuf;
+
+    statusBuf.ID    = ID;
+    statusBuf.title = windows.at(ID)->getTitle();
+    statusBuf.open  = windows.at(ID)->shown;
+
+    return statusBuf;
+}
+bool DisplayManager::setWindowShownStatus(uint8_t ID, bool shown) const{
+    if(!windows.contains(ID))
+        return false;
+    
+    windows.at(ID)->shown = shown;
+
+    return true;
+}
+uint8_t DisplayManager::getWindowID(const std::string& title) const{
+    for(auto& pair : windows){
+        if(pair.second->getTitle() == title)
+            return pair.first;
+    }
+
+    return 0;
+}
 
 
 // MARK: PRIVATE FUNCTIONS
