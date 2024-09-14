@@ -473,7 +473,15 @@ std::pair<int, std::ostringstream> Reload::execute(const StringVector& args){
 // MARK: Display Control
 DisplayControl::DisplayControl( std::weak_ptr<DisplayManager> setDisplayManager ) 
     :   Command         { "displayctl", "Interact with the display controller\n"
-                                "save-config \t\tSaves the window configuration\n"
+                                "save-config          \tSaves the window configuration\n"
+                                "show-window-names    \tShows all windows and their status\n"
+                                "show-all-window-info \tShows all window information\n"
+                                "<ID> <command>\n"
+                                "\t\topen   \tOpens the window\n"
+                                "\t\tclose  \tCloses the window\n"
+                                "<title> <command>\n"
+                                "\t\topen   \tOpens the window\n"
+                                "\t\tclose  \tCloses the window\n"
                         },
         displayManager  { setDisplayManager }
 {
@@ -495,6 +503,89 @@ std::pair<int, std::ostringstream> DisplayControl::execute(const StringVector& a
             return pairNormal();
         else
             return pairErrorWithMessage("Could not save window configuration\n");
+    }
+    else if(args[0] == "show-window-names"){
+       StringVector names;
+       tempDisplayManager->getAllWindowNames(names);
+
+        if(names.empty())
+            return pair(0, "There were no windows found");
+        
+        std::ostringstream msg;
+        for(const auto& s : names)
+            msg << s << '\n';
+        
+        return pair(0, msg.str());
+    }
+    else if(args[0] == "show-window-names"){
+       StringVector names;
+       tempDisplayManager->getAllWindowNames(names);
+
+        if(names.empty())
+            return pair(0, "There were no windows found");
+        
+        std::ostringstream msg;
+        for(const auto& s : names)
+            msg << s << '\n';
+        
+        return pair(0, msg.str());
+    }
+    else if(args[0] == "show-all-window-info"){
+       std::vector<uint8_t> IDs;
+       tempDisplayManager->getAllWindowIDs(IDs);
+
+        if(IDs.empty())
+            return pair(0, "There were no windows found");
+        
+        constexpr uint8_t idWidth   { 4 };
+        constexpr uint8_t nameWidth { 30 };
+        constexpr uint8_t openWidth { 7 };
+
+        uint64_t 	tableWidth 	{ idWidth + nameWidth + openWidth };
+
+        std::ostringstream msg;
+        msg << std::format("{:<{}}", "ID",		idWidth);
+        msg << std::format("{:<{}}", "Name",	nameWidth);
+        msg << std::format("{:<{}}", "Status",	openWidth);
+        msg << '\n' << std::format("{:-<{}}", '-', tableWidth) << "\n";
+
+        for(const auto& id : IDs){
+            msg << std::format("{:<{}}", id,		idWidth);
+            msg << std::format("{:<{}}", tempDisplayManager->getWindowStatus(id).title, nameWidth);
+
+            std::string shownString;
+            tempDisplayManager->getWindowStatus(id).open ? shownString = "open" : shownString = "closed";
+            msg << std::format("{:<{}}", shownString, openWidth);
+            msg << '\n';
+        }        
+        return pair(0, msg.str());
+    }
+
+
+    if(args.size() == 2){
+
+        int id{ tempDisplayManager->getWindowID(args[0]) };
+
+        try {
+            if(id == 0)
+                id = std::stoi(args[0]);
+        }
+        catch(std::invalid_argument& e){
+            return pairErrorWithMessage("No window was found with title " + args[0]);
+        }
+
+        bool shownStatus { false };
+        if(args[1] == "open")
+            shownStatus = true;
+        else if(args[1] == "close")
+            shownStatus = false;
+        else
+            return pairInvalidArgument(args[1]);
+
+        if(!tempDisplayManager->setWindowShownStatus(id, shownStatus))
+            return pairErrorWithMessage("No window was found with ID " + id);
+        
+        return pairNormal();
     }
 
     return pairErrorWithMessage("Ill formed command\n");
