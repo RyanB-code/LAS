@@ -18,10 +18,10 @@ namespace ShooterCentral{
     public:
         struct SubDirectories{
             std::string parentDir;
-            std::string ammoDir;
-            std::string drillDir;
-            std::string eventDir;
-            std::string gunDir;
+            std::string ammoFile;
+            std::string drillsFile;
+            std::string eventsFile;
+            std::string gunsFile;
         };
 
         FileIO(LAS::Logging::LoggerPtr setLogger);
@@ -31,9 +31,15 @@ namespace ShooterCentral{
         bool            setSaveDirectory(std::string path);
 
         bool            setupSubDirectories(std::string parentDir="");
+
+        bool    writeAmmo(const std::vector<Ammo>& ammoList)        const;
+        Ammo    readAmmo(const std::string& path)                   const;
+
+
+
     private:
         std::string             saveDirectory;
-        FileIO::SubDirectories  subDirectories;
+        FileIO::SubDirectories  fileSystem;
         LAS::Logging::LoggerPtr logger;
     };
 
