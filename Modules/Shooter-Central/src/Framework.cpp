@@ -19,9 +19,8 @@ bool Framework::setup(LAS::Logging::LoggerPtr setLoggerPtr, const std::string& d
     // USE LOGGING ONCE LOGGER IS VERIFIED
     // -------------------------------
 
-    if(!fileIO)
-        if(!setupFileIO(directory))
-            return false;
+    if(!setupFilesystem(directory))
+        return false;
 
    
    logger->log("Setup sucessful", Tags{"Routine", "SC"});
@@ -79,29 +78,6 @@ bool Framework::removeEvent(const std::string& key){
     events.erase(key);
     return !events.contains(key); // Return the inverse of contain()
 }
-bool Framework::addAmmoToStockpile(uint64_t amount, AmmoPtr ammo){
-    if(ammoStockpile.contains(ammo->name)){
-        ammoStockpile.at(ammo->name).first += amount;
-        return true;
-    }
-    else{
-        ammoStockpile.try_emplace(ammo->name), std::pair(amount, ammo);
-        return ammoStockpile.contains(ammo->name);
-    }
-}
-bool Framework::removeAmmoFromStockPile (uint64_t amountUsed, const std::string& key){
-    if(!ammoStockpile.contains(key))
-        return true;
-    
-    auto& ammo {ammoStockpile.at(key)};
-
-    if(ammo.first - amountUsed >= 100000)
-        return false;
-    else
-        ammo.first -= amountUsed;
-
-    return true;
-}
 SCWindowPtr Framework::getWindow() const {
     return window;
 }
@@ -119,19 +95,35 @@ LAS::Logging::LoggerPtr Framework::getLogger() const {
     return logger;
 }
 // MARK: PRIVATE FUNCTIONS
-bool Framework::setupFileIO(std::string directory){
-    fileIO = std::make_shared<FileIO>(logger);
-
-    if(!fileIO->setSaveDirectory(directory)) {
-        logger->log("Directory [" + directory + + "] was rejected.", Tags{"ERROR", "SC"});
+bool Framework::setupFilesystem(std::string directory){
+    if(directory.empty())
         return false;
-    };
 
-    if(!fileIO->setupSubDirectories()){
-        logger->log("Failed to setup sub-directories", Tags{"ERROR", "SC"});
+    directory = LAS::TextManip::ensureSlash(directory);
+
+    SubDirectories fileSystem;
+
+    fileSystem.ammoDir         = directory + "Ammo/";
+    fileSystem.drillsDir       = directory + "Drills/";
+    fileSystem.eventsDir       = directory + "Events/";
+    fileSystem.gunsDir         = directory + "Guns/";
+
+    // Check paths are good
+    if(!LAS::ensureDirectory(fileSystem.ammoDir)){
+        logger->log("Error finding or creating directory [" + fileSystem.ammoDir + "]", LAS::Logging::Tags{"ERROR", "SC"});
         return false;
     }
-
-
+    if(!LAS::ensureDirectory(fileSystem.drillsDir)){
+        logger->log("Error finding or creating directory [" + fileSystem.drillsDir + "]", LAS::Logging::Tags{"ERROR", "SC"});
+        return false;
+    }
+    if(!LAS::ensureDirectory(fileSystem.eventsDir)){
+        logger->log("Error finding or creating directory [" + fileSystem.eventsDir + "]", LAS::Logging::Tags{"ERROR", "SC"});
+        return false;
+    }
+    if(!LAS::ensureDirectory(fileSystem.gunsDir)){
+        logger->log("Error finding or creating directory [" + fileSystem.gunsDir + "]", LAS::Logging::Tags{"ERROR", "SC"});
+        return false;
+    }
     return true;
 }
