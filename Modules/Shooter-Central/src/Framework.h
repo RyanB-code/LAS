@@ -19,7 +19,8 @@ namespace ShooterCentral{
         Framework();
         ~Framework();
 
-        struct SubDirectories{
+        struct Filesystem{
+            std::string parentDir;
             std::string ammoDir;
             std::string drillsDir;
             std::string eventsDir;
@@ -48,11 +49,16 @@ namespace ShooterCentral{
         std::map<std::string, DrillPtr>                         drills;
         std::map<std::string, GunPtr>                           guns;
 
+        AmmoTrackerPtr          ammoTracker;
+
         SCWindowPtr             window;
         LAS::Logging::LoggerPtr logger;
 
         static constexpr  std::string commandGroupName { "sc" };
 
-        bool setupFilesystem(std::string directory);
+        bool setupFilesystem    (Filesystem& filesystem);
+        bool setupAmmoTracker   (std::string directory);
+
+        bool setupWindow       ();
     };
 }

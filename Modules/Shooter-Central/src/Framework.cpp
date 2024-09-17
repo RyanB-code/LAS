@@ -19,12 +19,26 @@ bool Framework::setup(LAS::Logging::LoggerPtr setLoggerPtr, const std::string& d
     // USE LOGGING ONCE LOGGER IS VERIFIED
     // -------------------------------
 
-    if(!setupFilesystem(directory))
+    Filesystem filesystem {directory};
+
+    if(!setupFilesystem(filesystem)){
+        logger->log("Failed to setup filesystem", Tags{"FATAL", "SC"});
         return false;
+    }
+
+    if(!setupAmmoTracker(filesystem.ammoDir)){
+        logger->log("Failed to setup Ammo Tracker", Tags{"FATAL", "SC"});
+        return false;
+    }
+
+    if(!setupWindow()){
+        logger->log("Failed to setup window", Tags{"FATAL", "SC"});
+        return false;
+    }
 
    
-   logger->log("Setup sucessful", Tags{"Routine", "SC"});
-   return true;
+    logger->log("Setup sucessful", Tags{"Routine", "SC"});
+    return true;
 }
 bool Framework::addGun(GunPtr gun){
     if(!gun)
@@ -95,35 +109,56 @@ LAS::Logging::LoggerPtr Framework::getLogger() const {
     return logger;
 }
 // MARK: PRIVATE FUNCTIONS
-bool Framework::setupFilesystem(std::string directory){
-    if(directory.empty())
+bool Framework::setupFilesystem(Filesystem& filesystem){
+    if(filesystem.parentDir.empty())
         return false;
 
-    directory = LAS::TextManip::ensureSlash(directory);
+    filesystem.parentDir = LAS::TextManip::ensureSlash(filesystem.parentDir);
 
-    SubDirectories fileSystem;
-
-    fileSystem.ammoDir         = directory + "Ammo/";
-    fileSystem.drillsDir       = directory + "Drills/";
-    fileSystem.eventsDir       = directory + "Events/";
-    fileSystem.gunsDir         = directory + "Guns/";
+    filesystem.ammoDir         = filesystem.parentDir + "Ammo/";
+    filesystem.drillsDir       = filesystem.parentDir + "Drills/";
+    filesystem.eventsDir       = filesystem.parentDir + "Events/";
+    filesystem.gunsDir         = filesystem.parentDir + "Guns/";
 
     // Check paths are good
-    if(!LAS::ensureDirectory(fileSystem.ammoDir)){
-        logger->log("Error finding or creating directory [" + fileSystem.ammoDir + "]", LAS::Logging::Tags{"ERROR", "SC"});
+    if(!LAS::ensureDirectory(filesystem.ammoDir)){
+        logger->log("Error finding or creating directory [" + filesystem.ammoDir + "]", LAS::Logging::Tags{"ERROR", "SC"});
         return false;
     }
-    if(!LAS::ensureDirectory(fileSystem.drillsDir)){
-        logger->log("Error finding or creating directory [" + fileSystem.drillsDir + "]", LAS::Logging::Tags{"ERROR", "SC"});
+    if(!LAS::ensureDirectory(filesystem.drillsDir)){
+        logger->log("Error finding or creating directory [" + filesystem.drillsDir + "]", LAS::Logging::Tags{"ERROR", "SC"});
         return false;
     }
-    if(!LAS::ensureDirectory(fileSystem.eventsDir)){
-        logger->log("Error finding or creating directory [" + fileSystem.eventsDir + "]", LAS::Logging::Tags{"ERROR", "SC"});
+    if(!LAS::ensureDirectory(filesystem.eventsDir)){
+        logger->log("Error finding or creating directory [" + filesystem.eventsDir + "]", LAS::Logging::Tags{"ERROR", "SC"});
         return false;
     }
-    if(!LAS::ensureDirectory(fileSystem.gunsDir)){
-        logger->log("Error finding or creating directory [" + fileSystem.gunsDir + "]", LAS::Logging::Tags{"ERROR", "SC"});
+    if(!LAS::ensureDirectory(filesystem.gunsDir)){
+        logger->log("Error finding or creating directory [" + filesystem.gunsDir + "]", LAS::Logging::Tags{"ERROR", "SC"});
         return false;
     }
+    return true;
+}
+bool Framework::setupAmmoTracker(std::string directory){
+    if(!ammoTracker)
+        ammoTracker = std::make_shared<AmmoTracker>(logger);
+
+    if(!ammoTracker->setDirectory(directory))
+        return false;
+    
+    if(!ammoTracker->readCartridges())
+        return false;
+
+    if(!ammoTracker->readAllAmmo())
+        return false;
+
+    return true;
+}
+bool Framework::setupWindow(){
+    if(!window->addAmmoTracker(ammoTracker)){
+        logger->log("Could not add Ammo Tracker to window", LAS::Logging::Tags{"FATAL", "SC"});
+        return false;
+    }
+
     return true;
 }
