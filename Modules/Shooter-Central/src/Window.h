@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Ammo.h"
+
 #include <LAS/Window.h>
 
 namespace ShooterCentral{
@@ -9,8 +11,13 @@ namespace ShooterCentral{
         ~ShooterCentralWindow();
 
         void draw() override;
+
+        bool addAmmoTracker(AmmoTrackerPtr setAmmoTracker);
+
     private:
-        std::string test;
+        AmmoTrackerPtr ammoTracker;
+
+
     };
 
     using SCWindowPtr = std::shared_ptr<ShooterCentralWindow>;
