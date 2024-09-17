@@ -33,6 +33,25 @@ bool AmmoTracker::addNewAmmoToStockpile (AmmoPtr ammo){
     else
         return false;
 }
+// MARK: GET INFO
+void AmmoTracker::getAllAmmoNames(StringVector& names) const{
+    if(!names.empty())
+        names.erase(names.begin(), names.end());
+
+
+    for(const auto& pair : ammoStockpile){
+        names.push_back(pair.second->name);
+    }
+}
+void AmmoTracker::getAllCartridgeNames(StringVector& names) const{
+    if(!names.empty())
+        names.erase(names.begin(), names.end());
+
+
+    for(const auto& pair : cartridges){
+        names.push_back(pair.second);
+    }
+}
 
 bool AmmoTracker::removeAmmoFromStockPile (uint64_t amountUsed, const std::string& key){
     if(!ammoStockpile.contains(key))
@@ -77,6 +96,34 @@ bool AmmoTracker::writeAllAmmo() const{
 
     return true;
 }
+bool AmmoTracker::readAllAmmo(){
+    if(!std::filesystem::exists(saveDirectory))
+        return false;
+
+    int filesThatCouldNotBeRead{0};
+	const std::filesystem::path workingDirectory{saveDirectory};
+	for(auto const& dirEntry : std::filesystem::directory_iterator(workingDirectory)){
+		try{
+			AmmoPtr ammo {std::make_shared<Ammo>(AmmoHelper::readAmmo(dirEntry.path().string()))};
+
+            // Attempt adding to stockpile
+            if(!addAmmoToStockpile(ammo->amount, ammo->name)){
+                if(!addNewAmmoToStockpile(ammo)){
+                    ++filesThatCouldNotBeRead;
+                }
+            }
+		}
+		catch(std::exception& e){
+			++filesThatCouldNotBeRead;
+		}
+	}
+
+	// Output number of files that could not be read
+	if(--filesThatCouldNotBeRead > 0)    // There will always be the cartridges file that cannot be read, so subtracting that
+		logger->log("Could not create Ammo object from file(s): " + filesThatCouldNotBeRead, LAS::Logging::Tags{"ROUTINE", "SC"});
+
+	return true;
+}
 // MARK: R/W CARTRIDGE
 bool AmmoTracker::writeAllCartridges() const{
     if(!std::filesystem::exists(saveDirectory))
@@ -96,6 +143,24 @@ bool AmmoTracker::writeAllCartridges() const{
 std::string AmmoTracker::getDirectory() const{
     return saveDirectory;
 }
+bool AmmoTracker::readCartridges(){
+    if(!std::filesystem::exists(saveDirectory))
+        return false;
+
+    std::string fullPath { saveDirectory };
+    fullPath += cartridgesFile;
+
+    StringVector cartridgeNames;
+    AmmoHelper::readCartridges(fullPath, cartridgeNames);
+
+    for(const auto& s : cartridgeNames){
+        if(!addCartridge(s))
+            logger->log("Cartridge named [" + s + "] already exists.", LAS::Logging::Tags{"ROUTINE", "SC"});
+    }
+
+    return true;
+}
+
 bool AmmoTracker::setDirectory(std::string path) {
     path = LAS::TextManip::ensureSlash(path);
 
@@ -191,6 +256,32 @@ bool AmmoHelper::writeAllCartridges(std::string path, const std::vector<std::str
     std::ofstream file{path};
     file << std::setw(1) << std::setfill('\t') << j;
     file.close();
+
+    return true;
+}
+bool AmmoHelper::readCartridges (std::string path, StringVector& cartridgeNames){
+    using LAS::json;
+
+    if(!std::filesystem::exists(path))
+        return false;
+
+    if(!cartridgeNames.empty())
+        cartridgeNames.erase(cartridgeNames.begin(), cartridgeNames.end());
+
+    std::ifstream inputFile{ path, std::ios::in };
+    json j = json::parse(inputFile);
+
+    json cartridges;
+	j.at("cartridges").get_to(cartridges);
+
+	for (auto& elment : cartridges.items()) {
+		json obj = elment.value();
+        std::string nameBuf;
+
+		obj.get_to(nameBuf);
+
+        cartridgeNames.push_back(nameBuf);
+	}
 
     return true;
 }
