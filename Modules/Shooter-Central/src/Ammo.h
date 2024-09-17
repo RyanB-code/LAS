@@ -31,10 +31,16 @@ namespace ShooterCentral{
         bool    addNewAmmoToStockpile   (AmmoPtr ammo);
         bool    removeAmmoFromStockPile (uint64_t amount,   const std::string& key);
 
+        void    getAllAmmoNames         (StringVector& names) const;        // Clears vector before adding elements
+        void    getAllCartridgeNames    (StringVector& names) const;        // Clears vector before adding elements
+
         bool    addCartridge            (const std::string& cartridge);
 
         bool    writeAllAmmo            () const;
+        bool    readAllAmmo             ();
+
         bool    writeAllCartridges      () const;
+        bool    readCartridges          ();
 
         bool        setDirectory        (std::string directory);
         std::string getDirectory        () const;
@@ -48,12 +54,14 @@ namespace ShooterCentral{
         static constexpr std::string cartridgesFile {"Cartridges.json"};
     };
 
-    namespace AmmoHelper{
-        bool            writeAmmo               (std::string directory, const Ammo& ammo);
-        Ammo            readAmmo                (const std::string& path);
+    using AmmoTrackerPtr = std::shared_ptr<AmmoTracker>;
 
-        bool            writeAllCartridges      (std::string path, const std::vector<std::string>& cartridges);
-        StringVector    readCartridges          (std::string directory);
+    namespace AmmoHelper{
+        bool    writeAmmo               (std::string directory, const Ammo& ammo);
+        Ammo    readAmmo                (const std::string& path);
+
+        bool    writeAllCartridges      (std::string path, const std::vector<std::string>& cartridges);
+        bool    readCartridges          (std::string path, StringVector& cartridgeNames);               // Clears vector before adding elements
     }
 
 }
