@@ -11,7 +11,7 @@ AmmoTracker::~AmmoTracker(){
     
 }
 // MARK: STOCKPILE
-bool AmmoTracker::addAmmoToStockpile (uint64_t amount, const std::string key){
+bool AmmoTracker::addAmmoToStockpile (uint64_t amount, const std::string& key){
     if(ammoStockpile.contains(key)){
         ammoStockpile.at(key)->amount += amount;
         return true;
