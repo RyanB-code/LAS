@@ -67,8 +67,8 @@ namespace ShooterCentral{
     using AmmoTrackerPtr = std::shared_ptr<AmmoTracker>;
 
     namespace AmmoHelper{
-        bool        writeAmmo   (std::string directory, const TrackedAmmo& ammo);
-        TrackedAmmo readAmmo    (const std::string& path);
+        bool        writeTrackedAmmo    (std::string directory, const TrackedAmmo& ammo);
+        TrackedAmmo readTrackedAmmo     (const std::string& path);
 
         bool    writeAllCartridges      (std::string path, const std::vector<std::string>& cartridges);
         bool    readCartridges          (std::string path, StringVector& cartridgeNames);               // Clears vector before adding elements

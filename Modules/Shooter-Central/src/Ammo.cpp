@@ -126,7 +126,7 @@ bool AmmoTracker::writeAllAmmo() const{
 	for(const auto& pair : ammoStockpile) {
         const auto& ammo = *pair.second;
 
-        if(!AmmoHelper::writeAmmo(saveDirectory, ammo)) 
+        if(!AmmoHelper::writeTrackedAmmo(saveDirectory, ammo)) 
             logger->log("Directory [" + saveDirectory + "] was not found. Ammo [" + ammo.ammoType.name + "] was not saved.", LAS::Logging::Tags{"ERROR", "SC"});
 	}
 
@@ -140,7 +140,7 @@ bool AmmoTracker::readAllAmmo(){
 	const std::filesystem::path workingDirectory{saveDirectory};
 	for(auto const& dirEntry : std::filesystem::directory_iterator(workingDirectory)){
 		try{
-			TrackedAmmoPtr ammoBuf {std::make_shared<TrackedAmmo>(AmmoHelper::readAmmo(dirEntry.path().string()))};
+			TrackedAmmoPtr ammoBuf {std::make_shared<TrackedAmmo>(AmmoHelper::readTrackedAmmo(dirEntry.path().string()))};
 
             // Attempt adding to stockpile
             if(!addAmmoToStockpile(ammoBuf->amount, ammoBuf->ammoType.name)){
@@ -209,7 +209,7 @@ bool AmmoTracker::setDirectory(std::string path) {
 }
 
 // MARK: AMMO HELPER
-bool AmmoHelper::writeAmmo(std::string directory, const TrackedAmmo& ammo){
+bool AmmoHelper::writeTrackedAmmo(std::string directory, const TrackedAmmo& ammo){
     using LAS::json;
 
     if(directory.empty())
@@ -253,7 +253,7 @@ bool AmmoHelper::writeAmmo(std::string directory, const TrackedAmmo& ammo){
    
     return true;
 }
-TrackedAmmo AmmoHelper::readAmmo(const std::string& path){
+TrackedAmmo AmmoHelper::readTrackedAmmo(const std::string& path){
     using LAS::json;
 
     if(!std::filesystem::exists(path))
