@@ -209,6 +209,30 @@ bool AmmoTracker::setDirectory(std::string path) {
 }
 
 // MARK: AMMO HELPER
+LAS::json AmmoHelper::ammoTypeToJson (const AmmoType& ammo){
+    using LAS::json;
+
+    json j;
+    j["name"]           = ammo.name;
+    j["manufacturer"]   = ammo.manufacturer;
+    j["cartridge"]      = ammo.cartridge;
+    j["grain"]          = int{ammo.grainWeight};
+
+    return j;
+}
+AmmoType AmmoHelper::jsonToAmmoType(const LAS::json& j){
+    using LAS::json;
+   
+    std::string nameBuf, manBuf, cartNameBuf; 
+    uint8_t grainBuf;
+
+    j.at("name").get_to(nameBuf);
+    j.at("manufacturer").get_to(manBuf);
+    j.at("cartridge").get_to(cartNameBuf);
+    j.at("grain").get_to(grainBuf);
+
+    return AmmoType{nameBuf, manBuf, cartNameBuf, grainBuf};
+}
 bool AmmoHelper::writeTrackedAmmo(std::string directory, const TrackedAmmo& ammo){
     using LAS::json;
 
