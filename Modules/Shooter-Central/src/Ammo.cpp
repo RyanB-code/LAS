@@ -246,11 +246,8 @@ bool AmmoHelper::writeTrackedAmmo(std::string directory, const TrackedAmmo& ammo
     
 
     // Make JSON
-    json j;
-    j["name"]           = ammo.ammoType.name;
-    j["manufacturer"]   = ammo.ammoType.manufacturer;
-    j["cartridge"]      = ammo.ammoType.cartridge;
-    j["grain"]          = int{ammo.ammoType.grainWeight};
+    json j {AmmoHelper::ammoTypeToJson(ammo.ammoType)};
+
     j["amountOnHand"]   = ammo.amount;
 
 
@@ -286,17 +283,10 @@ TrackedAmmo AmmoHelper::readTrackedAmmo(const std::string& path){
     std::ifstream inputFile{ path, std::ios::in };
     json j = json::parse(inputFile);
 
-    std::string nameBuf, manBuf, cartNameBuf; 
-    uint8_t grainBuf;
     uint64_t amountBuf;
-
-    j.at("name").get_to(nameBuf);
-    j.at("manufacturer").get_to(manBuf);
-    j.at("cartridge").get_to(cartNameBuf);
-    j.at("grain").get_to(grainBuf);
     j.at("amountOnHand").get_to(amountBuf);
 
-    return TrackedAmmo{ AmmoType{nameBuf, manBuf, cartNameBuf, grainBuf}, amountBuf};
+    return TrackedAmmo{ AmmoHelper::jsonToAmmoType(j), amountBuf};
 }
 bool AmmoHelper::writeAllCartridges(std::string path, const std::vector<std::string>& cartridges){
     using LAS::json;
