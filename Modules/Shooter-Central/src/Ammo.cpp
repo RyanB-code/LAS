@@ -43,6 +43,15 @@ void AmmoTracker::getAllAmmoNames(StringVector& names) const{
         names.push_back(pair.second->name);
     }
 }
+void AmmoTracker::getAllAmmo (std::vector<Ammo>& list)   const{
+     if(!list.empty())
+        list.erase(list.begin(), list.end());
+
+    for(const auto& a : ammoStockpile){
+        list.push_back(*a.second);
+    }
+}
+
 void AmmoTracker::getAllCartridgeNames(StringVector& names) const{
     if(!names.empty())
         names.erase(names.begin(), names.end());
@@ -53,14 +62,33 @@ void AmmoTracker::getAllCartridgeNames(StringVector& names) const{
     }
 }
 void AmmoTracker::getAmmoCountByCartridge (std::vector<std::pair<std::string, uint64_t>>& count) const{
-     if(!count.empty())
+    if(!count.empty())
         count.erase(count.begin(), count.end());
 
-    for(const auto& a : ammoStockpile){
-        count.push_back(std::pair{a.second->cartridge, a.second->amount});
+    StringVector namesList;
+    getAllCartridgeNames(namesList); // Get all the names of cartridges
+
+    // For every cartridge, add the amounts together
+    for(const auto& s : namesList){
+        int amountBuf { 0 };
+        std::vector<Ammo> sameCartridgeList;
+        getAllAmmoByCartridge(sameCartridgeList, s);
+
+        for(const auto& a : sameCartridgeList)
+            amountBuf += a.amount;
+
+        count.push_back(std::pair{s, amountBuf});           // Add to list
     }
 }
+void AmmoTracker::getAllAmmoByCartridge(std::vector<Ammo>& list, const std::string& cartridgeName)   const{
+    if(!list.empty())
+        list.erase(list.begin(), list.end());
 
+    for(const auto& pair : ammoStockpile){
+        if(pair.second->cartridge == cartridgeName)
+            list.push_back(*pair.second);
+    }
+}
 
 bool AmmoTracker::removeAmmoFromStockPile (uint64_t amountUsed, const std::string& key){
     if(!ammoStockpile.contains(key))

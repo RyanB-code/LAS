@@ -31,10 +31,12 @@ namespace ShooterCentral{
         bool    addNewAmmoToStockpile   (AmmoPtr ammo);
         bool    removeAmmoFromStockPile (uint64_t amount,   const std::string& key);
 
-        void    getAllAmmoNames         (StringVector& names) const;        // Clears vector before adding elements
-        void    getAllCartridgeNames    (StringVector& names) const;        // Clears vector before adding elements
+        void    getAllAmmoNames         (StringVector& names)       const;          // Clears vector before adding elements
+        void    getAllAmmo              (std::vector<Ammo>& list)   const;          // Clears vector before adding elements, only gives you copies of Ammo objects
 
-        void    getAmmoCountByCartridge (std::vector<std::pair<std::string, uint64_t>>& count) const;  // Clears vector before adding elements
+        void    getAllCartridgeNames    (StringVector& names) const;                                            // Clears vector before adding elements
+        void    getAmmoCountByCartridge (std::vector<std::pair<std::string, uint64_t>>& count) const;           // Clears vector before adding elements
+        void    getAllAmmoByCartridge   (std::vector<Ammo>& list, const std::string& cartridgeName)   const;    // Clears vector before adding elements, gives copies of ammo objects, adds if cartridge name is equal
 
         bool    addCartridge            (const std::string& cartridge);
 
