@@ -40,22 +40,6 @@ bool Framework::setup(LAS::Logging::LoggerPtr setLoggerPtr, const std::string& d
     logger->log("Setup sucessful", Tags{"Routine", "SC"});
     return true;
 }
-bool Framework::addGun(GunPtr gun){
-    if(!gun)
-        return false;
-
-    if(guns.contains(gun->getName()))
-        return false;
-    
-    return guns.try_emplace(gun->getName(), gun).second;
-}
-bool Framework::removeGun(const std::string& key){
-    if(!guns.contains(key))
-        return true;
-
-    guns.erase(key);
-    return !guns.contains(key); // Return the inverse of contain()
-}
 bool Framework::addDrill(DrillPtr drill){
      if(!drill)
         return false;

@@ -15,8 +15,7 @@ namespace ShooterCentral{
         RIFLE,
         PRECISION_RIFLE,
         NOT_APPLICABLE
-    };  
-
+    };
 
     class Gun final {
     public:
@@ -27,15 +26,39 @@ namespace ShooterCentral{
         uint64_t    getRoundCount() const;
         WeaponType  getWeaponType() const;
 
-        bool        addToRoundCount(AmmoPtr ammoType, uint64_t roundsShot);
+        bool        addToRoundCount(TrackedAmmoPtr ammo);
 
     private:
         std::string name;
         uint64_t    totalRounds;
         WeaponType  weaponType;
 
-        std::unordered_map<std::string, std::pair <AmmoPtr, uint64_t>> ammoTracker;
+        std::unordered_map<std::string, TrackedAmmoPtr> ammoTracker;
     };
 
-        using GunPtr = std::shared_ptr<Gun>;
+    using GunPtr = std::shared_ptr<Gun>;
+
+    class GunTracker{
+    public:
+        GunTracker(LAS::Logging::LoggerPtr setLogger);
+        ~GunTracker();
+
+        bool addGun     (GunPtr gun);
+        bool removeGun  (const std::string& key);
+
+        GunPtr getGun   (const std::string& key) const;
+
+    private:
+        LAS::Logging::LoggerPtr logger;
+
+        std::map<std::string, GunPtr> guns;
+    };
+
+    namespace GunHelper{
+        bool    writeGun    (std::string directory, const Gun& gun);
+        Gun     readGun     (const std::string& path);
+
+        std::string weaponTypeToStr (const WeaponType& type);
+        WeaponType  strToWeaponType (const std::string& string);
+    }
 }
