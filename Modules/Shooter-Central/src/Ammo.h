@@ -34,6 +34,8 @@ namespace ShooterCentral{
         void    getAllAmmoNames         (StringVector& names) const;        // Clears vector before adding elements
         void    getAllCartridgeNames    (StringVector& names) const;        // Clears vector before adding elements
 
+        void    getAmmoCountByCartridge (std::vector<std::pair<std::string, uint64_t>>& count) const;  // Clears vector before adding elements
+
         bool    addCartridge            (const std::string& cartridge);
 
         bool    writeAllAmmo            () const;
