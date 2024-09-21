@@ -67,6 +67,9 @@ namespace ShooterCentral{
     using AmmoTrackerPtr = std::shared_ptr<AmmoTracker>;
 
     namespace AmmoHelper{
+        LAS::json   ammoTypeToJson   (const AmmoType& ammo);
+        AmmoType    jsonToAmmoType   (const LAS::json& j);
+
         bool        writeTrackedAmmo    (std::string directory, const TrackedAmmo& ammo);
         TrackedAmmo readTrackedAmmo     (const std::string& path);
 
