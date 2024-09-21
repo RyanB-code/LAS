@@ -52,6 +52,15 @@ void AmmoTracker::getAllCartridgeNames(StringVector& names) const{
         names.push_back(pair.second);
     }
 }
+void AmmoTracker::getAmmoCountByCartridge (std::vector<std::pair<std::string, uint64_t>>& count) const{
+     if(!count.empty())
+        count.erase(count.begin(), count.end());
+
+    for(const auto& a : ammoStockpile){
+        count.push_back(std::pair{a.second->cartridge, a.second->amount});
+    }
+}
+
 
 bool AmmoTracker::removeAmmoFromStockPile (uint64_t amountUsed, const std::string& key){
     if(!ammoStockpile.contains(key))
