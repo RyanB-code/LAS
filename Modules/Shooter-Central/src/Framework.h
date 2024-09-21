@@ -29,9 +29,6 @@ namespace ShooterCentral{
 
         bool setup(LAS::Logging::LoggerPtr setLoggerPtr, const std::string& directory);   // Call inside LASM_init
 
-        bool addGun         (GunPtr gun);
-        bool removeGun      (const std::string& key);
-
         bool addDrill       (DrillPtr drill);
         bool removeDrill    (const std::string& key);
 
@@ -47,7 +44,6 @@ namespace ShooterCentral{
     private:
         std::map<std::string, EventPtr>                         events;
         std::map<std::string, DrillPtr>                         drills;
-        std::map<std::string, GunPtr>                           guns;
 
         AmmoTrackerPtr          ammoTracker;
 
