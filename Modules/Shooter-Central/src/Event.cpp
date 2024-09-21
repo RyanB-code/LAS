@@ -25,6 +25,7 @@ EventType Event::getEventType() const{
 EventLocation Event::getEventLocation() const{
     return location;
 }
+/*
 bool Event::addGun(GunPtr gun, AmmoPtr ammo, uint64_t rounds){
     if(!gun || !ammo || rounds == 0)
         return false;
@@ -36,3 +37,4 @@ bool Event::addGun(GunPtr gun, AmmoPtr ammo, uint64_t rounds){
     gunsUsed.push_back(std::tuple{gun, ammo, rounds});
     return true;
 }
+*/
