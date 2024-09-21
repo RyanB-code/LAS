@@ -15,7 +15,7 @@ namespace ShooterCentral{
         bool addAmmoTracker(AmmoTrackerPtr setAmmoTracker);
 
     private:
-
+        static constexpr int NUM_CARTRIDGE_NAMES_SHOWN { 10 };
         void drawStockpile() const;
 
         AmmoTrackerPtr ammoTracker;
