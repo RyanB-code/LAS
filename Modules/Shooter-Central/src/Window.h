@@ -15,8 +15,10 @@ namespace ShooterCentral{
         bool addAmmoTracker(AmmoTrackerPtr setAmmoTracker);
 
     private:
-        AmmoTrackerPtr ammoTracker;
 
+        void drawStockpile() const;
+
+        AmmoTrackerPtr ammoTracker;
 
     };
 
