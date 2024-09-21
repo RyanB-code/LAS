@@ -19,15 +19,15 @@ bool AmmoTracker::addAmmoToStockpile (uint64_t amount, const std::string& key){
     else
         return false;    
 }
-bool AmmoTracker::addNewAmmoToStockpile (AmmoPtr ammo){
-    if(ammoStockpile.contains(ammo->name))
+bool AmmoTracker::addNewAmmoToStockpile (TrackedAmmoPtr ammo){
+    if(ammoStockpile.contains(ammo->ammoType.name))
         return false;
 
-    ammoStockpile.try_emplace(ammo->name, ammo);
+    ammoStockpile.try_emplace(ammo->ammoType.name, ammo);
 
-    if(ammoStockpile.contains(ammo->name)){
+    if(ammoStockpile.contains(ammo->ammoType.name)){
         // Add to cartridges, does not matter return
-        addCartridge(ammo->cartridge);
+        addCartridge(ammo->ammoType.cartridge);
         return true;
     }
     else
@@ -37,7 +37,7 @@ bool AmmoTracker::removeAmmoFromStockPile (uint64_t amountUsed, const std::strin
     if(!ammoStockpile.contains(key))
         return true;
     
-    auto& ammo {ammoStockpile.at(key)};
+    auto& ammo { ammoStockpile.at(key) };
 
     if(ammo->amount - amountUsed >= 100000)
         return false;
@@ -52,16 +52,16 @@ void AmmoTracker::getAllAmmoNames(StringVector& names) const{
         names.erase(names.begin(), names.end());
 
 
-    for(const auto& pair : ammoStockpile){
-        names.push_back(pair.second->name);
+    for(const auto& ammo : ammoStockpile){
+        names.push_back(ammo.second->ammoType.name);
     }
 }
-void AmmoTracker::getAllAmmo (std::vector<Ammo>& list)   const{
+void AmmoTracker::getAllAmmo (std::vector<TrackedAmmo>& list)   const{
      if(!list.empty())
         list.erase(list.begin(), list.end());
 
-    for(const auto& a : ammoStockpile){
-        list.push_back(*a.second);
+    for(const auto& ammo : ammoStockpile){
+        list.push_back(*ammo.second);
     }
 }
 
@@ -82,23 +82,23 @@ void AmmoTracker::getAmmoCountByCartridge (std::vector<std::pair<std::string, ui
     getAllCartridgeNames(namesList); // Get all the names of cartridges
 
     // For every cartridge, add the amounts together
-    for(const auto& s : namesList){
+    for(const auto& name : namesList){
         int amountBuf { 0 };
-        std::vector<Ammo> sameCartridgeList;
-        getAllAmmoByCartridge(sameCartridgeList, s);
+        std::vector<TrackedAmmo> sameCartridgeList;
+        getAllAmmoByCartridge(sameCartridgeList, name);
 
-        for(const auto& a : sameCartridgeList)
-            amountBuf += a.amount;
+        for(const auto& ammo : sameCartridgeList)
+            amountBuf += ammo.amount;
 
-        count.push_back(std::pair{s, amountBuf});           // Add to list
+        count.push_back(std::pair{name, amountBuf});           // Add to list
     }
 }
-void AmmoTracker::getAllAmmoByCartridge(std::vector<Ammo>& list, const std::string& cartridgeName)   const{
+void AmmoTracker::getAllAmmoByCartridge(std::vector<TrackedAmmo>& list, const std::string& cartridgeName)   const{
     if(!list.empty())
         list.erase(list.begin(), list.end());
 
     for(const auto& pair : ammoStockpile){
-        if(pair.second->cartridge == cartridgeName)
+        if(pair.second->ammoType.cartridge == cartridgeName)
             list.push_back(*pair.second);
     }
 }
@@ -127,7 +127,7 @@ bool AmmoTracker::writeAllAmmo() const{
         const auto& ammo = *pair.second;
 
         if(!AmmoHelper::writeAmmo(saveDirectory, ammo)) 
-            logger->log("Directory [" + saveDirectory + "] was not found. Ammo [" + ammo.name + "] was not saved.", LAS::Logging::Tags{"ERROR", "SC"});
+            logger->log("Directory [" + saveDirectory + "] was not found. Ammo [" + ammo.ammoType.name + "] was not saved.", LAS::Logging::Tags{"ERROR", "SC"});
 	}
 
     return true;
@@ -140,11 +140,11 @@ bool AmmoTracker::readAllAmmo(){
 	const std::filesystem::path workingDirectory{saveDirectory};
 	for(auto const& dirEntry : std::filesystem::directory_iterator(workingDirectory)){
 		try{
-			AmmoPtr ammo {std::make_shared<Ammo>(AmmoHelper::readAmmo(dirEntry.path().string()))};
+			TrackedAmmoPtr ammoBuf {std::make_shared<TrackedAmmo>(AmmoHelper::readAmmo(dirEntry.path().string()))};
 
             // Attempt adding to stockpile
-            if(!addAmmoToStockpile(ammo->amount, ammo->name)){
-                if(!addNewAmmoToStockpile(ammo)){
+            if(!addAmmoToStockpile(ammoBuf->amount, ammoBuf->ammoType.name)){
+                if(!addNewAmmoToStockpile(ammoBuf)){
                     ++filesThatCouldNotBeRead;
                 }
             }
@@ -209,7 +209,7 @@ bool AmmoTracker::setDirectory(std::string path) {
 }
 
 // MARK: AMMO HELPER
-bool AmmoHelper::writeAmmo(std::string directory, const Ammo& ammo){
+bool AmmoHelper::writeAmmo(std::string directory, const TrackedAmmo& ammo){
     using LAS::json;
 
     if(directory.empty())
@@ -218,21 +218,21 @@ bool AmmoHelper::writeAmmo(std::string directory, const Ammo& ammo){
     directory = LAS::TextManip::ensureSlash(directory);
 
     if(!std::filesystem::exists(directory))
-		return 2;
+		return false;
     
 
     // Make JSON
     json j;
-    j["name"]           = ammo.name;
-    j["manufacturer"]   = ammo.manufacturer;
-    j["cartridge"]      = ammo.cartridge;
-    j["grain"]          = int{ammo.grainWeight};
+    j["name"]           = ammo.ammoType.name;
+    j["manufacturer"]   = ammo.ammoType.manufacturer;
+    j["cartridge"]      = ammo.ammoType.cartridge;
+    j["grain"]          = int{ammo.ammoType.grainWeight};
     j["amountOnHand"]   = ammo.amount;
 
 
     // Create JSON file name
     std::string fileName;
-    for(const auto& c : ammo.name){     // Remove spaces and make lowercase
+    for(const auto& c : ammo.ammoType.name){     // Remove spaces and make lowercase
         if(isalpha(c))
             fileName += tolower(c);
         else if(c == ' ' || c == '\t')
@@ -253,7 +253,7 @@ bool AmmoHelper::writeAmmo(std::string directory, const Ammo& ammo){
    
     return true;
 }
-Ammo AmmoHelper::readAmmo(const std::string& path){
+TrackedAmmo AmmoHelper::readAmmo(const std::string& path){
     using LAS::json;
 
     if(!std::filesystem::exists(path))
@@ -272,7 +272,7 @@ Ammo AmmoHelper::readAmmo(const std::string& path){
     j.at("grain").get_to(grainBuf);
     j.at("amountOnHand").get_to(amountBuf);
 
-    return Ammo{nameBuf, manBuf, cartNameBuf, grainBuf, amountBuf };
+    return TrackedAmmo{ AmmoType{nameBuf, manBuf, cartNameBuf, grainBuf}, amountBuf};
 }
 bool AmmoHelper::writeAllCartridges(std::string path, const std::vector<std::string>& cartridges){
     using LAS::json;
