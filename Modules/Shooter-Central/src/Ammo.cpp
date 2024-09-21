@@ -33,6 +33,19 @@ bool AmmoTracker::addNewAmmoToStockpile (AmmoPtr ammo){
     else
         return false;
 }
+bool AmmoTracker::removeAmmoFromStockPile (uint64_t amountUsed, const std::string& key){
+    if(!ammoStockpile.contains(key))
+        return true;
+    
+    auto& ammo {ammoStockpile.at(key)};
+
+    if(ammo->amount - amountUsed >= 100000)
+        return false;
+    else
+        ammo->amount -= amountUsed;
+
+    return true;
+}
 // MARK: GET INFO
 void AmmoTracker::getAllAmmoNames(StringVector& names) const{
     if(!names.empty())
@@ -88,20 +101,6 @@ void AmmoTracker::getAllAmmoByCartridge(std::vector<Ammo>& list, const std::stri
         if(pair.second->cartridge == cartridgeName)
             list.push_back(*pair.second);
     }
-}
-
-bool AmmoTracker::removeAmmoFromStockPile (uint64_t amountUsed, const std::string& key){
-    if(!ammoStockpile.contains(key))
-        return true;
-    
-    auto& ammo {ammoStockpile.at(key)};
-
-    if(ammo->amount - amountUsed >= 100000)
-        return false;
-    else
-        ammo->amount -= amountUsed;
-
-    return true;
 }
 bool AmmoTracker::addCartridge (const std::string& cartridge){
     if(cartridges.contains(cartridge))
