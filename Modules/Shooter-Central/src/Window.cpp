@@ -39,7 +39,7 @@ void ShooterCentralWindow::drawStockpile() const{
         static StringVector ammoNames;
         static StringVector cartridgeNames;
         static std::vector<std::pair<std::string, uint64_t>> countByCartridge;
-        static std::vector<Ammo>    ammo;
+        static std::vector<TrackedAmmo>    ammo;
 
         ammoTracker->getAllAmmoNames(ammoNames);
         ammoTracker->getAllCartridgeNames(cartridgeNames);
@@ -58,7 +58,7 @@ void ShooterCentralWindow::drawStockpile() const{
             const char* cartridgeList[NUM_CARTRIDGE_NAMES_SHOWN];
             cartridgeList[0] = "ALL";       // Default option
 
-            static std::vector<Ammo>    selectedAmmo;
+            static std::vector<TrackedAmmo>    selectedCatridgeAmmoList;
             int i { 1 };                                    // Starts at one to offset the all option
             for(const auto& s : cartridgeNames){
                 if(i < (NUM_CARTRIDGE_NAMES_SHOWN+1)){      // Add one to offset the additional 'all' option
@@ -68,7 +68,7 @@ void ShooterCentralWindow::drawStockpile() const{
             }
 
             ImGui::Combo("Cartridge", &highlilghtedItem, cartridgeList, cartridgeNames.size()+1); // This is the selector table. Add one to account for 'all' option
-            ammoTracker->getAllAmmoByCartridge(selectedAmmo, cartridgeList[highlilghtedItem]);  // Populates list of ammo with selected cartridge
+            ammoTracker->getAllAmmoByCartridge(selectedCatridgeAmmoList, cartridgeList[highlilghtedItem]);  // Populates list of ammo with selected cartridge
 
             // Change table based on what is highlighted
             if(highlilghtedItem == 0){
@@ -104,16 +104,16 @@ void ShooterCentralWindow::drawStockpile() const{
                             std::ostringstream text;
                             switch( column ){
                                 case 0:
-                                    ImGui::Text(itr->cartridge.c_str());
+                                    ImGui::Text(itr->ammoType.cartridge.c_str());
                                     break;
                                 case 1:
-                                    ImGui::Text(itr->name.c_str());
+                                    ImGui::Text(itr->ammoType.name.c_str());
                                     break;
                                 case 2:
-                                    ImGui::Text(itr->manufacturer.c_str());
+                                    ImGui::Text(itr->ammoType.manufacturer.c_str());
                                     break;
                                 case 3:
-                                    text << int{itr->grainWeight};
+                                    text << int{itr->ammoType.grainWeight};
                                     ImGui::Text(text.str().c_str());
                                     break;
                                 case 4:
@@ -128,7 +128,7 @@ void ShooterCentralWindow::drawStockpile() const{
                     } // End populating all table
                 }
                 else{
-                    for(auto itr { selectedAmmo.begin() }; itr != selectedAmmo.end(); ++itr){
+                    for(auto itr { selectedCatridgeAmmoList.begin() }; itr != selectedCatridgeAmmoList.end(); ++itr){
                         ImGui::TableNextRow();
                         for (int column{0}; column < columnsInDetailedTable; ++column)
                         {
@@ -136,13 +136,13 @@ void ShooterCentralWindow::drawStockpile() const{
                             std::ostringstream text;
                             switch( column ){
                                 case 0:
-                                    ImGui::Text(itr->name.c_str());
+                                    ImGui::Text(itr->ammoType.name.c_str());
                                     break;
                                 case 1:
-                                    ImGui::Text(itr->manufacturer.c_str());
+                                    ImGui::Text(itr->ammoType.manufacturer.c_str());
                                     break;
                                 case 2:
-                                    text << int{itr->grainWeight};
+                                    text << int{itr->ammoType.grainWeight};
                                     ImGui::Text(text.str().c_str());
                                     break;
                                 case 3:
