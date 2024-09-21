@@ -27,7 +27,7 @@ namespace ShooterCentral{
         AmmoTracker(LAS::Logging::LoggerPtr setLogger);
         ~AmmoTracker();
 
-        bool    addAmmoToStockpile      (uint64_t amount,   const std::string key);
+        bool    addAmmoToStockpile      (uint64_t amount,   const std::string& key);
         bool    addNewAmmoToStockpile   (AmmoPtr ammo);
         bool    removeAmmoFromStockPile (uint64_t amount,   const std::string& key);
 
