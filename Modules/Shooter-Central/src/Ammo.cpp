@@ -176,9 +176,6 @@ bool AmmoTracker::writeAllCartridges() const{
 
     return AmmoHelper::writeAllCartridges(fullPath, rawCartridges);
 }
-std::string AmmoTracker::getDirectory() const{
-    return saveDirectory;
-}
 bool AmmoTracker::readCartridges(){
     if(!std::filesystem::exists(saveDirectory))
         return false;
@@ -206,6 +203,9 @@ bool AmmoTracker::setDirectory(std::string path) {
     }
     else
         return false;
+}
+std::string AmmoTracker::getDirectory() const{
+    return saveDirectory;
 }
 
 // MARK: AMMO HELPER
