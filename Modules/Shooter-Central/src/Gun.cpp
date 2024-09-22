@@ -85,6 +85,9 @@ bool GunTracker::addGun(GunPtr gun){
     
     return guns.try_emplace(gun->getName(), gun).second;
 }
+uint64_t GunTracker::getGunTotal() const{
+    return guns.size();
+}
 bool GunTracker::removeGun(const std::string& key){
     if(!guns.contains(key))
         return true;
@@ -97,6 +100,51 @@ GunPtr GunTracker::getGun(const std::string& key) const{
         return nullptr;
 
     return guns.at(key);
+}
+// MARK: R/W Guns
+bool GunTracker::writeAllGuns() const{
+    using LAS::json;
+
+    if(guns.empty())
+        return true;
+
+    if(!std::filesystem::exists(saveDirectory)){
+        logger->log("Directory [" + saveDirectory + "] was not found. Did not attempt to save any Ammo objects.", LAS::Logging::Tags{"ERROR", "SC"});
+        return false;
+    }
+
+	for(const auto& pair : guns) {
+        const auto& gun = *pair.second;
+
+        if(!GunHelper::writeGun(saveDirectory, gun)) 
+            logger->log("Directory [" + saveDirectory + "] was not found. Ammo [" + gun.getName() + "] was not saved.", LAS::Logging::Tags{"ERROR", "SC"});
+	}
+
+    return true;
+}
+bool GunTracker::readGuns(){
+    if(!std::filesystem::exists(saveDirectory))
+        return false;
+
+    int filesThatCouldNotBeRead{0};
+	const std::filesystem::path workingDirectory{saveDirectory};
+	for(auto const& dirEntry : std::filesystem::directory_iterator(workingDirectory)){
+		try{
+			GunPtr gunBuf {std::make_shared<Gun>(GunHelper::readGun(dirEntry.path().string()))};
+
+            if(!addGun(gunBuf))
+                ++filesThatCouldNotBeRead;
+		}
+		catch(std::exception& e){
+			++filesThatCouldNotBeRead;
+		}
+	}
+
+	// Output number of files that could not be read
+	if(--filesThatCouldNotBeRead > 0)    // There will always be the cartridges file that cannot be read, so subtracting that
+		logger->log("Could not create Gun object from file(s): " + filesThatCouldNotBeRead, LAS::Logging::Tags{"ROUTINE", "SC"});
+
+	return true;
 }
 
 // MARK: GUN HELPER
@@ -115,8 +163,20 @@ bool GunHelper::writeGun(std::string directory, const Gun& gun){
     json j;
     j["name"]           = gun.getName();
     j["weaponType"]     = GunHelper::weaponTypeToStr(gun.getWeaponType());
+    j["cartridge"]      = gun.getCartridge();
 
-    // Entries in ammo tracker
+    // Write every ammo type used and amount
+    std::vector<TrackedAmmo> ammoUsed;
+    gun.getAllAmmoUsed(ammoUsed);
+
+	nlohmann::json trackedAmmoArray = nlohmann::json::array();
+	for (const auto& pair : ammoUsed){
+        json trackedAmmoJson { AmmoHelper::ammoTypeToJson(pair.ammoType), pair.amount };
+        trackedAmmoArray.push_back(trackedAmmoJson);
+    }
+
+	j["trackedAmmo"] = trackedAmmoArray;
+
 
     // Create JSON file name
     std::string fileName;
@@ -150,15 +210,30 @@ Gun GunHelper::readGun(const std::string& path){
     std::ifstream inputFile{ path, std::ios::in };
     json j = json::parse(inputFile);
 
-    std::string nameBuf, weaponTypeBuf; 
-    uint64_t roundCountBuf;
+    std::string nameBuf, weaponTypeBuf, cartBuf; 
 
     j.at("name").get_to(nameBuf);
-    j.at("roundCount").get_to(roundCountBuf);
     j.at("weaponType").get_to(weaponTypeBuf);
+    j.at("cartridge").get_to(cartBuf);
 
-    Gun gunBuf { nameBuf, GunHelper::strToWeaponType(weaponTypeBuf)};
-    //gunBuf.addToRoundCount(roundCountBuf);
+    Gun gunBuf { nameBuf, GunHelper::strToWeaponType(weaponTypeBuf), cartBuf};
+    
+    nlohmann::json trackedAmmoList;
+	j.at("trackedAmmo").get_to(trackedAmmoList);
+	
+    // Add for each element
+	for (auto& elm : trackedAmmoList.items()) {
+		nlohmann::json obj = elm.value();
+
+        uint64_t amountBuf { 0 };
+		AmmoType ammoTypeBuf {AmmoHelper::jsonToAmmoType(obj.at(0))};
+		obj.at(1).get_to(amountBuf);
+
+        TrackedAmmoPtr trackedAmmoBuf { std::make_shared<TrackedAmmo>(ammoTypeBuf, amountBuf)};
+        
+        if(!gunBuf.addToRoundCount(trackedAmmoBuf->ammoType.name, trackedAmmoBuf->amount))
+            gunBuf.addNewAmmoTypeToRoundCount(trackedAmmoBuf);
+	}
 
     return gunBuf;
 }

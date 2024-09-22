@@ -48,16 +48,28 @@ namespace ShooterCentral{
         GunTracker(LAS::Logging::LoggerPtr setLogger);
         ~GunTracker();
 
+        bool        setDirectory    (std::string directory);
+        std::string getDirectory    () const;
+
+        uint64_t getGunTotal () const;
+
         bool addGun     (GunPtr gun);
         bool removeGun  (const std::string& key);
 
         GunPtr getGun   (const std::string& key) const;
 
+        bool writeAllGuns   () const;
+        bool readGuns       ();
+
     private:
         LAS::Logging::LoggerPtr logger;
 
         std::map<std::string, GunPtr> guns;
+
+        std::string saveDirectory;
     };
+
+    using GunTrackerPtr = std::shared_ptr<GunTracker>;
 
     namespace GunHelper{
         bool    writeGun    (std::string directory, const Gun& gun);
