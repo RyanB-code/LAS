@@ -2,9 +2,11 @@
 
 using namespace ShooterCentral;
 
-Gun::Gun(std::string setName, WeaponType setWeaponType)
+// MARK: GUN
+Gun::Gun(std::string setName, WeaponType setWeaponType, std::string setCartridge)
         :   name        { setName },
-            weaponType  { setWeaponType }
+            weaponType  { setWeaponType },
+            cartridge   { setCartridge }
 {
 
 }
@@ -20,27 +22,59 @@ uint64_t Gun::getRoundCount() const{
 WeaponType Gun::getWeaponType() const{
     return weaponType;
 }
-bool Gun::addToRoundCount(TrackedAmmoPtr ammo){
+std::string Gun::getCartridge () const{
+    return cartridge;
+}
+
+bool Gun::addNewAmmoTypeToRoundCount(TrackedAmmoPtr ammo){
     if(!ammo)
         return false;
 
-    totalRounds += ammo->amount;
+    if(ammoTracker.contains(ammo->ammoType.name))
+        return false;
 
-    if(ammoTracker.contains(ammo->ammoType.name)){
-        ammoTracker.at(ammo->ammoType.name)->amount += ammo->amount; // Add to existing ammo type already used
-        return true;
-    }
-    else
-        return ammoTracker.try_emplace(ammo->ammoType.name, ammo).second;
+    totalRounds += ammo->amount;
+    return ammoTracker.try_emplace(ammo->ammoType.name, ammo).second;
+}
+bool Gun::addToRoundCount(const std::string& ammoName, uint64_t amount){
+    if(!ammoTracker.contains(ammoName))
+        return false;
+    
+    ammoTracker.at(ammoName)->amount += amount;
+    return true;
 }
 
-// MARK: Gun Tracker
+void Gun::getAllAmmoUsed(std::vector<TrackedAmmo>& ammoUsed) const{
+    if(!ammoUsed.empty())
+        ammoUsed.erase(ammoUsed.begin(), ammoUsed.end());
+
+
+    for(const auto& pair : ammoTracker){
+        ammoUsed.push_back(*pair.second);
+    }
+}
+
+
+// MARK: GUN TRACKER
 GunTracker::GunTracker(LAS::Logging::LoggerPtr setLogger): logger { setLogger }
 {
 
 }
 GunTracker::~GunTracker(){
     
+}
+bool GunTracker::setDirectory(std::string path) {
+    path = LAS::TextManip::ensureSlash(path);
+
+    if(std::filesystem::exists(path)){
+        saveDirectory = path;
+        return true;
+    }
+    else
+        return false;
+}
+std::string GunTracker::getDirectory() const{
+    return saveDirectory;
 }
 bool GunTracker::addGun(GunPtr gun){
     if(!gun)

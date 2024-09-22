@@ -19,19 +19,24 @@ namespace ShooterCentral{
 
     class Gun final {
     public:
-        Gun(std::string setName, WeaponType setWeaponType);
+        Gun(std::string setName, WeaponType setWeaponType, std::string setCartridge);
         ~Gun();
 
-        std::string getName()       const;
-        uint64_t    getRoundCount() const;
-        WeaponType  getWeaponType() const;
+        std::string getName         () const;
+        uint64_t    getRoundCount   () const;
+        WeaponType  getWeaponType   () const;
+        std::string getCartridge    () const;
 
-        bool        addToRoundCount(TrackedAmmoPtr ammo);
+        bool    addNewAmmoTypeToRoundCount  (TrackedAmmoPtr ammo);
+        bool    addToRoundCount             (const std::string& ammoName, uint64_t amount);
+
+        void    getAllAmmoUsed (std::vector<TrackedAmmo>& ammoUsed) const; // Clears vector before adding elements
 
     private:
         std::string name;
         uint64_t    totalRounds;
         WeaponType  weaponType;
+        std::string cartridge;
 
         std::unordered_map<std::string, TrackedAmmoPtr> ammoTracker;
     };
