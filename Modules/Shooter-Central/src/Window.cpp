@@ -13,28 +13,36 @@ ShooterCentralWindow::~ShooterCentralWindow(){
 void ShooterCentralWindow::draw() {
     if(ImGui::Begin(title.c_str(), &shown)){
 
-        if(!ammoTracker){
+        if(!ammoTracker || !gunTracker){
             ImGui::Text("This module has not been setup yet...");
             ImGui::End();
             return;
         }
 
+        drawArmory();
         drawStockpile();
 
     }
     ImGui::End();
 }
-bool ShooterCentralWindow::addAmmoTracker(AmmoTrackerPtr setAmmoTracker){
+bool ShooterCentralWindow::setAmmoTracker(AmmoTrackerPtr setAmmoTracker){
     if(!setAmmoTracker)
         return false;
 
     ammoTracker = setAmmoTracker;
     return true;
 }
+bool ShooterCentralWindow::setGunTracker(GunTrackerPtr setGunTracker){
+    if(!setGunTracker)
+        return false;
+
+    gunTracker = setGunTracker;
+    return true;
+}
 
 // MARK: PRIVATE FUNCTIONS
 void ShooterCentralWindow::drawStockpile() const{
-    if(ImGui::BeginChild("Stockpile")){
+    if(ImGui::BeginChild("Stockpile", ImVec2{500, 250})){
 
         static StringVector ammoNames;
         static StringVector cartridgeNames;
@@ -46,8 +54,9 @@ void ShooterCentralWindow::drawStockpile() const{
         ammoTracker->getAmmoCountByCartridge(countByCartridge);
         ammoTracker->getAllAmmo(ammo);
 
-        static bool detailedView { false };
+        ImGui::Text("Stockpile");
 
+        static bool detailedView { false };
         ImGui::Checkbox("Detailed View", &detailedView);
 
         if(detailedView){
@@ -198,8 +207,34 @@ void ShooterCentralWindow::drawStockpile() const{
                 ImGui::EndTable();
             } // End table
         }
-               
-
-        ImGui::EndChild();
     }
+    ImGui::EndChild();
+}
+void ShooterCentralWindow::drawArmory() const{
+    if(ImGui::BeginChild("Armory", ImVec2{500, 250})){
+
+        static bool showGunTable { false };
+
+        ImGui::Text("Armory");
+        ImGui::Text("Guns tracked: %d", gunTracker->getGunTotal());
+
+        ImGui::Checkbox("Show gun table", &showGunTable);
+
+        if(ImGui::BeginTable("Gun Table", 4, 
+                                    ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders |
+                                    ImGuiTableRowFlags_Headers | ImGuiTableFlags_Resizable |
+                                    ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_HighlightHoveredColumn |
+                                    ImGuiTableFlags_NoHostExtendX
+                            ))
+        {
+            ImGui::TableSetupColumn("Weapon Type",  NULL, 100);
+            ImGui::TableSetupColumn("Cartridge",    NULL, 100);
+            ImGui::TableSetupColumn("Name",         NULL, 100);
+            ImGui::TableSetupColumn("Round Count",  NULL, 100);
+
+
+            ImGui::EndTable();
+        }
+    }
+    ImGui::EndChild();
 }
