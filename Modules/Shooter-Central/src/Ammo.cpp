@@ -233,6 +233,7 @@ AmmoType AmmoHelper::jsonToAmmoType(const LAS::json& j){
 
     return AmmoType{nameBuf, manBuf, cartNameBuf, grainBuf};
 }
+// MARK: R/W AMMO
 bool AmmoHelper::writeTrackedAmmo(std::string directory, const TrackedAmmo& ammo){
     using LAS::json;
 
@@ -288,6 +289,7 @@ TrackedAmmo AmmoHelper::readTrackedAmmo(const std::string& path){
 
     return TrackedAmmo{ AmmoHelper::jsonToAmmoType(j), amountBuf};
 }
+// MARK: R/W CARTRIDGES
 bool AmmoHelper::writeAllCartridges(std::string path, const std::vector<std::string>& cartridges){
     using LAS::json;
 
