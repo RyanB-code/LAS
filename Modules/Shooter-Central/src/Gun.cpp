@@ -3,11 +3,10 @@
 using namespace ShooterCentral;
 
 // MARK: GUN
-Gun::Gun(std::string setName, WeaponType setWeaponType, std::string setCartridge, uint16_t setID)
+Gun::Gun(std::string setName, WeaponType setWeaponType, std::string setCartridge)
         :   name        { setName },
             weaponType  { setWeaponType },
-            cartridge   { setCartridge },
-            ID          { setID }
+            cartridge   { setCartridge }
 {
 
 }
@@ -31,26 +30,13 @@ WeaponType Gun::getWeaponType() const{
 std::string Gun::getCartridge () const{
     return cartridge;
 }
-uint16_t Gun::getID() const{
-    return ID;
-}
-bool Gun::addToRoundCount(TrackedAmmoPtr ammo){
-    if(!ammo)
-        return false;
+bool Gun::addToRoundCount(uint64_t amount, const AmmoType& ammoType){
+    if(!ammoTracker.contains(ammoType))
+        return ammoTracker.try_emplace(ammoType, std::make_shared<TrackedAmmo>(TrackedAmmo{ammoType, amount})).second;
     
-    if(ammoTracker.contains(ammo->ammoType.name))
-        return addToRoundCount(ammo->ammoType.name, ammo->amount);
-
-    return ammoTracker.try_emplace(ammo->ammoType.name, ammo).second;
-}
-bool Gun::addToRoundCount(const std::string& ammoName, uint64_t amount){
-    if(!ammoTracker.contains(ammoName))
-        return false;
-    
-    ammoTracker.at(ammoName)->amount += amount;
+    ammoTracker.at(ammoType)->amount += amount;
     return true;
 }
-
 void Gun::getAllAmmoUsed(std::vector<TrackedAmmo>& ammoUsed) const{
     if(!ammoUsed.empty())
         ammoUsed.erase(ammoUsed.begin(), ammoUsed.end());
@@ -59,25 +45,12 @@ void Gun::getAllAmmoUsed(std::vector<TrackedAmmo>& ammoUsed) const{
         ammoUsed.push_back(*pair.second);
     }
 }
-// MARK: GUN FACTORY
-uint16_t GunFactory::gunIDNumber = 0;
-GunFactory::GunFactory()
-{
-
+bool Gun::operator==(const Gun& other) const{
+    if(this->name == other.name && this->weaponType == other.weaponType && this->cartridge == other.cartridge)
+        return true;
+    else
+        return false;
 }
-GunFactory::~GunFactory(){
-    
-}
-Gun GunFactory::createGun (const std::string& name, WeaponType weaponType, std::string cartridge) const{
-    ++gunIDNumber;
-
-    if(gunIDNumber > 100)
-        throw std::out_of_range("Gun total reached");
-
-    return Gun{ name, weaponType, cartridge, gunIDNumber};
-}
-
-
 
 // MARK: GUN TRACKER
 GunTracker::GunTracker(LAS::Logging::LoggerPtr setLogger): logger { setLogger }
@@ -101,68 +74,48 @@ std::string GunTracker::getDirectory() const{
     return saveDirectory;
 }
 // MARK: CREATE GUNS
-uint16_t GunTracker::createPistol(const std::string& name, const std::string& cartridge){
-    try{
-        Gun gunBuf { gunFactory.createGun(name, WeaponType::PISTOL, cartridge)};
+GunPtr GunTracker::createPistol(const std::string& name, const std::string& cartridge){
+    Gun gunBuf { name, WeaponType::PISTOL, cartridge};
 
-        if(addGun(std::make_shared<Gun>(gunBuf)))
-            return gunBuf.getID();
-        else
-            return 0;
-    }
-    catch(std::exception& e){
-        return 0;
-    }
-}
-uint16_t GunTracker::createRifle(const std::string& name, const std::string& cartridge){
-    try{
-        Gun gunBuf { gunFactory.createGun(name, WeaponType::RIFLE, cartridge)};
+    if(addGun(std::make_shared<Gun>(gunBuf)))
+        return guns.at(gunBuf);
+    else
+        return nullptr;
 
-        if(addGun(std::make_shared<Gun>(gunBuf)))
-            return gunBuf.getID();
-        else
-            return 0;
-    }
-    catch(std::exception& e){
-        return 0;
-    }
 }
-uint16_t GunTracker::createPrecisionRifle (const std::string& name, const std::string& cartridge){
-    try{
-        Gun gunBuf { gunFactory.createGun(name, WeaponType::PRECISION_RIFLE, cartridge)};
+GunPtr GunTracker::createRifle(const std::string& name, const std::string& cartridge){
+    Gun gunBuf { name, WeaponType::RIFLE, cartridge};
 
-        if(addGun(std::make_shared<Gun>(gunBuf)))
-            return gunBuf.getID();
-        else
-            return 0;
-    }
-    catch(std::exception& e){
-        return 0;
-    }
+    if(addGun(std::make_shared<Gun>(gunBuf)))
+        return guns.at(gunBuf);
+    else
+        return nullptr;
 }
-bool GunTracker::removeGun(const uint16_t& ID){
-    if(!guns.contains(ID))
+GunPtr GunTracker::createPrecisionRifle (const std::string& name, const std::string& cartridge){
+    Gun gunBuf { name, WeaponType::PRECISION_RIFLE, cartridge};
+
+    if(addGun(std::make_shared<Gun>(gunBuf)))
+        return guns.at(gunBuf);
+    else
+        return nullptr;
+}
+bool GunTracker::removeGun(const Gun& gun){
+    if(!guns.contains(gun))
         return true;
 
-    guns.erase(ID);
-    return !guns.contains(ID); // Return the inverse of contain()
+    guns.erase(gun);
+    return !guns.contains(gun); // Return the inverse of contain()
 }
 // MARK: GET INFO
 uint64_t GunTracker::getGunTotal() const{
     return guns.size();
 }
-GunPtr GunTracker::getGun(const uint16_t& ID) const{
-    if(!guns.contains(ID))
-        return nullptr;
-
-    return guns.at(ID);
-}
-void GunTracker::getAllGunIDs(std::vector<uint16_t>& list) const{
+void GunTracker::getAllGuns(std::vector<Gun>& list) const{
     if(!list.empty())
         list.erase(list.begin(), list.end());
 
-    for(const auto& pair : guns)
-        list.push_back(pair.first);
+    for(const auto& [key, gun] : guns)
+        list.push_back(*gun);
 }
 // MARK: R/W Guns
 bool GunTracker::writeAllGuns() const{
@@ -214,10 +167,10 @@ bool GunTracker::addGun(GunPtr gun){
     if(!gun)
         return false;
 
-    if(guns.contains(gun->getID()))
+    if(guns.contains(*gun))
         return false;
     
-    return guns.try_emplace(gun->getID(), gun).second;
+    return guns.try_emplace(*gun, gun).second;
 }
 
 // MARK: GUN HELPER
@@ -289,9 +242,7 @@ Gun GunHelper::readGun(const std::string& path){
     j.at("weaponType").get_to(weaponTypeBuf);
     j.at("cartridge").get_to(cartBuf);
 
-    GunFactory gunFactory;
-
-    Gun gunBuf { gunFactory.createGun(nameBuf, GunHelper::strToWeaponType(weaponTypeBuf), cartBuf) };
+    Gun gunBuf {nameBuf, GunHelper::strToWeaponType(weaponTypeBuf), cartBuf };
     
     nlohmann::json trackedAmmoList;
 	j.at("trackedAmmo").get_to(trackedAmmoList);
@@ -304,7 +255,7 @@ Gun GunHelper::readGun(const std::string& path){
 		AmmoType ammoTypeBuf {AmmoHelper::jsonToAmmoType(pair.at(0))};
 		pair.at(1).get_to(amountBuf);
         
-        gunBuf.addToRoundCount(std::make_shared<TrackedAmmo>(ammoTypeBuf, amountBuf));
+        gunBuf.addToRoundCount(amountBuf, ammoTypeBuf);
 	}
 
     return gunBuf;
