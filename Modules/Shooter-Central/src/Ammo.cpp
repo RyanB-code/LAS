@@ -2,6 +2,14 @@
 
 using namespace ShooterCentral;
 
+// MARK: AMMO TYPE
+bool AmmoType::operator==(const AmmoType& other) const {
+    if(this->name == other.name && this->manufacturer == other.manufacturer && this->cartridge == other.cartridge && this->grainWeight == other.grainWeight)
+        return true;
+    else
+        return false;
+}
+
 // MARK: AMMO TRACKER
 AmmoTracker::AmmoTracker(LAS::Logging::LoggerPtr setLogger): logger { setLogger }
 {
@@ -11,33 +19,30 @@ AmmoTracker::~AmmoTracker(){
     
 }
 // MARK: STOCKPILE
-bool AmmoTracker::addAmmoToStockpile (uint64_t amount, const std::string& key){
-    if(ammoStockpile.contains(key)){
-        ammoStockpile.at(key)->amount += amount;
+bool AmmoTracker::addAmmoToStockpile (uint64_t amount, const AmmoType& ammoType){
+    if(ammoStockpile.contains(ammoType)){
+        ammoStockpile.at(ammoType)->amount += amount;
         return true;
     }
-    else
-        return false;    
-}
-bool AmmoTracker::addNewAmmoToStockpile (TrackedAmmoPtr ammo){
-    if(ammoStockpile.contains(ammo->ammoType.name))
-        return false;
+    
+    TrackedAmmoPtr ammoBuf { std::make_shared<TrackedAmmo>(TrackedAmmo{ammoType, amount}) };
 
-    ammoStockpile.try_emplace(ammo->ammoType.name, ammo);
+    ammoStockpile.try_emplace(ammoType, ammoBuf);
 
-    if(ammoStockpile.contains(ammo->ammoType.name)){
-        // Add to cartridges, does not matter return
-        addCartridge(ammo->ammoType.cartridge);
+    if(ammoStockpile.contains(ammoType)){
+        addCartridge(ammoType.cartridge);           // Add to cartridges, does not matter return
         return true;
     }
     else
         return false;
+
+    return false;    
 }
-bool AmmoTracker::removeAmmoFromStockPile (uint64_t amountUsed, const std::string& key){
-    if(!ammoStockpile.contains(key))
+bool AmmoTracker::removeAmmoFromStockPile (uint64_t amountUsed, const AmmoType& ammoType){
+    if(!ammoStockpile.contains(ammoType))
         return true;
     
-    auto& ammo { ammoStockpile.at(key) };
+    auto& ammo { ammoStockpile.at(ammoType) };
 
     if(ammo->amount - amountUsed >= 100000)
         return false;
@@ -140,14 +145,11 @@ bool AmmoTracker::readAllAmmo(){
 	const std::filesystem::path workingDirectory{saveDirectory};
 	for(auto const& dirEntry : std::filesystem::directory_iterator(workingDirectory)){
 		try{
-			TrackedAmmoPtr ammoBuf {std::make_shared<TrackedAmmo>(AmmoHelper::readTrackedAmmo(dirEntry.path().string()))};
+			TrackedAmmo ammoBuf {AmmoHelper::readTrackedAmmo(dirEntry.path().string())};
 
             // Attempt adding to stockpile
-            if(!addAmmoToStockpile(ammoBuf->amount, ammoBuf->ammoType.name)){
-                if(!addNewAmmoToStockpile(ammoBuf)){
-                    ++filesThatCouldNotBeRead;
-                }
-            }
+            if(!addAmmoToStockpile(ammoBuf.amount, ammoBuf.ammoType))
+                ++filesThatCouldNotBeRead;
 		}
 		catch(std::exception& e){
 			++filesThatCouldNotBeRead;
