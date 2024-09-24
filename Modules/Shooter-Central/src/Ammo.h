@@ -10,6 +10,8 @@
 #include <map>
 #include <vector>
 
+
+
 namespace ShooterCentral{
 
     struct AmmoType {
@@ -17,6 +19,8 @@ namespace ShooterCentral{
         std::string     manufacturer;
         std::string     cartridge;     
         uint8_t         grainWeight;
+
+        bool operator==(const AmmoType& other) const;
     };
 
     using AmmoTypePtr   = std::shared_ptr<AmmoType>;
@@ -28,14 +32,40 @@ namespace ShooterCentral{
 
     using TrackedAmmoPtr = std::shared_ptr<TrackedAmmo>;
 
+}
+
+namespace std{
+
+    template <class T>
+    inline void hash_combine(std::size_t& seed, const T& v)
+    {
+        std::hash<T> hasher;
+        seed ^= hasher(v) + 0x9e3779b9 + (seed<<6) + (seed>>2);
+    }
+    template <>
+    struct hash<ShooterCentral::AmmoType> {
+        size_t operator()(const ShooterCentral::AmmoType& ammo) const{
+            std::size_t seed { 0 };
+
+            std::hash_combine(seed, ammo.name);
+            std::hash_combine(seed, ammo.manufacturer);
+            std::hash_combine(seed, ammo.cartridge);
+            std::hash_combine(seed, ammo.grainWeight);
+
+            return seed;
+        }
+    };
+}
+
+namespace ShooterCentral{
+
     class AmmoTracker{
     public:
         AmmoTracker(LAS::Logging::LoggerPtr setLogger);
         ~AmmoTracker();
 
-        bool    addAmmoToStockpile      (uint64_t amount,   const std::string& key);
-        bool    addNewAmmoToStockpile   (TrackedAmmoPtr ammo);
-        bool    removeAmmoFromStockPile (uint64_t amount,   const std::string& key);
+        bool    addAmmoToStockpile      (uint64_t amount,   const AmmoType& ammoType);
+        bool    removeAmmoFromStockPile (uint64_t amount,   const AmmoType& ammoType);
 
         void    getAllAmmoNames         (StringVector& names)               const;          // Clears vector before adding elements
         void    getAllAmmo              (std::vector<TrackedAmmo>& list)    const;          // Clears vector before adding elements, only gives you copies of Ammo objects
@@ -56,9 +86,10 @@ namespace ShooterCentral{
         std::string getDirectory        () const;
 
     private:
-        std::map<std::string, TrackedAmmoPtr>   ammoStockpile;
+        std::unordered_map<AmmoType, TrackedAmmoPtr>      ammoStockpile;
         std::map<std::string, std::string>      cartridges;
-        std::string saveDirectory;
+
+        std::string             saveDirectory;
         LAS::Logging::LoggerPtr logger;
 
         static constexpr std::string cartridgesFile {"Cartridges.json"};
