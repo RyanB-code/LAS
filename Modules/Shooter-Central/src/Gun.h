@@ -94,7 +94,7 @@ namespace ShooterCentral{
 
         std::string saveDirectory;
 
-        bool addGun(GunPtr gun);
+        bool addGun(Gun& gun);
     };
 
     using GunTrackerPtr = std::shared_ptr<GunTracker>;
