@@ -142,24 +142,19 @@ bool GunTracker::readGuns(){
     if(!std::filesystem::exists(saveDirectory))
         return false;
 
-    int filesThatCouldNotBeRead{0};
-	const std::filesystem::path workingDirectory{saveDirectory};
+    const std::filesystem::path workingDirectory{saveDirectory};
 	for(auto const& dirEntry : std::filesystem::directory_iterator(workingDirectory)){
 		try{
-			GunPtr gunBuf {std::make_shared<Gun>(GunHelper::readGun(dirEntry.path().string()))};
+			Gun gunBuf {GunHelper::readGun(dirEntry.path().string())};
 
             if(!addGun(gunBuf))
-                ++filesThatCouldNotBeRead;
+                logger->log("Gun object already exists from file [" + dirEntry.path().string() + ']', LAS::Logging::Tags{"ROUTINE", "SC"});
 		}
 		catch(std::exception& e){
-			++filesThatCouldNotBeRead;
+			logger->log("Failed to create Gun object from file [" + dirEntry.path().string() + ']', LAS::Logging::Tags{"ERROR", "SC"});
 		}
 	}
-
-	// Output number of files that could not be read
-	if(--filesThatCouldNotBeRead > 0)    // There will always be the cartridges file that cannot be read, so subtracting that
-		logger->log("Could not create Gun object from file(s): " + filesThatCouldNotBeRead, LAS::Logging::Tags{"ROUTINE", "SC"});
-
+    
 	return true;
 }
 // MARK: PRIVATE FUNCTIONS
