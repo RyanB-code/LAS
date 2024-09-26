@@ -77,7 +77,7 @@ std::string GunTracker::getDirectory() const{
 GunPtr GunTracker::createPistol(const std::string& name, const std::string& cartridge){
     Gun gunBuf { name, WeaponType::PISTOL, cartridge};
 
-    if(addGun(std::make_shared<Gun>(gunBuf)))
+    if(addGun(gunBuf))
         return guns.at(gunBuf);
     else
         return nullptr;
@@ -86,7 +86,7 @@ GunPtr GunTracker::createPistol(const std::string& name, const std::string& cart
 GunPtr GunTracker::createRifle(const std::string& name, const std::string& cartridge){
     Gun gunBuf { name, WeaponType::RIFLE, cartridge};
 
-    if(addGun(std::make_shared<Gun>(gunBuf)))
+    if(addGun(gunBuf))
         return guns.at(gunBuf);
     else
         return nullptr;
@@ -94,7 +94,7 @@ GunPtr GunTracker::createRifle(const std::string& name, const std::string& cartr
 GunPtr GunTracker::createPrecisionRifle (const std::string& name, const std::string& cartridge){
     Gun gunBuf { name, WeaponType::PRECISION_RIFLE, cartridge};
 
-    if(addGun(std::make_shared<Gun>(gunBuf)))
+    if(addGun(gunBuf))
         return guns.at(gunBuf);
     else
         return nullptr;
@@ -163,14 +163,12 @@ bool GunTracker::readGuns(){
 	return true;
 }
 // MARK: PRIVATE FUNCTIONS
-bool GunTracker::addGun(GunPtr gun){
-    if(!gun)
+bool GunTracker::addGun(Gun& gun){
+    if(guns.contains(gun))
         return false;
 
-    if(guns.contains(*gun))
-        return false;
     
-    return guns.try_emplace(*gun, gun).second;
+    return guns.try_emplace(gun, std::make_shared<Gun>(gun)).second;
 }
 
 // MARK: GUN HELPER
