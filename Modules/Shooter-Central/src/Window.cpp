@@ -11,18 +11,31 @@ ShooterCentralWindow::~ShooterCentralWindow(){
 
 }
 void ShooterCentralWindow::draw() {
-    if(ImGui::Begin(title.c_str(), &shown)){
-
-        if(!ammoTracker || !gunTracker){
-            ImGui::Text("This module has not been setup yet...");
-            ImGui::End();
-            return;
-        }
-
-        drawArmory();
-        drawStockpile();
-
+    if(!ImGui::Begin(title.c_str(), &shown, ImGuiWindowFlags_MenuBar)){
+        ImGui::End();
+        return;
     }
+
+    if(!ammoTracker || !gunTracker){
+        ImGui::Text("This module has not been setup yet...");
+        ImGui::End();
+        return;
+    }
+
+    if(ImGui::BeginTabBar("Shooter Central Tabs",   ImGuiTabBarFlags_Reorderable | ImGuiTabBarFlags_TabListPopupButton |
+                                                    ImGuiTabBarFlags_DrawSelectedOverline | ImGuiTabBarFlags_FittingPolicyResizeDown
+    )){
+        if(ImGui::BeginTabItem("Armory")){
+            drawArmory();
+            ImGui::EndTabItem();
+        }
+        if(ImGui::BeginTabItem("Stockpile")){
+            drawStockpile();
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
+    }
+
     ImGui::End();
 }
 bool ShooterCentralWindow::setAmmoTracker(AmmoTrackerPtr setAmmoTracker){
@@ -56,7 +69,7 @@ void ShooterCentralWindow::drawStockpile() const{
         ammoTracker->getAmmoCountByCartridge(countByCartridge);
         ammoTracker->getAllAmmo(ammo);
 
-        ImGui::Text("Stockpile");
+        ImGui::SeparatorText("Stockpile");
 
         static bool detailedView { false };
         ImGui::Checkbox("Detailed View", &detailedView);
@@ -220,7 +233,7 @@ void ShooterCentralWindow::drawArmory() const{
 
         gunTracker->getAllGuns(gunList);
 
-        ImGui::Text("Armory");
+        ImGui::SeparatorText("Armory");
 
         static int gunNum { 0 };
         if(ImGui::Button("Add gun")){
