@@ -168,7 +168,7 @@ bool AmmoTracker::writeAllCartridges() const{
         return false;
 
     std::string fullPath { saveDirectory };
-    fullPath += cartridgesFile;
+    fullPath += CARTRIDGES_FILENAME;
 
     std::vector<std::string> rawCartridges;
 
@@ -183,7 +183,7 @@ bool AmmoTracker::readCartridges(){
         return false;
 
     std::string fullPath { saveDirectory };
-    fullPath += cartridgesFile;
+    fullPath += CARTRIDGES_FILENAME;
 
     StringVector cartridgeNames;
     AmmoHelper::readCartridges(fullPath, cartridgeNames);

@@ -92,7 +92,7 @@ namespace ShooterCentral{
         std::string             saveDirectory;
         LAS::Logging::LoggerPtr logger;
 
-        static constexpr std::string cartridgesFile {"Cartridges.json"};
+        static constexpr std::string CARTRIDGES_FILENAME {"Cartridges.json"};
     };
 
     using AmmoTrackerPtr = std::shared_ptr<AmmoTracker>;

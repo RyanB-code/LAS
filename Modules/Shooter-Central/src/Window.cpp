@@ -216,9 +216,9 @@ void ShooterCentralWindow::drawStockpile() const{
 // MARK: ARMORY
 void ShooterCentralWindow::drawArmory() const{
     if(ImGui::BeginChild("Armory", ImVec2{500, 250})){       
-        static std::vector<uint16_t> gunIDs;
+        static std::vector<Gun> gunList;
 
-        gunTracker->getAllGunIDs(gunIDs);
+        gunTracker->getAllGuns(gunList);
 
         ImGui::Text("Armory");
 
@@ -229,17 +229,14 @@ void ShooterCentralWindow::drawArmory() const{
             AmmoType ammoType1 {"Test name", "Test man", "Test Cart", 69};
             AmmoType ammoType2 {"Test name2", "Test man", "Test Cart", 50};
 
-            TrackedAmmo ammoBuf  { ammoType1, 50};
-            TrackedAmmo ammoBuf2 {ammoType2, 25};
+            GunPtr gunBuf { gunTracker->createPistol(name.str(), "test cartridge")};
 
-            uint16_t ID { gunTracker->createPistol(name.str(), "test cartridge")};
+            if(gunBuf){
+                gunBuf->addToRoundCount(15, ammoType1);
+                gunBuf->addToRoundCount(20, ammoType2);
 
-            GunPtr gun { gunTracker->getGun(ID)};
-            gun->addToRoundCount(std::make_shared<TrackedAmmo>(ammoBuf));
-            gun->addToRoundCount(std::make_shared<TrackedAmmo>(ammoBuf2));
-            gun->addToRoundCount(ammoBuf.ammoType.name, 12);
-
-            ++gunNum;
+                ++gunNum;
+            }
         }
         ImGui::SameLine();
         if(ImGui::Button("Write guns")){
@@ -252,7 +249,7 @@ void ShooterCentralWindow::drawArmory() const{
 
         ImGui::Text("Guns tracked %lu", gunTracker->getGunTotal());
 
-        if(ImGui::BeginTable("Gun Table", 5, 
+        if(ImGui::BeginTable("Gun Table", 4, 
                                     ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders |
                                     ImGuiTableRowFlags_Headers | ImGuiTableFlags_Resizable |
                                     ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_HighlightHoveredColumn |
@@ -263,16 +260,15 @@ void ShooterCentralWindow::drawArmory() const{
             ImGui::TableSetupColumn("Cartridge",    NULL, 100);
             ImGui::TableSetupColumn("Name",         NULL, 100);
             ImGui::TableSetupColumn("Round Count",  NULL, 100);
-            ImGui::TableSetupColumn("ID",           NULL, 100);
 
             ImGui::TableHeadersRow();
 
 
-            for(auto itr { gunIDs.begin() }; itr != gunIDs.end(); ++itr){
+            for(auto itr { gunList.begin() }; itr != gunList.end(); ++itr){
                     ImGui::TableNextRow();
-                    for (int column{0}; column < 5; ++column)
+                    for (int column{0}; column < 4; ++column)
                     {
-                        const Gun& gun {*gunTracker->getGun(*itr)};
+                        const Gun& gun {*itr};
 
                         ImGui::TableSetColumnIndex(column);
                         switch( column ){
@@ -287,9 +283,6 @@ void ShooterCentralWindow::drawArmory() const{
                                 break;
                             case 3:
                                 ImGui::Text("%lu", gun.getRoundCount());
-                                break;
-                            case 4:
-                                ImGui::Text("%u", gun.getID());
                                 break;
                             default:
                                 ImGui::Text("Broken table");
