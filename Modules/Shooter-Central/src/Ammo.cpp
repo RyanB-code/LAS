@@ -26,7 +26,6 @@ bool AmmoTracker::addAmmoToStockpile (uint64_t amount, const AmmoType& ammoType)
     }
     
     TrackedAmmoPtr ammoBuf { std::make_shared<TrackedAmmo>(TrackedAmmo{ammoType, amount}) };
-
     ammoStockpile.try_emplace(ammoType, ammoBuf);
 
     if(ammoStockpile.contains(ammoType)){
@@ -141,7 +140,6 @@ bool AmmoTracker::readAllAmmo(){
     if(!std::filesystem::exists(saveDirectory))
         return false;
 
-    int filesThatCouldNotBeRead{0};
 	const std::filesystem::path workingDirectory{saveDirectory};
 	for(auto const& dirEntry : std::filesystem::directory_iterator(workingDirectory)){
 		try{
@@ -149,16 +147,13 @@ bool AmmoTracker::readAllAmmo(){
 
             // Attempt adding to stockpile
             if(!addAmmoToStockpile(ammoBuf.amount, ammoBuf.ammoType))
-                ++filesThatCouldNotBeRead;
+                 logger->log("Ammo object not added from file [" + dirEntry.path().string() + ']', LAS::Logging::Tags{"ROUTINE", "SC"});
 		}
 		catch(std::exception& e){
-			++filesThatCouldNotBeRead;
+            if(dirEntry.path().filename().string() != CARTRIDGES_FILENAME)  // Ignore the cartridges file
+			    logger->log("Failed to create Ammo object from file [" + dirEntry.path().string() + ']', LAS::Logging::Tags{"ERROR", "SC"});
 		}
 	}
-
-	// Output number of files that could not be read
-	if(--filesThatCouldNotBeRead > 0)    // There will always be the cartridges file that cannot be read, so subtracting that
-		logger->log("Could not create Ammo object from file(s): " + filesThatCouldNotBeRead, LAS::Logging::Tags{"ROUTINE", "SC"});
 
 	return true;
 }
