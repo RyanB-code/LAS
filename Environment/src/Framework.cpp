@@ -439,24 +439,28 @@ namespace LAS::FrameworkSetup{
         filePaths.imGuiIniPath          = filePaths.dotLASDir + "imgui.ini";
 
         // Check paths are good
-        if(!LAS::ensureDirectory(filePaths.logDir)){
-            std::cerr << "Error finding or creating [" << filePaths.logDir << "]";
+        try {
+            if(!LAS::ensureDirectory(filePaths.logDir)){
+                std::cerr << "Error finding or creating [" << filePaths.logDir << "]";
+                return false;
+            }
+            if(!LAS::ensureDirectory(filePaths.moduleLibDir)){
+                std::cerr << "Error finding or creating [" << filePaths.moduleLibDir << "]";
+                return false;
+            }
+            if(!LAS::ensureDirectory(filePaths.moduleFilesDir)){
+                std::cerr << "Error finding or creating [" << filePaths.moduleFilesDir << "]";
+                return false;
+            }
+            if(!LAS::ensureDirectory(filePaths.dotLASDir)){
+                std::cerr << "Error finding or creating [" << filePaths.dotLASDir << "]";
+                return false;
+            }
+        }
+        catch(std::filesystem::filesystem_error& e){
+            std::cerr << "Fatal error in LAS filesystem setup.\n\tWhat: " << e.what() << "\n\tFile: " << e.path1().string() << "\n";
             return false;
         }
-        if(!LAS::ensureDirectory(filePaths.moduleLibDir)){
-            std::cerr << "Error finding or creating [" << filePaths.moduleLibDir << "]";
-            return false;
-        }
-        if(!LAS::ensureDirectory(filePaths.moduleFilesDir)){
-            std::cerr << "Error finding or creating [" << filePaths.moduleFilesDir << "]";
-            return false;
-        }
-        if(!LAS::ensureDirectory(filePaths.dotLASDir)){
-            std::cerr << "Error finding or creating [" << filePaths.dotLASDir << "]";
-            return false;
-        }
-        
-        // Do not create imgui.ini file since that will be handled by Display Manager
 
         return true;
     }
