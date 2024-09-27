@@ -46,9 +46,9 @@ namespace LAS{
         explicit ConsoleWindow(std::queue<std::string>& setQueue);
         ~ConsoleWindow();
 
-        void draw() override;
-        void output(const std::ostringstream& os)   override;
-        void output(const std::string& msg)         override;
+        void draw   ()                              override;
+        void output (const std::ostringstream& os)  override;
+        void output (const std::string& msg)        override;
 
         bool addToCommandHistory (const std::string& text);
 
@@ -90,18 +90,17 @@ namespace LAS{
         std::string                     getRCPath()                 const;
         std::string                     getCommandHistoryPath()     const;
 
-        bool setRCPath               (const std::string& path, bool createNewFile=true);
-        bool setCommandHistoryPath   (const std::string& path);
+        bool setRCPath              (const std::string& path, bool createNewFile=true);
+        bool setCommandHistoryPath  (const std::string& path);
 
-        bool readRCFile(std::string path="");
+        bool readRCFile             (std::string path="");
     private:
         std::unordered_map  <std::string, std::unordered_map<std::string, CommandPtr>>  commands;
         std::unordered_map  <std::string, std::string>                                  aliases;
 
-        std::queue          <std::string>               commandQueue;
-        std::vector         <ShellOutputPtr>            outputs;
-        std::shared_ptr     <ConsoleWindow>             window;
-
+        std::queue          <std::string>       commandQueue;
+        std::vector         <ShellOutputPtr>    outputs;
+        std::shared_ptr     <ConsoleWindow>     window;
 
         std::string rcPath;
         std::string commandHistoryPath;
