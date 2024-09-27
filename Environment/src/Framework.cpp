@@ -414,9 +414,22 @@ namespace LAS::FrameworkSetup{
     }
     bool setupFilesystem(FilePaths& filePaths) {
         // Ensure filesystem is in place
-        filePaths.parentDir             = LAS::FrameworkSetup::getExeParentDir();
+        #ifdef DEBUG
+            filePaths.parentDir             = LAS::FrameworkSetup::getExeParentDir();
+        #else
+            #ifdef __linux__
+                std::string home {getenv("HOME")};
+            #else
+                std::cerr << "Only Linux is currently supported.\n";
+                return false;
+            #endif
+
+            filePaths.parentDir             = home + "/Documents/LAS/";
+        #endif
 
         filePaths.dotLASDir             = filePaths.parentDir + ".las/";
+        filePaths.rcPath                = filePaths.dotLASDir + ".las-rc";  // Do not create here, it is initialized in shell
+
         filePaths.moduleLibDir          = filePaths.parentDir + "Module Libraries/";
         filePaths.moduleFilesDir        = filePaths.parentDir + "Module Files/";
 
