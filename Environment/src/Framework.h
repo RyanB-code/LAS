@@ -59,7 +59,7 @@ namespace LAS{
         DisplayManagerPtr   displayManager;
         ShellPtr            shell;
 
-        static constexpr std::string commandGroupName {"las"};
+        static constexpr std::string commandGroupName   {"las"};
 
         bool                setupComplete               { false };
         uint16_t            cacheLastNumberOfCommands   { 50 };     // How many previous commands will be added to command history upon startup
