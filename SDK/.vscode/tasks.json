@@ -40,7 +40,7 @@
 		},
 		{
 			"type": "shell",
-			"label": "2a. Delete all files in bin/ directory",	// This is future proofing so when the version number changes I wont have to manually delete the old version
+			"label": "2. Delete all files in bin/ directory",	// This is future proofing so when the version number changes I wont have to manually delete the old version
 			"command": "find",
 			"args": [
 				"-type",
@@ -59,36 +59,9 @@
 			"detail": "Delete all files in directory"
 		},
 		{
-			"type": "cppbuild",
-			"label": "2b. Link object files into SO file",
-			"command": "/usr/bin/g++",
-			"args": [
-				"-fdiagnostics-color=always",		// Use color in the terminal	
-				"-shared",							// Make shared object
-
-				"-Wl,-soname,libLAS-SDK.so.0",		// Embeds soname into file
-
-				"-o", 								// Output the files
-				"libLAS-SDK.so",					// Name the output library (gets renamed later)
-
-				"${workspaceFolder}/build/intermediate/*.o",	// Use all the object files in the build/ibj files directory		
-			],
-			"options": {
-				"cwd": "${workspaceFolder}/bin"		// Change directory to bin folder
-			},
-			"problemMatcher": [
-				"$gcc"
-			],
-			"group": {
-				"kind": "build",
-				"isDefault": false
-			},
-			"detail": "Link object files"
-		},
-		{
 			"type": "shell",
-			"label": "2c. Rename SO file with version information",
-			"command": "./RenameAndLink.sh",
+			"label": "3. Link, Rename, Distribute",
+			"command": "./Link-Rename-Distribute.sh",
 			"options": {
 				"cwd": "${workspaceFolder}/build/scripts"
 			},
@@ -96,11 +69,11 @@
 				"kind": "build",
 				"isDefault": false
 			},
-			"detail": "Rename the .so file"
+			"detail": "Link, rename, and distribute the library"
 		},
 		{
 			"type": "shell",
-			"label": "3. Copy All Include Files to Environment/include",
+			"label": "4. Copy All Include Files to Environment/include",
 			"command": "cp",
 			"args": [
 				"-r",
@@ -118,7 +91,7 @@
 		},
 		{
 			"type": "shell",
-			"label": "4. Copy All Include Files to ModuleAPI/include",
+			"label": "5. Copy All Include Files to ModuleAPI/include",
 			"command": "cp",
 			"args": [
 				"-r",
@@ -136,7 +109,7 @@
 		},
 		{
 			"type": "shell",
-			"label": "5. Copy All Include Files to Modules/Test-Module/include",
+			"label": "6. Copy All Include Files to Modules/Test-Module/include",
 			"command": "cp",
 			"args": [
 				"-r",
@@ -154,7 +127,7 @@
 		},
 		{
 			"type": "shell",
-			"label": "6. Copy All Include Files to Modules/Shooter-Central/include",
+			"label": "7. Copy All Include Files to Modules/Shooter-Central/include",
 			"command": "cp",
 			"args": [
 				"-r",
@@ -177,13 +150,12 @@
 			"label": "Perform All Tasks",
 			"dependsOrder": "sequence",
 			"dependsOn" : [	"1. Compile without linking", 
-							"2a. Delete all files in bin/ directory", 
-							"2b. Link object files into SO file",
-							"2c. Rename SO file with version information",
-						 	"3. Copy All Include Files to Environment/include",
-							"4. Copy All Include Files to ModuleAPI/include",
-							"5. Copy All Include Files to Modules/Test-Module/include",
-							"6. Copy All Include Files to Modules/Shooter-Central/include"
+							"2. Delete all files in bin/ directory", 
+							"3. Link, Rename, Distribute",
+						 	"4. Copy All Include Files to Environment/include",
+							"5. Copy All Include Files to ModuleAPI/include",
+							"6. Copy All Include Files to Modules/Test-Module/include",
+							"7. Copy All Include Files to Modules/Shooter-Central/include"
 						],
 			"group": {
 				"kind": "build",
