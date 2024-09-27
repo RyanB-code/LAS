@@ -2,7 +2,7 @@
 
 #define LAS_VERSION_MAJOR 1
 #define LAS_VERSION_MINOR 0
-#define LAS_VERSION_PATCH 0
+#define LAS_VERSION_PATCH 1
 
 #include <string>
 #include <stdint.h>
