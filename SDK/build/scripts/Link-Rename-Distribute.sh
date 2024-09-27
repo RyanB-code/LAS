@@ -27,6 +27,17 @@ shortFileName=libLAS-SDK.so # This is what ever the build shared object library 
 finalRealName=libLAS-SDK.so.$major.$minor.$patch
 finalSOName=libLAS-SDK.so.$major
 
+
+# =======================================================
+# Link object files into SO file
+g++ -fdiagnostics-color=always -shared -Wl,-soname,libLAS-SDK.so.$major -o libLAS-SDK.so ../build/intermediate/*.o 2>&1
+if [[ $? -eq 0 ]]; then
+    echo "Linked object files successful"
+else
+    echo "Failed to link object files into SO file"
+    exit 2
+fi
+
 # =======================================================
 # Rename the new so with the real name
 if [ -f $shortFileName ]; 
