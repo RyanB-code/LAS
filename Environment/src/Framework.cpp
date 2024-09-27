@@ -395,25 +395,6 @@ namespace LAS::FrameworkSetup{
         else
             return fileName;
     }
-    std::string getRCPath(){
-            // If linux, check the home directory
-        #ifdef __linux__
-
-            #ifdef DEBUG
-                std::string directory {"/mnt/NAS/1-Project-Related/Project-Source-Directories/LAS/Environment/bin/"};
-                return directory + ".las/.las-rc";
-            #endif
-            #ifndef DEBUG
-                std::string home {getenv("HOME")};
-                return home + "/.las/.las-rc";
-            #endif
-        #endif
-
-        // If windows, right now say its not supported
-        #ifdef _Win32
-            throw std::domain_error{"Windows is not currently supported.\nApplication aborted.\n"};
-        #endif
-    }
     std::string getExeParentDir(){
         #ifdef __linux__
             std::string exePath {std::filesystem::canonical(std::filesystem::path{"/proc/self/exe"})};
@@ -443,16 +424,6 @@ namespace LAS::FrameworkSetup{
         filePaths.logDir                = filePaths.dotLASDir + "logs/";
 
         filePaths.imGuiIniPath          = filePaths.dotLASDir + "imgui.ini";
-
-
-        // Get the correct directory for the settings file
-        try{
-            filePaths.rcPath = LAS::FrameworkSetup::getRCPath();
-        }
-        catch(std::exception& e){
-            std::cerr << e.what() << "\n";
-            return false;
-        }
 
         // Check paths are good
         if(!LAS::ensureDirectory(filePaths.logDir)){
