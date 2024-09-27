@@ -1,9 +1,11 @@
 {
 	"version": "2.0.0",
 	"tasks": [
+
+		// MARK: DEBUG TASKS
 		{
 			"type": "cppbuild",
-			"label": "1. Compile without linking",
+			"label": "1. Compile without linking - DEBUG",
 			"command": "/usr/bin/g++",
 			"args": [
 				"-fdiagnostics-color=always",		// Use color in the terminal
@@ -60,8 +62,11 @@
 		},
 		{
 			"type": "shell",
-			"label": "3. Link, Rename, Distribute",
+			"label": "3. Link, Rename, Distribute - DEBUG",
 			"command": "./Link-Rename-Distribute.sh",
+			"args": [
+				"-d"
+			],
 			"options": {
 				"cwd": "${workspaceFolder}/build/scripts"
 			},
@@ -143,15 +148,64 @@
 			},
 			"detail": "Copy headers"
 		},
+		// MARK: RELEASE TASKS
+		{
+			"type": "cppbuild",
+			"label": "1. Compile without linking - RELEASE",
+			"command": "/usr/bin/g++",
+			"args": [
+				"-fdiagnostics-color=always",		// Use color in the terminal
 
+				"-fvisibility=default",				// Functions are automatically exported
+				"-Bsymbolic",						// Wont allow symbolic binding of exported funcions with the GOT
+
+				"-I${workspaceFolder}/include",		// Search for header files in the include directory
+				"-L${workspaceFolder}/lib",			// Search for compiled archives in the lib directory
+				
+				"-c",								// Compiles
+				"-fpic", 							// Compile with constrained global offset table for position independent code
+				"-Wall",							// Produce warning messages for everything
+				"-std=c++23",						// Use C++23
+
+				"${workspaceFolder}/src/*.cpp",			// Use all .cpp files in src directory
+				"${workspaceFolder}/src/imgui/*.cpp",	// Use all .cpp files in src/imgui directory					
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/build/intermediate"			// Change directory to build folder
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"detail": "Compile without linking"
+		},
+		{
+			"type": "shell",
+			"label": "2. Link, Rename, Distribute - RELEASE",
+			"command": "./Link-Rename-Distribute.sh",
+			"args": [
+				"-r"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/build/scripts"
+			},
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"detail": "Link, rename, and distribute the library"
+		},
 
 		// MARK: Perform All Tasks
 		{
-			"label": "Perform All Tasks",
+			"label": "Perform All Tasks - DEBUG",
 			"dependsOrder": "sequence",
-			"dependsOn" : [	"1. Compile without linking", 
+			"dependsOn" : [	"1. Compile without linking - DEBUG", 
 							"2. Delete all files in bin/ directory", 
-							"3. Link, Rename, Distribute",
+							"3. Link, Rename, Distribute - DEBUG",
 						 	"4. Copy All Include Files to Environment/include",
 							"5. Copy All Include Files to ModuleAPI/include",
 							"6. Copy All Include Files to Modules/Test-Module/include",
@@ -160,6 +214,17 @@
 			"group": {
 				"kind": "build",
 				"isDefault": true
+			}
+		},
+		{
+			"label": "Perform All Tasks - RELEASE",
+			"dependsOrder": "sequence",
+			"dependsOn" : [	"1. Compile without linking - RELEASE", 
+							"2. Link, Rename, Distribute - RELEASE"
+						],
+			"group": {
+				"kind": "build",
+				"isDefault": false
 			}
 		}
 	]
