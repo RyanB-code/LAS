@@ -36,7 +36,6 @@ namespace LAS{
     
     namespace FrameworkSetup{
         std::string     createLogFile       (const std::string& parentDir);
-        std::string     getRCPath           ();
         std::string     getExeParentDir     ();
         bool            setupFilesystem     (FilePaths& filePaths);
     }
