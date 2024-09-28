@@ -1,5 +1,5 @@
 bin
 *.ini
-builds
+build
 lib
 *.o
