@@ -1,10 +1,10 @@
 #pragma once
 
-#include <LAS/Window.h>
-#include <LAS/Logging.h>
-#include <LAS/Commands.h>
-#include <LAS/Information.h>
-#include <LAS/SDK.h>
+#include "Window.h"
+#include "Logging.h"
+#include "Commands.h"
+#include "Information.h"
+#include "SDK.h"
 
 #if __GNUC__ >= 4
     #define MODULE_EXPORT extern "C" __attribute__ ((visibility ("protected")))
