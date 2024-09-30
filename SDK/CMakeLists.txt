@@ -26,7 +26,9 @@ set_target_properties(${LAS_SDK_NAME} PROPERTIES SOVERSION ${LAS_SDK_VERSION_MAJ
 set_target_properties(${LAS_SDK_NAME} PROPERTIES    LIBRARY_OUTPUT_DIRECTORY "/tmp")    # Set directory to output the SO, NEEDS to be NOT a NAS to work 
 
 add_custom_command( TARGET ${LAS_SDK_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E rm -f           "${CMAKE_CURRENT_SOURCE_DIR}/include/Config.h"  # Remove temporary file
+    COMMAND ${CMAKE_COMMAND} -E rm -f   "${CMAKE_CURRENT_SOURCE_DIR}/include/Config.h"      # Remove temporary file
+    COMMAND ${CMAKE_COMMAND} -E rm -f   "${CMAKE_SOURCE_DIR}/Environment/include/Config.h"  # Remove temporary file from other target
+
 )
 
 

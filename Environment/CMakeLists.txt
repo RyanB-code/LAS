@@ -26,7 +26,8 @@ target_link_libraries(${LAS_ENV_NAME} PRIVATE ${OPENGL_LIBRARIES})
 
 # Post build commands
 add_custom_command( TARGET ${LAS_ENV_NAME} POST_BUILD 
-    COMMAND ${CMAKE_COMMAND} -E rm -f   "${CMAKE_CURRENT_SOURCE_DIR}/include/Config.h"  # Remove temporary file        
+    COMMAND ${CMAKE_COMMAND} -E rm -f   "${CMAKE_CURRENT_SOURCE_DIR}/include/Config.h"  # Remove temporary file 
+    COMMAND ${CMAKE_COMMAND} -E rm -f   "${CMAKE_SOURCE_DIR}/SDK/include/Config.h"      # Remove temporary file from other target
 )
 
 if(DEBUG)
