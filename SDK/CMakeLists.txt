@@ -58,6 +58,5 @@ else()
         COMMAND ${CMAKE_COMMAND} -E rm  -f "/tmp/lib${LAS_SDK_NAME}.so"
         COMMAND ${CMAKE_COMMAND} -E rm  -f "/tmp/lib${LAS_SDK_NAME}.so.${LAS_SDK_VERSION_MAJOR}"
         COMMAND ${CMAKE_COMMAND} -E rm  -f "/tmp/lib${LAS_SDK_NAME}.so.${LAS_SDK_VERSION_MAJOR}.${LAS_SDK_VERSION_MINOR}.${LAS_SDK_VERSION_PATCH}"
-
     )
 endif()
