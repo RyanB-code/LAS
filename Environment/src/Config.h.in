@@ -1,0 +1,19 @@
+#pragma once
+
+#define LAS_ENV_VERSION_MAJOR @LAS_ENV_VERSION_MAJOR@
+#define LAS_ENV_VERSION_MINOR @LAS_ENV_VERSION_MINOR@
+#define LAS_ENV_VERSION_PATCH @LAS_ENV_VERSION_PATCH@
+
+#include <string>
+#include <stdint.h>
+#include <sstream>
+
+
+namespace LAS::Environment{
+    std::string getVersion      ();
+    std::string getInformation  ();
+
+    uint8_t getVersionMajor     ();
+    uint8_t getVersionMinor     ();
+    uint8_t getVersionPatch     ();
+}
