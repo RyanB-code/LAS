@@ -3,7 +3,7 @@
 std::string LAS::Environment::getVersion(){
     std::ostringstream os {};
 
-    os << LAS_VERSION_MAJOR << "." << LAS_VERSION_MINOR << "." << LAS_VERSION_PATCH;
+    os << LAS_ENV_VERSION_MAJOR << "." << LAS_ENV_VERSION_MINOR << "." << LAS_ENV_VERSION_PATCH;
     
     return os.str();
 }
@@ -19,11 +19,11 @@ std::string LAS::Environment::getInformation(){
 }
 
 uint8_t LAS::Environment::getVersionMajor(){
-    return LAS_VERSION_MAJOR;
+    return LAS_ENV_VERSION_MAJOR;
 }
 uint8_t LAS::Environment::getVersionMinor(){
-    return LAS_VERSION_MINOR;
+    return LAS_ENV_VERSION_MINOR;
 }
 uint8_t LAS::Environment::getVersionPatch(){
-    return LAS_VERSION_PATCH;
+    return LAS_ENV_VERSION_PATCH;
 }
