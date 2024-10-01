@@ -1,5 +1,5 @@
 bin
 *.ini
 build
-lib
+lib/*.so
 *.o
