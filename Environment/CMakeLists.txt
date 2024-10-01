@@ -40,7 +40,10 @@ if(DEBUG)
 
     add_custom_command( TARGET ${LAS_ENV_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory  "${CMAKE_SOURCE_DIR}/bin/SDK/Debug"                     "${CMAKE_SOURCE_DIR}/bin/Environment/Debug"     # Copy all debug libs to Env/Debug to the LAS-ENV-dev.exe can use it
-        COMMAND ${CMAKE_COMMAND} -E rm -rf          "${CMAKE_SOURCE_DIR}/bin/Environment/Debug/include"                                                     # Remove include dir thats not needed
+        
+        COMMAND ${CMAKE_COMMAND} -E rm -rf          "${CMAKE_SOURCE_DIR}/bin/Environment/Debug/include"         # Remove include dir thats not needed
+        COMMAND ${CMAKE_COMMAND} -E rm -rf          "${CMAKE_SOURCE_DIR}/bin/Environment/Debug/*.so"            # Remove the un-versioned LAS-SDK lib
+        COMMAND ${CMAKE_COMMAND} -E rm -rf          "${CMAKE_SOURCE_DIR}/bin/Environment/Debug/*[0-9].[0-9]"    # Remove the fully versioned LAS-SDK lib 
     )
 else()
     set_target_properties(${LAS_ENV_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/Environment/Release")    # Set output directory
