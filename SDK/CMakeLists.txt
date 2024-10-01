@@ -36,10 +36,10 @@ if(DEBUG)
     )
 else()
     add_custom_command( TARGET ${LAS_SDK_NAME} PRE_BUILD
-    COMMAND ${CMAKE_COMMAND} -E rm -rf  "${CMAKE_SOURCE_DIR}/bin/SDK/Release/include"         # Remove the old include directory 
-    COMMAND ${CMAKE_COMMAND} -E rm -f   "${CMAKE_SOURCE_DIR}/bin/SDK/Release/*.so"            # Remove the un-versioned LAS-SDK lib
-    COMMAND ${CMAKE_COMMAND} -E rm -f   "${CMAKE_SOURCE_DIR}/bin/SDK/Release/*so.[0-9]"       # Remove the SONAME versioned LAS-SDK lib 
-    COMMAND ${CMAKE_COMMAND} -E rm -f   "${CMAKE_SOURCE_DIR}/bin/SDK/Release/*[0-9].[0-9]"    # Remove the fully versioned LAS-SDK lib 
+        COMMAND ${CMAKE_COMMAND} -E rm -rf  "${CMAKE_SOURCE_DIR}/bin/SDK/Release/include"         # Remove the old include directory 
+        COMMAND ${CMAKE_COMMAND} -E rm -f   "${CMAKE_SOURCE_DIR}/bin/SDK/Release/*.so"            # Remove the un-versioned LAS-SDK lib
+        COMMAND ${CMAKE_COMMAND} -E rm -f   "${CMAKE_SOURCE_DIR}/bin/SDK/Release/*so.[0-9]"       # Remove the SONAME versioned LAS-SDK lib 
+        COMMAND ${CMAKE_COMMAND} -E rm -f   "${CMAKE_SOURCE_DIR}/bin/SDK/Release/*[0-9].[0-9]"    # Remove the fully versioned LAS-SDK lib 
     )
 endif()
 
