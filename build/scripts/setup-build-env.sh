@@ -9,6 +9,3 @@ mkdir bin/Environment/Release
 mkdir bin/SDK
 mkdir bin/SDK/Debug
 mkdir bin/SDK/Release
-
-cd build
-cmake -DDEBUG=ON ..
