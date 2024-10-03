@@ -27,17 +27,10 @@ cd LAS
 ```
 ./build/scripts/setup-build-env.sh
 ```
-#### Set Debug Flag for Development
-When the following variable is `ON`, certain functionality is added that aids in debugging and development work.
-```
-cmake -DDEBUG=ON <path to top-level CMakeLists.txt>
-```
-Turn off this variable for to get `Release` functionality
-```
-cmake -DDEBUG=OFF <path to top-level CMakeLists.txt>
-```
 #### Building the Project
- The commands to build each target do not change for the `Release` and `Debug` versions. The output will depend on the CMake `DEBUG` flag being set (see the [previous section](#Set-Debug-Flag-For-Development) for more information).
+ The commands to build each target do not change for the `Release` and `Debug` versions. The output will depend on the CMake `DEBUG` flag being set (see the [following section](#Set-Debug-Flag-For-Development) for more information). 
+ 
+ If you wish to change to `DEBUG` mode, you must [set the flag](#Set-Debug-Flag-For-Development) before building each target.
 
 *(The LAS-SDK must always be built first since the compiling of the LAS Environment requires the LAS-SDK library.)*
 
@@ -48,6 +41,15 @@ cmake --build . --target LAS-SDK
 Build the LAS Environment 
 ```
 cmake --build . --target LAS
+```
+#### Set Debug Flag for Development
+This section is *optional*. When the following variable is `ON`, certain functionality is added that aids in debugging and development work.
+```
+cmake -DDEBUG=ON <path to top-level CMakeLists.txt>
+```
+Turn off this variable for to get `Release` functionality
+```
+cmake -DDEBUG=OFF <path to top-level CMakeLists.txt>
 ```
 
 ### License
