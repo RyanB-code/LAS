@@ -49,7 +49,7 @@ This section is *optional*. When the following variable is `ON`, certain functio
 ```
 cmake -DDEBUG=ON <path to top-level CMakeLists.txt>
 ```
-Turn off this variable for to get `Release` functionality
+Turn off this variable to get `Release` functionality.
 ```
 cmake -DDEBUG=OFF <path to top-level CMakeLists.txt>
 ```
