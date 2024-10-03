@@ -32,15 +32,17 @@ cd LAS
  
  If you wish to change to `DEBUG` mode, you must [set the flag](#Set-Debug-Flag-For-Development) before building each target.
 
-*(The LAS-SDK must always be built first since the compiling of the LAS Environment requires the LAS-SDK library.)*
+*NOTE: The LAS-SDK must always be built first since the compiling of the LAS Environment requires the LAS-SDK library.*
+
+*NOTE: It is recommended to contain build files in the `build/` directory for cleanliness*
 
 Build the LAS-SDK 
 ```
-cmake --build . --target LAS-SDK
+cmake --build <path to top-level CMakeLists.txt> --target LAS-SDK
 ```
 Build the LAS Environment 
 ```
-cmake --build . --target LAS
+cmake --build <path to top-level CMakeLists.txt> --target LAS
 ```
 #### Set Debug Flag for Development
 This section is *optional*. When the following variable is `ON`, certain functionality is added that aids in debugging and development work.
