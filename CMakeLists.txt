@@ -15,6 +15,10 @@ set (LAS_ENV_VERSION_MAJOR 	"1")
 set (LAS_ENV_VERSION_MINOR 	"0")
 set (LAS_ENV_VERSION_PATCH 	"0")
 
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    option(DEBUG "DEBUG" ON)
+endif()
+
 
 add_subdirectory(SDK)
 add_subdirectory(Environment)
