@@ -47,6 +47,8 @@ endif()
 add_custom_command( TARGET ${LAS_SDK_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E rm -f   "${CMAKE_CURRENT_SOURCE_DIR}/include/Config.h"      # Remove temporary file
     COMMAND ${CMAKE_COMMAND} -E rm -f   "${CMAKE_SOURCE_DIR}/Environment/include/Config.h"  # Remove temporary file from other target
+    COMMAND ${CMAKE_COMMAND} -E copy_directory  "${CMAKE_CURRENT_SOURCE_DIR}/include"   "${CMAKE_SOURCE_DIR}/Environment/include"   # Copy to Environment to use updated headers
+
 )
 
 # Conditional commands
