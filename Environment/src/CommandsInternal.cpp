@@ -291,7 +291,7 @@ ModuleControl::ModuleControl(   std::weak_ptr<DisplayManager>   setDisplayManage
                                 "\t\tmodule-load-directory [option] <directory>\tChange directory where modules are loaded from\n\t\t\tOptional: -c creates directory specified\n"
                                 "list-modules\t\tLists all modules by name\n"
                                 "reload-all  \t\tReloads all modules from file\n"
-                                "reload <name> \tRe-runs a module's RC file\n"               
+                                "reload <name> \tRe-runs a module's RC file\n"
                 },
                                 displayManager  {setDisplayManager},
                                 moduleManager   {setModuleManager},
@@ -309,7 +309,7 @@ std::pair<int, std::ostringstream> ModuleControl::execute(const StringVector& ar
 
 
     if(!tempDisplayManager|| !tempModuleManager || !tempShell)
-        return pairErrorWithMessage("\tCould not access necessary items\n");
+        return pairErrorWithMessage("Could not access necessary items");
 
     // 0 = verb, 1 = what, 2 = option/dir, 3 = directory
     
@@ -328,9 +328,8 @@ std::pair<int, std::ostringstream> ModuleControl::execute(const StringVector& ar
     }
     else if (args[0] == "reload-all")
         reload = true;
-    else if (args[0] == "reload" && args.size() > 1){
+    else if (args[0] == "reload" && args.size() > 1)
         reloadByName = true;
-    }
     else if (args[0] == "list-modules")
         listModules = true;
     else
