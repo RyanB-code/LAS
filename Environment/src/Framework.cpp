@@ -94,9 +94,9 @@ void Framework::run(){
         std::cerr << "Application must be setup before running\n";
         return;
     }
-    
+
     // If refresh() returns true, that means an glfwShouldWindowClose() was called
-    while(!displayManager->refresh()){
+    while(!displayManager->refresh()){       
         shell->handleCommandQueue();
     }
 
@@ -211,17 +211,17 @@ bool Framework::setupLogger(const std::string& logDir){
 }
 bool Framework::setupModuleManager(const std::string& moduleLoadDir, const std::string& moduleFilesDir){
     moduleManager = std::make_shared<ModuleManager>( ModuleManager{logger});
-    logger->log("Module Manager setup successful", Tags{"OK"});
 
     if(!moduleManager->setModuleLoadDirectory(moduleLoadDir)){
-        logger->log("Failed to set module load directory", Tags{"Module Manager"});
+        logger->log("Failed to set module load directory", Tags{"FATAL", "Module Manager"});
         return false;
     }
     if(!moduleManager->setModuleFilesDirectory(moduleFilesDir)){
-        logger->log("Failed to set module files directory", Tags{"Module Manager"});
+        logger->log("Failed to set module files directory", Tags{"FATAL", "Module Manager"});
         return false;
     }
 
+    logger->log("Module Manager setup successful", Tags{"OK"});
     return true;
 }
 bool Framework::setupDisplay(const std::string& imGuiIniPath){
