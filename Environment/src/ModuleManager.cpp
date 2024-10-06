@@ -2,6 +2,121 @@
 
 using namespace LAS;
 
+// MARK: TEST
+ModuleMessageSubscriberTest::ModuleMessageSubscriberTest()
+{
+
+}
+ModuleMessageSubscriberTest::~ModuleMessageSubscriberTest(){
+
+}
+void ModuleMessageSubscriberTest::notifiy() {
+    std::cout << "Notified\n";
+}
+// MARK: MOD MSG SUB
+ModuleMessageSubscriber::ModuleMessageSubscriber(){
+    static uint8_t IDs { 0 };
+    ++IDs;
+    ID = IDs;
+}
+ModuleMessageSubscriber::~ModuleMessageSubscriber(){
+
+}
+uint8_t ModuleMessageSubscriber::getID() const{
+    return ID;
+}
+
+// MARK: MODULE MSG MAN
+ModuleMessageManager::ModuleMessageManager(){
+
+}
+ModuleMessageManager::~ModuleMessageManager(){
+    
+}
+void ModuleMessageManager::addMsg(std::string msg) {
+    if(subscribers.empty())
+        return;
+
+    auto& element { messageQueue.emplace_back(std::pair{msg, std::vector<uint8_t>{} } )};
+    
+    std::vector<uint8_t> IDs { };
+    for(const auto& subscriber : subscribers){
+        IDs.emplace_back( subscriber->getID() );
+    }
+
+    for(const auto& ID : IDs)
+        element.second.emplace_back(ID);
+
+    for(const auto& subscriber : subscribers)
+        if(subscriber)
+            subscriber->notifiy();
+}
+bool ModuleMessageManager::addSubscriber(ModMsgSubPtr subscriber){
+    subscribers.emplace_back(subscriber);
+    return true;
+}
+void ModuleMessageManager::retrieveMessages(uint8_t ID, std::queue<std::string>& messages){
+    std::vector<std::pair<std::string, std::vector<uint8_t>>>::iterator itr;
+
+    std::vector<std::vector<std::pair<std::string, std::vector<uint8_t>>>::iterator> entriesToErase;
+
+    for(itr = messageQueue.begin(); itr != messageQueue.end(); ++itr ){
+        auto& pair {*itr};
+
+        std::vector<uint8_t>::iterator idItr;
+        std::vector<std::vector<uint8_t>::iterator> idEntriesToErase;
+        for(idItr = pair.second.begin(); idItr != pair.second.end(); ++idItr){
+            if(*idItr == ID){
+                messages.push(pair.first);  // If the ID is found in the map, that means the MSG was not sent, therefore add to messages
+                idEntriesToErase.emplace_back(idItr);              // Remove ID from MAP meaning message was given
+            }
+        }
+
+        // Erase ID from pair
+        for(const auto& idItr : idEntriesToErase)
+            pair.second.erase(idItr);
+
+
+        // If a map is empty, that means it can be erased from the queue
+        if(pair.second.empty())
+            entriesToErase.emplace_back(itr);
+    }
+
+    // Erase the empty queues
+    for(const auto& eraseItr : entriesToErase)
+        messageQueue.erase(eraseItr);
+}
+void ModuleMessageManager::viewMessages (std::ostringstream& os){
+    constexpr uint8_t msgWidth  { 40 };
+    constexpr uint8_t idWidth   { 40 };
+    constexpr uint8_t openWidth { 7 };
+
+    os << std::format("{:<{}}", "MSG",		msgWidth);
+    os << std::format("{:<{}}", "IDs",	    idWidth);
+    
+    os << "\n";
+    
+    for(const auto& pair : messageQueue){
+        os << std::format("{:<{}}", pair.first, msgWidth);
+
+        std::ostringstream IDs;
+        if(!pair.second.empty()){
+            for(const auto& ID : pair.second)
+                IDs << "ID: " << int{ID} << ". ";
+
+            os << std::format("{:<{}}", IDs.str(), idWidth);
+        }
+        else
+            os << std::format("{:<{}}", "IDs Empty", idWidth);
+
+         os << "\n";
+    }
+
+    os << "\nEnd Msgs\n";
+}
+
+
+// MARK: MODULE MANAGER
 ModuleManager::ModuleManager(const LoggerPtr& setLogger) :
     logger {setLogger}
 {
@@ -217,6 +332,18 @@ void ModuleManager::clearNonUtilityModules(){
         i->second->cleanup();
         modules.erase(i);
     }
+}
+void ModuleManager::addMsg(const std::string& msg){
+    messageManager.addMsg(msg);
+}
+void ModuleManager::viewMessages(std::ostringstream& os){
+    messageManager.viewMessages(os);
+}
+bool ModuleManager::addSubscriber(ModMsgSubPtr subscriber){
+    return messageManager.addSubscriber(subscriber);
+}
+void ModuleManager::retrieveMessages(uint8_t ID, std::queue<std::string>& messages){
+    messageManager.retrieveMessages(ID, messages);
 }
 
 // MARK: LASCore Namespace 
