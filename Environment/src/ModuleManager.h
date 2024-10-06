@@ -14,13 +14,8 @@
 #include <vector>
 #include <dlfcn.h>
 
+
 namespace LAS{
-    class ModuleManager;
-
-    using StringVector      = std::vector<std::string>;
-    using ModuleManagerPtr  = std::shared_ptr<ModuleManager>;
-
-
     class ModuleManager final {
     public:
         explicit ModuleManager(const LoggerPtr& setLogger);
@@ -28,12 +23,12 @@ namespace LAS{
 
         bool addModule      (const ModulePtr& module);
         bool removeModule   (std::string title);
-        bool containsModule (std::string title)   const;
+        bool containsModule (std::string title)             const;
 
-        ModulePtr           getModule(std::string title)        const;
-        const StringVector  getModuleNames()                    const;
+        ModulePtr           getModule(std::string title)    const;
+        const StringVector  getModuleNames()                const;
 
-        WindowList          getAllWindows()                     const;
+        WindowList          getAllWindows()                 const;
 
         std::string         getModuleLoadDirectory  () const;
         std::string         getModuleFilesDirectory () const;
@@ -43,8 +38,8 @@ namespace LAS{
         void loadAllModules  (ImGuiContext& context, StringVector& modulesNotLoaded, std::string loadDirectory="", std::string filesDirectory=""); // Clears the StringVector first
         bool loadModule      (std::string moduleFilesDirectory, ImGuiContext& context, const std::string& fileName);
 
-        void clearNonUtilityModules    ();
-
+        void clearNonUtilityModules();
+        
     private:
         std::unordered_map<std::string, ModulePtr> modules{};
         const LoggerPtr& logger;
@@ -54,7 +49,8 @@ namespace LAS{
 
         static constexpr std::string moduleNameSuffix    {".lasm"};    // Every module must end with this to attempt to be added
     };
-
+    
+    using ModuleManagerPtr  = std::shared_ptr<ModuleManager>;
     namespace Modules{
         ModulePtr   bindFiletoModule        (const std::string& path, const LoggerPtr& logger, const ImGuiContext& context);
         bool        ensureModuleFiles       (std::string parentDirectory, std::string moduleTitle);
