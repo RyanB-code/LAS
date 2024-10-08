@@ -7,11 +7,11 @@ if(DEBUG)
 endif()
 
 # Add sources to EXE
-add_executable(${LAS_ENV_NAME} "${sources}")
+add_executable(${LAS_ENV_NAME} EXCLUDE_FROM_ALL "${sources}")
 
 
 # Setup config file with versioning
-configure_file(src/Config.h.in "${CMAKE_CURRENT_SOURCE_DIR}/include/Config.h")
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/Config.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/include/Config.h")
 
 # Add headers
 target_include_directories(${LAS_ENV_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")   # Adds headers include
@@ -66,3 +66,4 @@ else()
 
     target_link_libraries(${LAS_ENV_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/lib/libLAS-SDK.so")                              # Specify release lib
 endif()
+
