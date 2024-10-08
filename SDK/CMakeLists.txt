@@ -2,7 +2,7 @@
 file(GLOB_RECURSE sources CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 
 # Makes the library with the sources
-add_library(${LAS_SDK_NAME} SHARED "${sources}")
+add_library(${LAS_SDK_NAME} EXCLUDE_FROM_ALL SHARED "${sources}" )
 
 if (DEBUG)
     target_compile_definitions(${LAS_SDK_NAME} PRIVATE DEBUG)
@@ -10,7 +10,7 @@ if (DEBUG)
 endif()
 
 # Make the config file
-configure_file(src/Config.h.in "${CMAKE_CURRENT_SOURCE_DIR}/include/Config.h")
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/Config.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/include/Config.h")
 
 # Let the compiler know where the header files are
 # The PRIVATE specifier means the headers are only used for the specified target
