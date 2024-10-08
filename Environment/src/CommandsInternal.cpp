@@ -305,7 +305,7 @@ ModuleControl::~ModuleControl(){
 std::pair<int, std::ostringstream> ModuleControl::execute(const StringVector& args){
     std::shared_ptr<DisplayManager> tempDisplayManager { displayManager.lock()};
     std::shared_ptr<ModuleManager>  tempModuleManager  { moduleManager.lock()};
-    std::shared_ptr<Shell>          tempShell           { shell.lock()};
+    std::shared_ptr<Shell>          tempShell          { shell.lock()};
 
 
     if(!tempDisplayManager|| !tempModuleManager || !tempShell)

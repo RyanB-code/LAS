@@ -19,47 +19,6 @@
 
 namespace LAS{
 
-    class ModuleMessageSubscriber{
-    public:
-        ModuleMessageSubscriber();
-        virtual ~ModuleMessageSubscriber();
-
-        virtual void notifiy() = 0;
-
-        uint8_t getID() const;
-    private:
-        uint8_t ID;    
-    };
-
-    class ModuleMessageSubscriberTest : public ModuleMessageSubscriber{
-    public:
-        ModuleMessageSubscriberTest();
-        ~ModuleMessageSubscriberTest();
-
-        virtual void notifiy() override;
-    };
-
-    using ModMsgSubPtr = std::shared_ptr<ModuleMessageSubscriber>;
-
-    class ModuleMessageManager{
-    public:
-        ModuleMessageManager();
-        ~ModuleMessageManager();
-
-        void    addMsg              (std::string msg);
-        bool    addSubscriber       (ModMsgSubPtr subscriber);
-
-        void    retrieveMessages    (uint8_t ID, std::queue<std::string>& messages);
-        void    viewMessages        (std::ostringstream& os);
-
-    private:
-        static constexpr uint64_t MAX_MODULES   { 20 };
-
-        std::vector<std::pair<std::string, std::vector<uint8_t>>>   messageQueue;
-        std::vector<ModMsgSubPtr>                                   subscribers;
-    };
-
-
     class ModuleManager final {
     public:
         explicit ModuleManager(const LoggerPtr& setLogger);
@@ -84,11 +43,6 @@ namespace LAS{
 
         void clearNonUtilityModules();
 
-        void addMsg             (const std::string& msg);
-        void viewMessages       (std::ostringstream& os);
-        bool addSubscriber      (ModMsgSubPtr subscriber);
-        void retrieveMessages   (uint8_t ID, std::queue<std::string>& messages);
-
     private:
         std::unordered_map<std::string, ModulePtr> modules{};
         const LoggerPtr& logger;
@@ -97,8 +51,6 @@ namespace LAS{
         std::string moduleFilesDirectory;
 
         static constexpr std::string moduleNameSuffix    {".lasm"};    // Every module must end with this to attempt to be added
-
-        ModuleMessageManager messageManager;
     };
 
     using ModuleManagerPtr  = std::shared_ptr<ModuleManager>;
