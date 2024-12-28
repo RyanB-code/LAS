@@ -206,6 +206,10 @@ bool Framework::setupLogger(const std::string& logDir){
         return false;
     }
 
+    // Log version information
+    logger->log("LAS Environment version " + LAS::Environment::getVersion(), Tags{"INFO"});
+    logger->log("LAS SDK version " + LAS::SDK::getVersion(), Tags{"INFO"});
+
     logger->log("Logger setup successful", Tags{"OK"});
     return true;
 }
