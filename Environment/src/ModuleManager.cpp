@@ -112,12 +112,14 @@ bool ModuleManager::loadModule  (std::string parentDirectory, ImGuiContext& cont
             return false;
             break;
         case 5:
-            logger->log("Module SDK version and Environment SDK version mismatch from Module [" + moduleBuffer->getTitle() + "]. Issues may occur.", Tags{"WARNING", "Module Manager"});
-            break;
         case 6:
+            logger->log("SDK version mismatch. Issues may occur. Module [" + moduleBuffer->getTitle() + "] made with SDK version " + versionToStr(moduleBuffer->getSDKVersion()) + "."
+                        "Environment SDK is version  " + LAS::SDK::getVersion() + "", Tags{"WARNING", "Module Manager"});
+            break;
+        case 7:
             fatalMsg    << "Fatal version mismatch. Environment SDK is " << LAS::SDK::getVersion() 
                         << ". Module [" << moduleBuffer->getTitle() 
-                        << "] SDK version is " << LAS::Information::versionToStr(moduleBuffer->getSDKVersion());
+                        << "] SDK version is " << versionToStr(moduleBuffer->getSDKVersion());
             logger->log( fatalMsg.str(), Tags{"ERROR", "Module Manager"});
             return false;
             break;
@@ -151,6 +153,10 @@ bool ModuleManager::loadModule  (std::string parentDirectory, ImGuiContext& cont
         return false;
     }
 
+    logger->log("Checks passed for Module [" + moduleBuffer->getTitle() + "] version " + versionToStr(moduleBuffer->getModuleVersion()), Tags{"INFO", "Module Manager"});
+    logger->log("Setting up module...", Tags{"INFO", "Module Manager"});
+
+
     // Pass environment info only if all files could be created
     EnvironmentInfo envInfo {moduleFilesDirectory, moduleRCFilePath, context, logger};
     if(!moduleBuffer->loadEnvInfo(envInfo)){
@@ -162,6 +168,9 @@ bool ModuleManager::loadModule  (std::string parentDirectory, ImGuiContext& cont
         logger->log("Could not add module [" + moduleBuffer->getTitle() + "]", Tags{"ERROR", "Module Manager"});
         return false;
     }
+    
+    logger->log("Setup complete for Module [" + moduleBuffer->getTitle() + "]", Tags{"INFO", "Module Manager"});
+
     return true;
 }
 
@@ -274,6 +283,9 @@ namespace LAS::Modules{
         case 2:
             return 6;
             break;
+        case 3:
+            return 7;
+            break;
         default:
             return -1;
             break;
@@ -297,15 +309,18 @@ namespace LAS::Modules{
     }
     int compareVersions (const Version& base, const Version& compare){
         if(base.major != compare.major)
-            return 2;
-
-        if(base.minor >= compare.minor)
-            return 0;
+            return 3;
         
         if(base.minor < compare.minor)
+            return 2;
+
+        if(base.minor > compare.minor)
             return 1;
 
-        return 2;
+         if(base.minor == compare.minor)
+            return 0;
+
+        return 3;
     }
 
 }

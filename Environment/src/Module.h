@@ -37,11 +37,13 @@ namespace LAS{
         bool    setRCFilePath   (const std::string& path);
 
         const Version&              getSDKVersion()     const;
+        const Version&              getModuleVersion()  const;
         std::string                 getTitle()          const;
         std::string                 getGroupName()      const;
         std::string                 getDirectory()      const;
         std::string                 getRCFilePath()     const;
         WindowPtr                   getWindow()         const;
+
         std::vector<CommandPtr>&    getCommands();
 
         bool    loadModuleInfo();

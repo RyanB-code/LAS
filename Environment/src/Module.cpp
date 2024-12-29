@@ -35,6 +35,9 @@ bool Module::setRCFilePath(const std::string& path){
 const Version& Module::getSDKVersion() const{
     return moduleInfo.sdkVersion;
 }
+const Version& Module::getModuleVersion() const{
+    return moduleInfo.moduleVersion;
+}
 
 std::string Module::getTitle() const{
     return moduleInfo.title;
