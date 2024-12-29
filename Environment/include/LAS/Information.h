@@ -15,11 +15,12 @@ namespace LAS::Information{
         uint8_t patch;
     };
     struct ModuleInfo {
-        Version                 sdkVersion          {};
-        std::string             title               {};
-        std::string             commandGroupName    {};
-        Windowing::WindowPtr    window              {};
-        std::vector<CommandPtr> commands            {};
+        Version                 sdkVersion          { };
+        Version                 moduleVersion       { };
+        std::string             title               { };
+        std::string             commandGroupName    { };
+        Windowing::WindowPtr    window              { };
+        std::vector<CommandPtr> commands            { };
     };
     struct EnvironmentInfo {
         std::string     directory   {};
