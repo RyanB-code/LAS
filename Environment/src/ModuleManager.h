@@ -57,8 +57,11 @@ namespace LAS{
     namespace Modules{
         ModulePtr   bindFiletoModule        (const std::string& path, const LoggerPtr& logger, const ImGuiContext& context);
         bool        ensureModuleFiles       (std::string parentDirectory, std::string moduleTitle);
-        int         compareVersions         (const Version& base, const Version& compare);      // 0 = success, 1 = warning mismatch, 2 = fatal mismatch
-        int         verifyModuleInformation (const ModulePtr& module);                          // 0 = success, 1 = bad ptr, 2 = title empty, 3 = group empty, 4 = bad group name, 5 = version warning, 6 = fatal version mismatch               
+        int         compareVersions         (const Version& base, const Version& compare);      // 0 = same major and minor, 1 = compare minor is older, 2 = compare minor is newer,  3 = fatal mismatch
+        
+        int         verifyModuleInformation (const ModulePtr& module);                          
+        // 0 = success, 1 = bad ptr, 2 = title empty, 3 = group empty, 
+        // 4 = bad group name, 5 = version warning, module minor is older than SDK, 6 =  5 = version warning, module minor is newer than SDK, 7 = fatal version mismatch               
 
     }
 }
