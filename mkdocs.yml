@@ -1,7 +1,9 @@
-site_name: Life Applicaiton Suite Documentation
+site_name: Life Applicaiton Suite
 site_url: https://docs.las.com
 nav:
   - Home: index.md
+  - SDK:
+    - Overview: SDK docs/overview.md
 
 markdown_extensions:
   - toc:
