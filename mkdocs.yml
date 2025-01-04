@@ -1,0 +1,49 @@
+site_name: Life Applicaiton Suite Documentation
+site_url: https://docs.las.com
+nav:
+  - Home: index.md
+
+markdown_extensions:
+  - toc:
+      permalink: true
+theme:
+  name: material
+  palette:
+    # Automatic brightness mode
+    - media: "(prefers-color-scheme)"
+      scheme: default
+      primary: blue
+      accent: green
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to system preference
+    # Toggle Light Mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue
+      accent: green
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+
+    # Toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue
+      accent: green
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.instant.progress
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.path
+    - navigation.indexes
+    - navigation.expand
+extra:
+  version:
+    provider: mike
+    default: stable
