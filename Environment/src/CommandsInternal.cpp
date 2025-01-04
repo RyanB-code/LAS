@@ -233,6 +233,8 @@ std::pair<int, std::ostringstream> Print::execute(const StringVector& args) {
             addDisplaySettings  = true;
         }
     }
+    else
+        return pairInvalidArgument(args[0]); 
 
 
     if(addLogSettings){
