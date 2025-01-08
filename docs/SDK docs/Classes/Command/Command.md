@@ -1,16 +1,18 @@
-# Commands
 
-The header file `Commands.h` contains the following to allow access to the LAS Environment's Unix-like command functionality. The `Command` object is a base class that provides freedom for a Module developer to use derived classes to provide the operations they desire.
+# <span style="font-size:smaller;">LAS : : </span><span style="font-size:larger;">Command</span>
 
 ***
 
-## <span style="font-size:smaller;">LAS : : </span><span style="font-size:larger;">Command</span>
-
 ```
-class Command (std::string Key, std::string Description)
+class Command (
+        std::string Key, 
+        std::string Description
+    )
 ```
 
-Type `Command` represents a keyword that when entered in the command line is executed, with or without additional arguments, according to the `Command`'s `execute()` function.
+The class `Command` represents a keyword. When entered into the LAS Environment's shell, with or without additional arguments, the `Command`'s `execute()` function is called.
+
+The `Command` object is a base class that provides freedom for a Module developer to use derived classes to provide the operations they desire.
 
 ## Member Types
 | <u>Name</u>       | <u>Definition</u>    |
@@ -21,7 +23,7 @@ Type `Command` represents a keyword that when entered in the command line is exe
 ## Member Functions
 | <u>Name</u>       | <u>Definition</u> |
 | ----------------- | ------------- |
-| (constructor)     | Constructs a new `Command`   |
+| *(constructor)*     | Constructs a new `Command`   |
 | getKey            | Returns the `key` member variable  |
 | getDescription    | Returns the `description` member variable  |
 | execute           | Pure virtual function that is called when the `Command` is given to the Environment's shell |
@@ -29,5 +31,16 @@ Type `Command` represents a keyword that when entered in the command line is exe
 ## Non-Member Functions
 *(none)*
 
+## Related Aliases
+```
+namespace LAS {
+    using CommandPtr    = std::unique_ptr<Command>;
+    using CommandList   = std::vector<CommandPtr>;
+}
+```
 
+## Example
+```
+CODE HERE
+```
 
