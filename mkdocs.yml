@@ -3,7 +3,17 @@ site_url: https://docs.las.com
 nav:
   - Home: index.md
   - SDK:
-    - Overview: SDK docs/overview.md
+    - Objects:
+      - Command:
+        - Command class: SDK docs/Classes/Command/Command.md
+        - Functions:
+          - getKey ( ): SDK docs/Classes/Command/getKey.md
+          - getyDescription ( ): SDK docs/Classes/Command/getDescription.md
+          - execute ( ): SDK docs/Classes/Command/execute.md
+    - Namespaces:
+      - Command Helper: 
+        - pair ( ) : SDK docs/Namespaces/CommandHelper/pair.md
+    - Module API.h: SDK docs/ModuleAPI.md
 
 markdown_extensions:
   - toc:
@@ -45,6 +55,8 @@ theme:
     - navigation.path
     - navigation.indexes
     - navigation.expand
+    - navigation.sections
+    - navigation.prune
 extra:
   version:
     provider: mike
