@@ -7,7 +7,7 @@ std::pair<int, std::ostringstream> pair
     (int returnCode, const std::string& msg);
 ```
 
-Returns a pair of given number and message.
+Returns a pair of the given number and message.
 
 ## Parameters
 | <u>Name</u>       | <u>Definition</u> |
@@ -19,7 +19,7 @@ Returns a pair of given number and message.
 An `std::pair`, of which are the two given parameters, respectively. A newline will be inserted as the last character if one is not present.
 
 ## Exceptions
-Does not throw exceptions unless one of the specified operations (e.g. constructor of an element) throws. 
+None.
 
 ## Example
 ```
