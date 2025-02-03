@@ -20,7 +20,7 @@ This function is called when the LAS Environment's shell encounters the `Command
 An `std::pair` of which the first type is an `int` designed to be a return code, and the second of type `std::ostringstream` meant to provide user-facing information about the event.
 
 ## Exceptions
-***ANY A DEVELOPER CHOOSES TO THROW***
+*Any a developer choose to throw.*
 
 ## Example
 ```

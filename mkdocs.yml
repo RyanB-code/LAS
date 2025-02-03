@@ -13,6 +13,12 @@ nav:
     - Namespaces:
       - Command Helper: 
         - pair ( ) : SDK docs/Namespaces/CommandHelper/pair.md
+        - pairNormal ( ) : SDK docs/Namespaces/CommandHelper/pairNormal.md
+        - pairInvalidArgument ( ) : SDK docs/Namespaces/CommandHelper/pairInvalidArgument.md
+        - pairErrorWithMessage ( ) : SDK docs/Namespaces/CommandHelper/pairErrorWithMessage.md
+        - stringValueTrue ( ) : SDK docs/Namespaces/CommandHelper/stringValueTrue.md
+        - stringValueFalse ( ) : SDK docs/Namespaces/CommandHelper/stringValueFalse.md
+
     - Module API.h: SDK docs/ModuleAPI.md
 
 markdown_extensions:
