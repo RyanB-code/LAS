@@ -31,23 +31,21 @@ namespace LAS::TextManip{
         
         return text;
     }
-    std::string ensureNoSpaces  (const std::string& text){
-        std::string textBuf;
+    std::string ensureNoSpaces  (std::string text){
         for(const char& c : text){
             if(c == ' ')
-                textBuf += '-';
+                text += '-';
         }
-        return textBuf;
+        return text;
     }
-    std::string ensureAlNumNoSpaces (const std::string& text){
-        std::string textBuf;
+    std::string ensureAlNumNoSpaces (std::string text){
         for(const char& c : text){
             if(std::isalnum(c))
-                textBuf += c;
+                text += c;
             if(c == ' ')
-                textBuf += '-';
+                text += '-';
         }
-        return textBuf;
+        return text;
     }
     std::string ensureNewline (std::string text ){
         if(text.empty())
