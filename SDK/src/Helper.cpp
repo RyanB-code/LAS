@@ -6,14 +6,14 @@
 namespace LAS{
 
     bool ensureDirectory (const std::string& path){
-        if(!std::filesystem::exists(path))
-            return false;
+        if(std::filesystem::exists(path))
+            return true;
         
         return std::filesystem::create_directories(path);
     }
     bool ensureFile     (const std::string& path){
-        if(!std::filesystem::exists(path))
-            return false;
+        if(std::filesystem::exists(path))
+            return true;
     
         std::ofstream file(path);
         return std::filesystem::exists(path);
