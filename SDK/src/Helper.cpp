@@ -6,30 +6,29 @@
 namespace LAS{
 
     bool ensureDirectory (const std::string& path){
-        if(std::filesystem::exists(path)){
-            return true;
-        }
-        else{
-            return std::filesystem::create_directories(path);
-        }
+        if(!std::filesystem::exists(path))
+            return false;
+        
+        return std::filesystem::create_directories(path);
     }
     bool ensureFile     (const std::string& path){
-        if(std::filesystem::exists(path)){
-            return true;
-        }
-        else{
-            std::ofstream file(path);
-            return std::filesystem::exists(path);
-        }
+        if(!std::filesystem::exists(path))
+            return false;
+    
+        std::ofstream file(path);
+        return std::filesystem::exists(path);
     }
 }
 
 namespace LAS::TextManip{
     std::string ensureSlash(std::string text){
+        if(text.empty())
+            return std::string{};
+
         // Ensure slash
-        if(text.back() != '\\' && text.back() != '/'){
+        if(text.back() != '\\' && text.back() != '/')
             text += "/";
-        }
+        
         return text;
     }
     std::string ensureNoSpaces  (const std::string& text){
@@ -55,9 +54,9 @@ namespace LAS::TextManip{
             return std::string{};
 
         // Ensure newline
-        if(text.back() != '\n'){
+        if(text.back() != '\n')
             text += '\n';
-        }
+        
         return text;
     }
 
