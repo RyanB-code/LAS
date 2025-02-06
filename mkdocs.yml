@@ -10,6 +10,8 @@ nav:
           - getKey ( ): SDK docs/Classes/Command/getKey.md
           - getyDescription ( ): SDK docs/Classes/Command/getDescription.md
           - execute ( ): SDK docs/Classes/Command/execute.md
+      - Version: SDK docs/Classes/Information/version.md
+      - ModuleInfo: SDK docs/Classes/Information/moduleInfo.md
     - Namespaces:
       - Command Helper: 
         - pair ( ) : SDK docs/Namespaces/CommandHelper/pair.md
@@ -18,12 +20,11 @@ nav:
         - pairErrorWithMessage ( ) : SDK docs/Namespaces/CommandHelper/pairErrorWithMessage.md
         - stringValueTrue ( ) : SDK docs/Namespaces/CommandHelper/stringValueTrue.md
         - stringValueFalse ( ) : SDK docs/Namespaces/CommandHelper/stringValueFalse.md
-      - TextManip:
-          - ensureSlash( ) : SDK docs/Namespaces/TextManip/ensureSlash.md
-          - ensureNoSpaces( ) : SDK docs/Namespaces/TextManip/ensureNoSpaces.md
-          - ensureAlNumNoSpaces( ) : SDK docs/Namespaces/TextManip/ensureAlNumNoSpaces.md
-          - ensureNewline( ) : SDK docs/Namespaces/TextManip/ensureNewline.md
-    - Module API.h: SDK docs/ModuleAPI.md
+      - Text Manipulation:
+        - ensureSlash( ) : SDK docs/Namespaces/TextManip/ensureSlash.md
+        - ensureNoSpaces( ) : SDK docs/Namespaces/TextManip/ensureNoSpaces.md
+        - ensureAlNumNoSpaces( ) : SDK docs/Namespaces/TextManip/ensureAlNumNoSpaces.md
+        - ensureNewline( ) : SDK docs/Namespaces/TextManip/ensureNewline.md
 
 markdown_extensions:
   - toc:

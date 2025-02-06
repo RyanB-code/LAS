@@ -14,7 +14,7 @@ The class `Command` represents a keyword. When entered into the LAS Environment'
 
 The `Command` object is a base class that provides freedom for a Module developer to use derived classes to provide the operations they desire.
 
-## Member Types
+## Member Variables
 | <u>Name</u>       | <u>Definition</u>    |
 | ----------------- | ------------- |
 | key               | An `std::string`, it is the collection of characters that when found by the parser, will initiate execution of the command  |
