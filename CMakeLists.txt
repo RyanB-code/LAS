@@ -17,6 +17,7 @@ set (LAS_ENV_VERSION_PATCH 	"1")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     option(DEBUG "DEBUG" ON)
+    set(CMAKE_BUILD_TYPE Debug)
 endif()
 
 
