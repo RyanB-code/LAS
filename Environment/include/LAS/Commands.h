@@ -26,7 +26,7 @@ namespace LAS{
     using CommandList   = std::vector<CommandPtr>;
 
     namespace CommandHelper{
-        std::pair<int, std::ostringstream> pair                     (int returnVal, const std::string& msg);
+        std::pair<int, std::ostringstream> pair                     (int returnCode, const std::string& msg);
         std::pair<int, std::ostringstream> pairNormal               ();
         std::pair<int, std::ostringstream> pairErrorWithMessage     (const std::string& msg);
         std::pair<int, std::ostringstream> pairInvalidArgument      (const std::string& arg);
