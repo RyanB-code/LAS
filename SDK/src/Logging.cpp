@@ -3,151 +3,143 @@
 namespace LAS::Logging {
 
     std::string printTime(const std::chrono::system_clock::time_point& time) noexcept {
-        std::chrono::zoned_time zonedTime { std::chrono::current_zone(), time }; // Makes zoned time
-
-        // Needed to output the seconds as 2 digits instead of a float
-        std::string seconds {std::format("{:%S}", zonedTime)};
-        std::ostringstream formattedTime;
-        formattedTime << std::format("{:%H:%M:}", zonedTime) << seconds.substr(0,2);
-
-        return formattedTime.str();
+        std::chrono::zoned_time zonedTime { std::chrono::current_zone(), time };
+        return std::format("{:%T}", zonedTime).substr(0, 8);
     }
     std::string printLocation(const std::source_location& location)	noexcept {
         std::ostringstream os;
-
         os << "[" << location.file_name() << " | " << location.function_name() << " | " << location.line() << "]";
-
         return os.str();
     }
 
-    // MARK: Log
-    Log::Log(std::string setMsg, std::string setTag, std::source_location setLocation, Timepoint setTimestamp)
-        :   msg {setMsg},
-            location{setLocation},
-            timestamp {setTimestamp}
-    {
-        tags.push_back(setTag);
-    }
-    Log::Log(std::string setMsg, Tags setTags, std::source_location setLocation, Timepoint setTimestamp)
-        :   msg {setMsg},
-            tags {setTags},         
-            location{setLocation},
-            timestamp {setTimestamp}
-    {
 
-    }
+    // LogOutput
+    LogOutput::LogOutput(const LogSettings& setSettings) : settings { setSettings } {
+        static int givenIDs { 0 };
 
-    Log::~Log(){
+        if(givenIDs < 0 || givenIDs > 50) 
+            throw::std::out_of_range("Max LogOutputs reached: 50");
 
-    }
-    std::string Log::getMsg() const{
-        return msg;
-    }
-    std::source_location Log::getLocation() const {
-        return location;
-    }
-    Timepoint Log::getTimestamp() const{
-        return timestamp;
-    }
-    const StringVector& Log::getTags() const{
-        return tags;
-    }
-    Log& Log::addTag(std::string tag){
-        tags.push_back(tag);
-        return *this;
-    }
-
-
-    // MARK: LogOutput
-
-    LogOutput::LogOutput() {
-        static uint8_t givenIDs {0};
-
-        if(givenIDs < 0 || givenIDs > 200){
-            throw std::out_of_range{"Cannot be more than 200 LogOutputs"};
-        }
         ID = ++givenIDs;
     }
-    LogOutput::~LogOutput() {
+    LogOutput::~LogOutput(){
 
     }
-    uint8_t LogOutput::getID () const {
+
+    void LogOutput::setSettings(const LogSettings& setSettings){
+        settings = setSettings;
+    }
+    LogSettings LogOutput::getSettings() const {
+        return settings;
+    }
+    int LogOutput::getID() const {
         return ID;
     }
 
 
-    // MARK: Logger
-
-    Logger::Logger(LogSettingsPtr setLogSettings) : logSettings {setLogSettings} {
+    // Logger
+    Logger::Logger() {
 
     }
     Logger::~Logger(){
 
     }
-    void Logger::log(std::string setMsg, const Tags& setTag, std::source_location setLocation) const{
-
+    Logger& Logger::getInstance() {
+        static Logger instance;
+        return instance;
+    }
+    void Logger::log(const std::string& msg, const std::string& tag, const std::source_location& location) const {
         if(outputs.empty()){
+            std::puts("There are no log outputs.");
             return;
         }
 
-        // Gets Time
         const std::chrono::zoned_time time { std::chrono::current_zone(), std::chrono::system_clock::now() };
 
-        // For a log with no tags
-        if(setTag.empty()){
-            Log log{setMsg, "N/A", setLocation, time};
+        Log log {msg, tag, location, time};
 
-            // Iterate through LogOutputs and output the log
-            for(std::vector<std::shared_ptr<LogOutput>>::const_iterator it {outputs.cbegin()}; it != outputs.cend(); ++it){
-                it->get()->log(log, *logSettings);
-            }
-        }
-        else{
-            Log log{setMsg, setTag, setLocation, time};
-
-            // Iterate through LogOutputs and output the log
-            for(std::vector<std::shared_ptr<LogOutput>>::const_iterator it {outputs.cbegin()}; it != outputs.cend(); ++it){
-                it->get()->log(log, *logSettings);
-            }
-        }
+        for(const auto& [ID, outputPtr] : outputs)
+            outputPtr->log(log);
 
         return;
     }
-    bool Logger::addOutput (std::shared_ptr<LogOutput> output){
-        for(const auto& out : outputs){
+    bool Logger::addOutput(LogOutputPtr newOutput) {
+        if(outputs.contains(newOutput->getID()))
+            return false;
 
-            // Do not add if IDs are same
-            if(out->getID() == output->getID()){
-                return false;
-            }
-            else{
-                outputs.push_back(output);
-                return true;
-            }
-        }
+        return outputs.try_emplace(newOutput->getID(), newOutput).second;
+    }
+    bool Logger::contains(int ID) const {
+        return outputs.contains(ID);
+    }
+    bool Logger::removeOutput(int ID) {
+        auto iterator { outputs.find(ID) };
 
-        // If there are no outputs, just add the parameter
-        if(outputs.empty()){
-            outputs.push_back(output);
+        if(iterator != outputs.end()){
+            outputs.erase(iterator);
             return true;
         }
-        
+
         return false;
     }
-    bool Logger::removeOutput (uint8_t ID){
-        for(std::vector<std::shared_ptr<LogOutput>>::iterator it {outputs.begin()}; it != outputs.end();){
-            if (it->get()->getID() == ID){
-                it = outputs.erase(it);
-                return true;
-            }
-            else
-                ++it;
-        }
-        return false;
+    void Logger::setGlobalSettings(const LogSettings& setSettings){
+        settings = setSettings;
+
+        for(auto& [ID, outputPtr] : outputs)
+            outputPtr->setSettings(settings);
     }
-    LogSettingsPtr Logger::getLogSettings () {
-        return logSettings;
+    bool Logger::setOutputSettings(int ID, const LogSettings& setSettings){
+        if(!outputs.contains(ID))
+            return false;
+
+        outputs.at(ID)->setSettings(setSettings);
+
+        return true;
     }
+    LogSettings Logger::getGlobalSettings() const {
+        return settings;
+    }
+    LogSettings Logger::getOutputSettings(int ID) const{
+        if(!outputs.contains(ID))
+            throw std::out_of_range("A LogOutput with that ID is not active");
+
+        return outputs.at(ID)->getSettings();
+    }
+
 }
 
+// LAS namespace
+namespace LAS{
+    void log_info(const std::string& msg, const std::source_location& location) {
+        Logging::Logger::getInstance().log(msg, "INFO", location);
+    }
+    void log_warn(const std::string& msg, const std::source_location& location) {
+        Logging::Logger::getInstance().log(msg, "WARNING", location);
+    }
+    void log_error(const std::string& msg, const std::source_location& location) {
+        Logging::Logger::getInstance().log(msg, "ERROR", location);
+    }
+    void log_critical(const std::string& msg, const std::source_location& location) {
+        Logging::Logger::getInstance().log(msg, "CRITICAL", location);
+    }
+
+    bool Logging::addOutput(LogOutputPtr newOutput) {
+        return Logger::getInstance().addOutput(newOutput);
+    }
+    bool Logging::removeOutput(int ID) {
+        return Logger::getInstance().removeOutput(ID);
+    }
+    void Logging::setGlobalSettings(const LogSettings& setSettings){
+        return Logger::getInstance().setGlobalSettings(setSettings);
+    }
+    bool Logging::setOutputSettings(int ID, const LogSettings& setSettings){
+        return Logger::getInstance().setOutputSettings(ID, setSettings);
+    }
+    Logging::LogSettings Logging::getGlobalSettings() {
+        return Logger::getInstance().getGlobalSettings();
+    }
+    Logging::LogSettings Logging::getOutputSettings(int ID) {
+        return Logger::getInstance().getOutputSettings(ID);
+    }
+}
 

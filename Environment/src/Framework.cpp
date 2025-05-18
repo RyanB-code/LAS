@@ -2,13 +2,11 @@
 
 using namespace LAS;
 
-Framework::Framework (  LoggerPtr           setLogger,
-                        ModuleManagerPtr    setModuleManager,
+Framework::Framework (  ModuleManagerPtr    setModuleManager,
                         DisplayManagerPtr   setDisplayManager,
                         ShellPtr            setShell
                     )
                     :
-                        logger          {setLogger},
                         moduleManager   {setModuleManager},
                         displayManager  {setDisplayManager},
                         shell           {setShell}
@@ -32,10 +30,8 @@ bool Framework::setup(){
             return false;
     }
 
-    if(!logger){
-        if(!setupLogger(filePaths.logDir))
-            return false;
-    }
+    if(!setupLogger(filePaths.logDir))
+        return false;
 
     // --------------------------------------------------
     // After logging is setup, use logger for messages
@@ -47,6 +43,7 @@ bool Framework::setup(){
     }
     if(!setupInternalWindows())
         return false;
+
 
     // --------------------------------------------------
     // Up until setupInternalWindows() is called, all logs
@@ -70,7 +67,7 @@ bool Framework::setup(){
     
     if(!shell->readRCFile(filePaths.rcPath)){
         if(!ShellHelper::defaultInitializeRCFile(filePaths.rcPath)){
-            logger->log("Could not find or create new RC file at [" + filePaths.rcPath + "]", Tags{"ERROR", "SHELL"});
+            log_critical("Could not find or create new RC file at [" + filePaths.rcPath + "]");
             return false;
         }
     }
@@ -81,7 +78,7 @@ bool Framework::setup(){
     if(shell)
         shell->handleCommandQueue(false);
     else{
-        logger->log("There is no target shell for LAS", Tags{"ERROR", "SHELL"});
+        log_critical("There is no target shell for LAS");
         return false;
     }
 
@@ -138,9 +135,9 @@ void Framework::setupCommands(){
     using namespace LAS::Commands;
 
     // Instantiate commands
-    std::unique_ptr<Set>                            set         {std::make_unique<Set>                          (displayManager, moduleManager, logger, shell)};
+    std::unique_ptr<Set>                            set         {std::make_unique<Set>                          (displayManager, moduleManager, shell)};
     std::unique_ptr<Manual>                         manual      {std::make_unique<Manual>                       (shell) };
-    std::unique_ptr<Print>                          print       {std::make_unique<Print>                        (displayManager, moduleManager, logger)};
+    std::unique_ptr<Print>                          print       {std::make_unique<Print>                        (displayManager, moduleManager)};
     std::unique_ptr<Echo>                           echo        {std::make_unique<Echo>                         () };
     std::unique_ptr<ModuleControl>                  modulectl   {std::make_unique<ModuleControl>                (displayManager, moduleManager, shell) };
     std::unique_ptr<LAS::Commands::Information>     info        {std::make_unique<LAS::Commands::Information>   () };
@@ -152,47 +149,45 @@ void Framework::setupCommands(){
     if(!shell->addCommand(commandGroupName, std::move(set))){
         std::ostringstream msg;
         msg << "Command [" << set->getKey() << "] could not be added.\n";
-        logger->log(msg.str(), Tags{"Shell"});
+        log_error(msg.str());
     }
     if(!shell->addCommand(commandGroupName, std::move(manual))){
         std::ostringstream msg;
         msg << "Command [" << manual->getKey() << "] could not be added.\n";
-        logger->log(msg.str(), Tags{"Shell"});
+        log_error(msg.str());
     }
     if(!shell->addCommand(commandGroupName, std::move(print))){
         std::ostringstream msg;
         msg << "Command [" << print->getKey() << "] could not be added.\n";
-        logger->log(msg.str(), Tags{"Shell"});
+        log_error(msg.str());
     }
     if(!shell->addCommand(commandGroupName, std::move(echo))){
         std::ostringstream msg;
         msg << "Command [" << echo->getKey() << "] could not be added.\n";
-        logger->log(msg.str(), Tags{"Shell"});
+        log_error(msg.str());
     }
     if(!shell->addCommand(commandGroupName, std::move(modulectl))){
         std::ostringstream msg;
         msg << "Command [" << modulectl->getKey() << "] could not be added.\n";
-        logger->log(msg.str(), Tags{"Shell"});
+        log_error(msg.str());
     }
     if(!shell->addCommand(commandGroupName, std::move(info))){
         std::ostringstream msg;
         msg << "Command [" << info->getKey() << "] could not be added.\n";
-        logger->log(msg.str(), Tags{"Shell"});
+        log_error(msg.str());
     }
     if(!shell->addCommand(commandGroupName, std::move(reload))){
         std::ostringstream msg;
         msg << "Command [" << reload->getKey() << "] could not be added.\n";
-        logger->log(msg.str(), Tags{"Shell"});
+        log_error(msg.str());
     }
     if(!shell->addCommand(commandGroupName, std::move(displayctl))){
         std::ostringstream msg;
         msg << "Command [" << displayctl->getKey() << "] could not be added.\n";
-        logger->log(msg.str(), Tags{"Shell"});
+        log_error(msg.str());
     }
 }
 bool Framework::setupLogger(const std::string& logDir){
-    LogSettingsPtr  logSettings {new LogSettings{}};                            // Uses default settings values
-    logger = std::make_shared<Logger>(Logger{logSettings});                     // Sets local logger member variable
 
     LogToFile logToFile{};
     if(!logToFile.setPath(LAS::FrameworkSetup::createLogFile(logDir))){
@@ -201,79 +196,78 @@ bool Framework::setupLogger(const std::string& logDir){
     }
     
     // If all is good, add LogToFile to logger
-    if(!logger->addOutput(std::make_shared<LogToFile>(logToFile))){
+    if(!Logging::addOutput(std::make_shared<LogToFile>(logToFile))){
         std::cerr << "Could not add default LogToFile as an output for the logger\n";
         return false;
     }
 
     // Log version information
-    logger->log("LAS Environment version " + LAS::Environment::getVersion(), Tags{"INFO"});
-    logger->log("LAS SDK version " + LAS::SDK::getVersion(), Tags{"INFO"});
+    log_info("LAS Environment version " + LAS::Environment::getVersion());
+    log_info("LAS SDK version " + LAS::SDK::getVersion());
 
-    logger->log("Logger setup successful", Tags{"OK"});
+    log_info("Logger setup successful");
     return true;
 }
 bool Framework::setupModuleManager(const std::string& moduleLoadDir, const std::string& moduleFilesDir){
-    moduleManager = std::make_shared<ModuleManager>( ModuleManager{logger});
+    moduleManager = std::make_shared<ModuleManager>( ModuleManager{ });
 
     if(!moduleManager->setModuleLoadDirectory(moduleLoadDir)){
-        logger->log("Failed to set module load directory", Tags{"FATAL", "Module Manager"});
+        log_critical("Failed to set module load directory");
         return false;
     }
     if(!moduleManager->setModuleFilesDirectory(moduleFilesDir)){
-        logger->log("Failed to set module files directory", Tags{"FATAL", "Module Manager"});
+        log_critical("Failed to set module files directory");
         return false;
     }
 
-    logger->log("Module Manager setup successful", Tags{"OK"});
+    log_info("Module Manager setup successful");
     return true;
 }
 bool Framework::setupDisplay(const std::string& imGuiIniPath){
-    displayManager = std::make_shared<DisplayManager>(logger);
+    displayManager = std::make_shared<DisplayManager>();
 
     if(!displayManager->init(imGuiIniPath)){
-        logger->log("Error setting up necessary display libraries", Tags{"ERROR", "Display Manager"});
+        log_critical("Error setting up necessary display libraries");
         return false;
     }
 
-    logger->log("Display setup successful", Tags{"OK"});
+    log_info("Display setup successful");
 
     return true;
 }
 bool Framework::setupInternalWindows(){
 
     // Setup log viewer window
-    LogWindow   logWindow{logger->getLogSettings()};
-    LogToWindow logToWindow{std::make_shared<LogWindow>(logWindow)};
+    LogToWindow logToWindow{ };
+    logToWindow.setSettings(Logging::getGlobalSettings());
 
-    logger->addOutput(std::make_shared<LogToWindow>(logToWindow));
+    Logging::addOutput(std::make_shared<LogToWindow>(logToWindow));
 
     if(!displayManager->addWindow(logToWindow.getWindow())){
-        logger->log("Log viewer could not be added to window manager", Tags{"ERROR", "Display Manager"});
+        log_error("Log viewer could not be added to window manager");
         return false;
     }
-    logger->log("Log viewer setup successful", Tags{"OK"});
-
+    log_info("Log viewer setup successful");
 
     // Setup console window
     if(!displayManager->addWindow(shell->getWindow())){
-        logger->log("Console could not be added to window manager", Tags{"ERROR", "Display Manager"});
+        log_error("Console could not be added to window manager");
         return false;
     }
     if(!shell->addOutput(shell->getWindow())){
-        logger->log("Console Window's Shell Output could not be added to Shell Outputs", Tags{"ERROR", "Shell"});
+        log_error("Console Window's Shell Output could not be added to Shell Outputs");
         return false;
     }
 
 
-    logger->log("Console setup successful", Tags{"OK"});
+    log_info("Console setup successful");
 
     return true;
 }
 // MARK: Load Functions
 bool Framework::loadAllModules(const std::string& moduleLibDirectory, const std::string& moduleFilesDirectory) {
     if(!ImGui::GetCurrentContext()){
-        logger->log("No ImGuiContext found", Tags{"ERROR", "Framework"});
+        log_critical("No ImGuiContext found");
         return false;
     }
 
@@ -288,13 +282,13 @@ bool Framework::loadAllModules(const std::string& moduleLibDirectory, const std:
             for(const auto& s : modulesThatFailedToLoad){
                 msg << "[" << s << "] ";
             }
-            logger->log(msg.str(), Tags{"Non Fatal", "Module Manager"});
+            log_warn(msg.str());
         }
         else
-            logger->log("All Modules loaded successfully", Tags{"OK"});
+            log_info("All Modules loaded successfully");
     }
     catch(std::filesystem::filesystem_error& e){
-        logger->log("Could not find module directory [" + std::string{e.path1()} + "] to load Modules", Tags{"ERROR", "Module Manager", "Filesystem Error"});
+        log_critical("Could not find module directory [" + std::string{e.path1()} + "] to load Modules");
         return false;
     }
 
@@ -310,17 +304,17 @@ void Framework::loadAllModuleWindows(){
     if(couldntLoad > 0){
         std::ostringstream msg;
         msg << "There were [" << couldntLoad << "] windows that could not be loaded from modules";
-        logger->log(msg.str(), Tags{"Non Fatal", "Framework"});
+        log_warn(msg.str());
     }
     else
-        logger->log("All windows successfully loaded from all modules", Tags{"OK"});
+        log_info("All windows successfully loaded from all modules");
 }
 bool Framework::loadModuleWindow(const std::string& name){
     if(!moduleManager->containsModule(name))
         return false;
     
     if(!displayManager->addWindow(moduleManager->getModule(name)->getWindow())){
-        logger->log("Failed to load window for module [" + name +"]. Module ID or window name collision", Tags{"ERROR", "Display Manager", "Module Manager"});
+        log_error("Failed to load window for module [" + name +"]. Module ID or window name collision");
         return false;
     }
     
@@ -337,11 +331,11 @@ void Framework::loadAllModuleCommands(){
         if(!commandsNotLoaded.empty()){
             std::ostringstream msg;
             msg << "[" << commandsNotLoaded.size() << "] commands could not be loaded from Module [" << name << "]";
-            logger->log(msg.str(), Tags{"Framework"});
+            log_warn(msg.str());
             commandsNotLoaded.clear();
         }
         else
-            logger->log("All commands loaded successfully from module [" + name + "]", Tags {"OK"});
+            log_info("All commands loaded successfully from module [" + name + "]");
     }
 }
 bool Framework::loadModuleCommands(const std::string& moduleName, StringVector& commandsNotLoaded) {

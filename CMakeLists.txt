@@ -7,8 +7,8 @@ project(LAS VERSION 1.0.0)
 
 set (LAS_SDK_NAME		    "LAS-SDK")
 set (LAS_SDK_VERSION_MAJOR 	"0")
-set (LAS_SDK_VERSION_MINOR 	"2")
-set (LAS_SDK_VERSION_PATCH 	"1")
+set (LAS_SDK_VERSION_MINOR 	"3")
+set (LAS_SDK_VERSION_PATCH 	"0")
 
 set (LAS_ENV_NAME	        "LAS")
 set (LAS_ENV_VERSION_MAJOR 	"0")

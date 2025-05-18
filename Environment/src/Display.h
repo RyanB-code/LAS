@@ -33,7 +33,7 @@ namespace LAS{
     };
     class DisplayManager{
     public:
-        explicit DisplayManager(const LoggerPtr& setLogger);
+        explicit DisplayManager();
         ~DisplayManager();
 
         bool init(const std::string& imGuiIniPath);
@@ -61,7 +61,6 @@ namespace LAS{
         bool setWindowShownStatus   (uint8_t ID, bool shown) const;
 
     private:
-        const LoggerPtr&        logger;
         std::string             iniPath;
 
         std::map<uint8_t, WindowPtr> windows;

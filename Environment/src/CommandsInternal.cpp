@@ -31,8 +31,8 @@ std::pair<int, std::ostringstream> Manual::execute(const StringVector&){
 // MARK: Set
 Set::Set(   std::weak_ptr<DisplayManager> setDM,
             std::weak_ptr<ModuleManager>  setMM,
-            std::weak_ptr<Logger>         setLogger,
-            std::weak_ptr<Shell>          setShell ) 
+            std::weak_ptr<Shell>          setShell 
+        ) 
         :   Command {"set",     "<setting> <value>\n"
                                 "log-tag-text-box-size <int>\tSets the text box size for log tags\n"
                                 "log-msg-text-box-size <int>\tSets the text box size for log messages\n"
@@ -44,7 +44,6 @@ Set::Set(   std::weak_ptr<DisplayManager> setDM,
                     },
             displayManager  {setDM},
             moduleManager   {setMM},
-            logger          {setLogger},
             shell           {setShell}
 {
 
@@ -55,10 +54,9 @@ Set::~Set(){
 std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
     std::shared_ptr<DisplayManager> tempDisplayManager { displayManager.lock()};
     std::shared_ptr<ModuleManager>  tempModuleManager  { moduleManager.lock()};
-    std::shared_ptr<Logger>         tempLogger         { logger.lock()};
     std::shared_ptr<Shell>          tempShell          { shell.lock() };
 
-    if(!tempDisplayManager|| !tempModuleManager || !tempLogger)
+    if(!tempDisplayManager|| !tempModuleManager)
         return pair(-1, "\tCould not access necessary items\n");
     
     std::pair<int, std::ostringstream> returnBuf;
@@ -78,8 +76,9 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
             if(size > 200 )
                 return pairErrorWithMessage("Size cannot be greater than 200");
             
-            auto settings = tempLogger->getLogSettings();
-            settings->textBoxWidth_tag = size;
+            auto settings = Logging::getGlobalSettings();
+            settings.textBoxWidth_tag = size;
+            Logging::setGlobalSettings(settings);
             return pairNormal();
         }
         catch(std::exception& e){
@@ -96,8 +95,9 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
             if(size > 255 )
                 return pairErrorWithMessage("Size cannot be greater than 255");
             
-            auto settings = tempLogger->getLogSettings();
-            settings->textBoxWidth_msg = size;
+            auto settings = Logging::getGlobalSettings();
+            settings.textBoxWidth_msg = size;
+            Logging::setGlobalSettings(settings);
             return pairNormal();
         }
         catch(std::exception& e){
@@ -107,13 +107,15 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
     }
     else if(args[0] == "show-log-time"){
         if(stringValueTrue(args[1])){
-            auto settings = tempLogger->getLogSettings();
-            settings->showTime = true;
+            auto settings = Logging::getGlobalSettings();
+            settings.showTime = true;
+            Logging::setGlobalSettings(settings);
             return pairNormal();
         }
         else if(stringValueFalse(args[1])){
-            auto settings = tempLogger->getLogSettings();
-            settings->showTime = false;
+            auto settings = Logging::getGlobalSettings();
+            settings.showTime = false;
+            Logging::setGlobalSettings(settings);
             return pairNormal();
         }
         else
@@ -121,13 +123,15 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
     }
     else if(args[0] == "show-log-tag"){
         if(stringValueTrue(args[1])){
-            auto settings = tempLogger->getLogSettings();
-            settings->showTags = true;
+            auto settings = Logging::getGlobalSettings();
+            settings.showTags = true;
+            Logging::setGlobalSettings(settings);
             return pairNormal();
         }
         else if(stringValueFalse(args[1])){
-            auto settings = tempLogger->getLogSettings();
-            settings->showTags = false;
+            auto settings = Logging::getGlobalSettings();
+            settings.showTags = false;
+            Logging::setGlobalSettings(settings);
             return pairNormal();
         }
         else
@@ -135,13 +139,15 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
     }
     else if(args[0] == "show-log-msg"){
         if(stringValueTrue(args[1])){
-            auto settings = tempLogger->getLogSettings();
-            settings->showMsg = true;
+            auto settings = Logging::getGlobalSettings();
+            settings.showMsg = true;
+            Logging::setGlobalSettings(settings);
             return pairNormal();
         }
         else if(stringValueFalse(args[1])){
-            auto settings = tempLogger->getLogSettings();
-            settings->showMsg = false;
+            auto settings = Logging::getGlobalSettings();
+            settings.showMsg = false;
+            Logging::setGlobalSettings(settings);
             return pairNormal();
         }
         else
@@ -149,13 +155,15 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
     }
     else if(args[0] == "show-log-location"){
         if(stringValueTrue(args[1])){
-            auto settings = tempLogger->getLogSettings();
-            settings->showLocation = true;
+            auto settings = Logging::getGlobalSettings();
+            settings.showLocation = false;
+            Logging::setGlobalSettings(settings);
             return pairNormal();
         }
         else if(stringValueFalse(args[1])){
-            auto settings = tempLogger->getLogSettings();
-            settings->showLocation = false;
+            auto settings = Logging::getGlobalSettings();
+            settings.showLocation = false;
+            Logging::setGlobalSettings(settings);
             return pairNormal();
         }
         else
@@ -174,8 +182,8 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
 
 // MARK: Print
 Print::Print(   std::weak_ptr<DisplayManager> setDM,
-                std::weak_ptr<ModuleManager>  setMM,
-                std::weak_ptr<Logger>         setLogger) 
+                std::weak_ptr<ModuleManager>  setMM
+            )
         :   Command {"print",   "Prints information\n"
                                 "<arg> [option]\n"
                                 "\t--settings [option]\t Show all settings\n"
@@ -184,8 +192,7 @@ Print::Print(   std::weak_ptr<DisplayManager> setDM,
                                 "\t             -d    \t Show display settings\n"
                     },
             displayManager  {setDM},
-            moduleManager   {setMM},
-            logger          {setLogger}
+            moduleManager   {setMM}
 {
 
 }
@@ -195,9 +202,8 @@ Print::~Print(){
 std::pair<int, std::ostringstream> Print::execute(const StringVector& args) {
     std::shared_ptr<DisplayManager> tempDisplayManager { displayManager.lock()};
     std::shared_ptr<ModuleManager>  tempModuleManager  { moduleManager.lock()};
-    std::shared_ptr<Logger>         tempLogger         { logger.lock()};
 
-    if(!tempDisplayManager|| !tempModuleManager || !tempLogger)
+    if(!tempDisplayManager|| !tempModuleManager)
         return pairErrorWithMessage("\tCould not access necessary items\n");
     
     std::ostringstream os;
@@ -238,14 +244,14 @@ std::pair<int, std::ostringstream> Print::execute(const StringVector& args) {
 
 
     if(addLogSettings){
-        const LogSettingsPtr settings {tempLogger->getLogSettings()};
+        LogSettings settings {Logging::getGlobalSettings()};
         os <<   "Log Settings:\n"
-                "\tShow Time:       \t"         << std::boolalpha << settings->showTime <<  "\n"
-                "\tShow Tags:       \t"         << std::boolalpha << settings->showTags <<  "\n"
-                "\tShow Message:    \t"         << std::boolalpha << settings->showMsg <<  "\n"
-                "\tShow Location:   \t"         << std::boolalpha << settings->showLocation <<  "\n"
-                "\tTag Text Box Size:     "     << (int)settings->textBoxWidth_tag <<  "\n"
-                "\tMessage Text Box Size: "     << (int)settings->textBoxWidth_msg <<  "\n";
+                "\tShow Time:       \t"         << std::boolalpha << settings.showTime <<  "\n"
+                "\tShow Tags:       \t"         << std::boolalpha << settings.showTags <<  "\n"
+                "\tShow Message:    \t"         << std::boolalpha << settings.showMsg <<  "\n"
+                "\tShow Location:   \t"         << std::boolalpha << settings.showLocation <<  "\n"
+                "\tTag Text Box Size:     "     << (int)settings.textBoxWidth_tag <<  "\n"
+                "\tMessage Text Box Size: "     << (int)settings.textBoxWidth_msg <<  "\n";
     }
     if(addModuleSettings){
         os <<   "Module Manager Settings:\n"  

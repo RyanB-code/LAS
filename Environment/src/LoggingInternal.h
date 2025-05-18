@@ -14,14 +14,14 @@ namespace LAS::Logging{
         std::string getPath() const;
         bool setPath(std::string setPath);      // Sets the path to the file, will not create file
 
-        void log (const Log& log, const LogSettings& logSettings) const override;
+        void log (const Log& log) const override;
     private:
         std::string path;
     };
 
     class LogWindow : public Windowing::Window {
     public:
-        explicit LogWindow(const LogSettingsPtr&);
+        explicit LogWindow(LogSettings& settings);
         ~LogWindow();
 
         void draw() override;
@@ -30,15 +30,15 @@ namespace LAS::Logging{
 
     private:
         std::vector<Log> logHistory;
-        LogSettingsPtr logSettings;
+        LogSettings& settings;
     };
 
     class LogToWindow final : public LogOutput {
     public:
-        explicit LogToWindow(std::shared_ptr<LogWindow>);
+        explicit LogToWindow();
         ~LogToWindow();
 
-        void log(const Log&, const LogSettings&) const override;
+        void log(const Log& log) const override;
         std::shared_ptr<LogWindow> getWindow();
 
     private:

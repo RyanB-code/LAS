@@ -42,8 +42,7 @@ namespace LAS{
 
     class Framework final{
     public:
-        Framework(  LoggerPtr           setLogger           =nullptr,
-                    ModuleManagerPtr    setModuleManager    =nullptr,
+        Framework(  ModuleManagerPtr    setModuleManager    =nullptr,
                     DisplayManagerPtr   setDisplayManager   =nullptr,
                     ShellPtr            setLasShell         =nullptr
                 );
@@ -53,7 +52,6 @@ namespace LAS{
         void run    ();
 
     private:
-        LoggerPtr           logger;
         ModuleManagerPtr    moduleManager;
         DisplayManagerPtr   displayManager;
         ShellPtr            shell;

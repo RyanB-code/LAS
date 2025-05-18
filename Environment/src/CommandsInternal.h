@@ -32,7 +32,6 @@ namespace LAS::Commands{
     public:
         Set(    std::weak_ptr<DisplayManager>,
                 std::weak_ptr<ModuleManager>,
-                std::weak_ptr<Logger>,
                 std::weak_ptr<Shell>  
         );
         ~Set();
@@ -41,22 +40,19 @@ namespace LAS::Commands{
     private:
         const std::weak_ptr<DisplayManager> displayManager;
         const std::weak_ptr<ModuleManager>  moduleManager;
-        const std::weak_ptr<Logger>         logger;
         const std::weak_ptr<Shell>          shell;
     };
 
     class Print : public Command {
     public:
         Print ( std::weak_ptr<DisplayManager>,
-                std::weak_ptr<ModuleManager>,
-                std::weak_ptr<Logger> 
+                std::weak_ptr<ModuleManager>
             );
         ~Print();
         std::pair<int, std::ostringstream> execute(const StringVector&) override;
     private:
         const std::weak_ptr<DisplayManager> displayManager;
         const std::weak_ptr<ModuleManager>  moduleManager;
-        const std::weak_ptr<Logger>         logger;
     };
 
     class Echo : public Command {

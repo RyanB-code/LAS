@@ -2,11 +2,9 @@
 
 using namespace LAS;
 
-Module::Module( const LoggerPtr&             setLogger,
-                LAS::Modules::LoadModuleInfo            setLoadModuleInfo,
+Module::Module( LAS::Modules::LoadModuleInfo            setLoadModuleInfo,
                 LAS::Modules::LoadEnvironmentInfo       setLoadEnvironmentInfo,
                 LAS::Modules::VoidNoParams              setCleanup) :
-        logger              {setLogger},
         loadModuleInfoPtr   {setLoadModuleInfo},
         loadEnvInfoPtr      {setLoadEnvironmentInfo},
         cleanupPtr          {setCleanup}

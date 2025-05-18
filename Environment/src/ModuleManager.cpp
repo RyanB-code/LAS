@@ -4,9 +4,7 @@ using namespace LAS;
 
 
 // MARK: MODULE MANAGER
-ModuleManager::ModuleManager(const LoggerPtr& setLogger) :
-    logger {setLogger}
-{
+ModuleManager::ModuleManager() {
 
 }
 ModuleManager::~ModuleManager(){
@@ -70,22 +68,22 @@ bool ModuleManager::loadModule  (std::string parentDirectory, ImGuiContext& cont
 
     // Reject if not named correctly
     if(!fileName.ends_with(moduleNameSuffix)){
-        logger->log("The file [" + fileName + "] was ignored for module loading. Improper name format.", Tags{"Non fatal", "Module Manager"});
+        log_info("The file [" + fileName + "] was ignored for module loading. Improper name format.");
         return false;
     }
     
     ModulePtr moduleBuffer;
     try{
-        moduleBuffer = LAS::Modules::bindFiletoModule(fileName, logger, context);
+        moduleBuffer = LAS::Modules::bindFiletoModule(fileName, context);
     }
     catch(std::exception& e){
-        logger->log(std::string{e.what()} + " from file [" + fileName + "]", Tags{"Non fatal", "Module Manager"});
+        log_warn(std::string{e.what()} + " from file [" + fileName + ".");
         return false;
     }
 
     // This writes library information to the buffer
     if(!moduleBuffer->loadModuleInfo()){
-        logger->log("loadModuleInfo() returned false from Module [" + moduleBuffer->getTitle() + "]. Loading procedure terminated", Tags{"Non fatal", "Module Manager"});
+        log_error("loadModuleInfo() returned false from Module [" + moduleBuffer->getTitle() + "]. Loading procedure terminated");
         return false;
     }
 
@@ -96,35 +94,35 @@ bool ModuleManager::loadModule  (std::string parentDirectory, ImGuiContext& cont
             // Success
             break;
          case 1:
-            logger->log("Module buffer does not exist. From file [" + fileName + "]", Tags{"ERROR", "Module Manager"});
+            log_error("Module buffer does not exist. From file [" + fileName + "]");
             return false;
             break;
         case 2:
-            logger->log("Module title empty from file [" + fileName + "]", Tags{"ERROR", "Module Manager"});
+            log_error("Module title empty from file [" + fileName + "]");
             return false;
             break;
         case 3:
-            logger->log("Command group is empty from Module [" + moduleBuffer->getTitle() + "]", Tags{"ERROR", "Module Manager"});
+            log_error("Command group is empty from Module [" + moduleBuffer->getTitle() + "]");
             return false;
             break;
         case 4:
-            logger->log("Command group name rejected from Module [" + moduleBuffer->getTitle() + "]", Tags{"ERROR", "Module Manager"});
+            log_error("Command group name rejected from Module [" + moduleBuffer->getTitle() + "]");
             return false;
             break;
         case 5:
         case 6:
-            logger->log("SDK version mismatch. Issues may occur. Module [" + moduleBuffer->getTitle() + "] made with SDK version " + versionToStr(moduleBuffer->getSDKVersion()) + "."
-                        "Environment SDK is version  " + LAS::SDK::getVersion() + "", Tags{"WARNING", "Module Manager"});
+            log_warn("SDK version mismatch. Issues may occur. Module [" + moduleBuffer->getTitle() + "] made with SDK version " + versionToStr(moduleBuffer->getSDKVersion()) + "."
+                        "Environment SDK is version  " + LAS::SDK::getVersion());
             break;
         case 7:
             fatalMsg    << "Fatal version mismatch. Environment SDK is " << LAS::SDK::getVersion() 
                         << ". Module [" << moduleBuffer->getTitle() 
                         << "] SDK version is " << versionToStr(moduleBuffer->getSDKVersion());
-            logger->log( fatalMsg.str(), Tags{"ERROR", "Module Manager"});
+            log_error( fatalMsg.str());
             return false;
             break;
         default:
-            logger->log("Failure to verify information for file [" + fileName + "]", Tags{"ERROR", "Module Manager"});
+            log_error("Failure to verify information for file [" + fileName + "]");
             return false;
             break;
     }
@@ -145,31 +143,31 @@ bool ModuleManager::loadModule  (std::string parentDirectory, ImGuiContext& cont
 
     // Check directories can be made
     if(!LAS::ensureDirectory(moduleFilesDirectory)){
-        logger->log("Could not find or create directory [" + moduleFilesDirectory + "] for Module [" + moduleBuffer->getTitle() + "]", Tags{"ERROR", "Module Manager"});
+        log_error("Could not find or create directory [" + moduleFilesDirectory + "] for Module [" + moduleBuffer->getTitle() + "]");
         return false;
     }
     if(!LAS::ensureFile(moduleRCFilePath)){
-        logger->log("Could not find or create file [" + moduleRCFilePath + "] for Module [" + moduleBuffer->getTitle() + "]", Tags{"ERROR", "Module Manager"});
+        log_error("Could not find or create file [" + moduleRCFilePath + "] for Module [" + moduleBuffer->getTitle() + "]");
         return false;
     }
 
-    logger->log("Checks passed for Module [" + moduleBuffer->getTitle() + "] version " + versionToStr(moduleBuffer->getModuleVersion()), Tags{"INFO", "Module Manager"});
-    logger->log("Setting up module...", Tags{"INFO", "Module Manager"});
+    log_info("Checks passed for Module [" + moduleBuffer->getTitle() + "] version " + versionToStr(moduleBuffer->getModuleVersion()));
+    log_info("Setting up module...");
 
 
     // Pass environment info only if all files could be created
-    EnvironmentInfo envInfo {moduleFilesDirectory, moduleRCFilePath, context, logger};
+    EnvironmentInfo envInfo {moduleFilesDirectory, moduleRCFilePath, context};
     if(!moduleBuffer->loadEnvInfo(envInfo)){
-        logger->log("Failed loading environment info from Module [" + moduleBuffer->getTitle() + "]", Tags{"ERROR", "Module Manager"});
+        log_error("Failed loading environment info from Module [" + moduleBuffer->getTitle() + "]");
         return false;
     }
 
     if(!addModule(moduleBuffer)){
-        logger->log("Could not add module [" + moduleBuffer->getTitle() + "]", Tags{"ERROR", "Module Manager"});
+        log_error("Could not add module [" + moduleBuffer->getTitle() + "]");
         return false;
     }
     
-    logger->log("Setup complete for Module [" + moduleBuffer->getTitle() + "]", Tags{"INFO", "Module Manager"});
+    log_info("Setup complete for Module [" + moduleBuffer->getTitle() + "]");
 
     return true;
 }
@@ -234,7 +232,7 @@ void ModuleManager::clearNonUtilityModules(){
 // MARK: LASCore Namespace 
 namespace LAS::Modules{
 
-    ModulePtr bindFiletoModule(const std::string& path, const LoggerPtr& logger, const ImGuiContext& context){
+    ModulePtr bindFiletoModule(const std::string& path, const ImGuiContext& context){
         void* lib {dlopen(path.c_str(), RTLD_LAZY)};    // Map the shared object file
 
         if(!lib)
@@ -250,7 +248,7 @@ namespace LAS::Modules{
             throw std::runtime_error{"Failed to find necessary function signatures"};     // Do not continue if library could not be opened
 
 
-        return std::make_shared<Module>(logger, loadModuleInfo, loadEnvInfo, cleanup);
+        return std::make_shared<Module>(loadModuleInfo, loadEnvInfo, cleanup);
     }
     int verifyModuleInformation(const ModulePtr& module) {
         if(!module)

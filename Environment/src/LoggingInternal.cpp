@@ -20,34 +20,24 @@ bool LogToFile::setPath(std::string setPath){
 std::string LogToFile::getPath() const {
     return path;
 }
-void LogToFile::log(const Log& log, const LogSettings& logSettings) const {
+void LogToFile::log(const Log& log) const {
     using namespace LAS::Logging;
 
     std::ostringstream os{};    // Buffer to store formatted log
 
-    if (logSettings.showTime)
-        os << '[' << printTime(log.getTimestamp()) << "]  ";
+    if (settings.showTime)
+        os << '[' << printTime(log.timestamp) << "]  ";
 
-    if (logSettings.showTags) {
-        // Iterate through tags for the log and display each tag
-        for (const std::string& t : log.getTags()) {
-            os << '[';
-            
-            // No Centering if too long
-            if (t.size() >= logSettings.textBoxWidth_tag)
-                os << t;
-
-            else {
-                os << std::format("{:^{}}", t, logSettings.textBoxWidth_tag);
-            }
-            os << "]  ";           
-        }
+    if (settings.showTags) {
+        os << '[';
+        os << std::format("{:^{}}", log.tag, settings.textBoxWidth_tag);
+        os << "]  ";           
     }
-    if (logSettings.showMsg) {
-        os << std::format("{:<{}}  ", log.getMsg(), logSettings.textBoxWidth_msg);
+    if (settings.showMsg) {
+        os << std::format("{:<{}}  ", log.msg, settings.textBoxWidth_msg);
     }
-    if (logSettings.showLocation)
-        os << printLocation(log.getLocation());
+    if (settings.showLocation)
+        os << printLocation(log.location);
 
     // Indent
     os << std::endl;
@@ -66,17 +56,14 @@ void LogToFile::log(const Log& log, const LogSettings& logSettings) const {
 }
 
 // MARK: Log Window
-LogWindow::LogWindow(const LogSettingsPtr& setLogSettings) 
-    :       Windowing::Window{"Log Viewer", Windowing::MenuOption::UTILITY}, 
-            logSettings {setLogSettings}
-{
+LogWindow::LogWindow(LogSettings& setSettings) : Windowing::Window{"Log Viewer", Windowing::MenuOption::UTILITY}, settings {setSettings} {
 
 }
 LogWindow::~LogWindow() {
 
 }
 void LogWindow::addLog(const Log& log){
-    Log logCopy {log.getMsg(), log.getTags(), log.getLocation(), log.getTimestamp()};
+    Log logCopy {log.msg, log.tag, log.location, log.timestamp};
     logHistory.push_back(logCopy);
 }
 
@@ -90,39 +77,39 @@ void LogWindow::draw() {
     ImVec2 windowSize {ImGui::GetWindowSize()};
 
     static bool autoScroll      {true};
-    static int  tagSizeBuffer   {logSettings->textBoxWidth_tag};
-    static int  msgSizeBuffer   {logSettings->textBoxWidth_msg};
+    static int  tagSizeBuffer   {settings.textBoxWidth_tag};
+    static int  msgSizeBuffer   {settings.textBoxWidth_msg};
 
     ImGui::BeginChild("Options", ImVec2(windowSize.x-20, 85), ImGuiChildFlags_Border);
-    ImGui::Checkbox("Show Time",            &logSettings->showTime); 
+    ImGui::Checkbox("Show Time",            &settings.showTime); 
     ImGui::SameLine();
-    ImGui::Checkbox("Show Tags",            &logSettings->showTags);
+    ImGui::Checkbox("Show Tags",            &settings.showTags);
     ImGui::SameLine();
-    ImGui::Checkbox("Show Message",         &logSettings->showMsg);
+    ImGui::Checkbox("Show Message",         &settings.showMsg);
     ImGui::SameLine();
-    ImGui::Checkbox("Show Code Location",   &logSettings->showLocation);
+    ImGui::Checkbox("Show Code Location",   &settings.showLocation);
     ImGui::SameLine();
     ImGui::Checkbox("Auto Scroll",          &autoScroll);
 
 
     if(ImGui::InputInt("Tag Text Box Size",     &tagSizeBuffer, 1, 5, ImGuiInputTextFlags_EnterReturnsTrue))
-        logSettings->textBoxWidth_tag = tagSizeBuffer;
+        settings.textBoxWidth_tag = tagSizeBuffer;
     if(ImGui::InputInt("Message Text Box Size", &msgSizeBuffer, 1, 5, ImGuiInputTextFlags_EnterReturnsTrue))
-        logSettings->textBoxWidth_msg = msgSizeBuffer;
+        settings.textBoxWidth_msg = msgSizeBuffer;
     ImGui::EndChild();
 
 
     // Ensure sizes are not too small
     if(tagSizeBuffer >= 5)
-        logSettings->textBoxWidth_tag = tagSizeBuffer;
+        settings.textBoxWidth_tag = tagSizeBuffer;
     else{
-        logSettings->textBoxWidth_tag = 5;
+        settings.textBoxWidth_tag = 5;
         tagSizeBuffer = 5;
     }
     if(msgSizeBuffer >= 20)
-        logSettings->textBoxWidth_msg = msgSizeBuffer;
+        settings.textBoxWidth_msg = msgSizeBuffer;
     else{
-        logSettings->textBoxWidth_msg = 20;
+        settings.textBoxWidth_msg = 20;
         msgSizeBuffer = 20;
     }
 
@@ -133,32 +120,24 @@ void LogWindow::draw() {
         using namespace LAS::Logging;
         std::ostringstream os{};    // Buffer to store formatted log
 
-        if (logSettings->showTime)
-            os << '[' << printTime(log.getTimestamp()) << "]  ";
+        if (settings.showTime)
+            os << '[' << printTime(log.timestamp) << "]  ";
 
-        if (logSettings->showTags) {
-            // Iterate through tags for the log and display each tag
-            for (const std::string& tag : log.getTags()) {
-                    os << '[';
-        
-                // No Centering if too long
-                if (tag.size() >= logSettings->textBoxWidth_tag)
-                    os << tag;
-                else 
-                    os << std::format("{:^{}}", tag, logSettings->textBoxWidth_tag);
-
-                os << "] ";       
-            }
+        if (settings.showTags) {
+            os << '[';
+            os << std::format("{:^{}}", log.tag, settings.textBoxWidth_tag);
+            os << "] ";       
+     
             os << " ";
         }
-        if (logSettings->showMsg){
-            if(log.getMsg().size() > logSettings->textBoxWidth_msg)
-                os << std::format("{:^{}}...  ", log.getMsg().substr(0, logSettings->textBoxWidth_msg-3), logSettings->textBoxWidth_msg-3);
+        if (settings.showMsg){
+            if(log.msg.size() > settings.textBoxWidth_msg)
+                os << std::format("{:^{}}...  ", log.msg.substr(0, settings.textBoxWidth_msg-3), settings.textBoxWidth_msg-3);
             else
-                os << std::format("{:<{}}  ", log.getMsg().substr(0, logSettings->textBoxWidth_msg), logSettings->textBoxWidth_msg);
+                os << std::format("{:<{}}  ", log.msg.substr(0, settings.textBoxWidth_msg), settings.textBoxWidth_msg);
         }
-        if (logSettings->showLocation)
-            os << printLocation(log.getLocation());
+        if (settings.showLocation)
+            os << printLocation(log.location);
 
         
         ImGui::TextUnformatted(os.str().c_str());
@@ -174,15 +153,15 @@ void LogWindow::draw() {
 
 
 //MARK: Log To Window
-LogToWindow::LogToWindow(std::shared_ptr<LogWindow> setWindow)
-    :   window{setWindow}
+LogToWindow::LogToWindow()
+    : window{std::make_shared<LogWindow>(LogWindow{settings})}
 {
 
 }
 LogToWindow::~LogToWindow(){
 
 }
-void LogToWindow::log(const Log& log, const LogSettings& logSettings) const {
+void LogToWindow::log(const Log& log) const {
     window->addLog(log);
     return;
 }

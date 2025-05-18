@@ -27,10 +27,10 @@ namespace LAS{
 
     class Module{
     public:
-        explicit Module( const LoggerPtr&               setLogger,
-                LAS::Modules::LoadModuleInfo            setLoadModuleInfo,
-                LAS::Modules::LoadEnvironmentInfo       setLoadEnvironmentInfo,
-                LAS::Modules::VoidNoParams              setCleanup);
+        explicit Module(    LAS::Modules::LoadModuleInfo            setLoadModuleInfo,
+                            LAS::Modules::LoadEnvironmentInfo       setLoadEnvironmentInfo,
+                            LAS::Modules::VoidNoParams              setCleanup
+                        );
         ~Module();
 
         bool    setDirectory    (std::string directory);
@@ -55,8 +55,6 @@ namespace LAS{
 
         std::string directory;
         std::string rcFilePath;
-
-        const LoggerPtr& logger;
 
         LAS::Modules::LoadModuleInfo        loadModuleInfoPtr   {};
         LAS::Modules::LoadEnvironmentInfo   loadEnvInfoPtr      {};

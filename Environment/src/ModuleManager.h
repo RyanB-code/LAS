@@ -21,7 +21,7 @@ namespace LAS{
 
     class ModuleManager final {
     public:
-        explicit ModuleManager(const LoggerPtr& setLogger);
+        explicit ModuleManager();
         ~ModuleManager();
 
         bool addModule      (const ModulePtr& module);
@@ -45,7 +45,6 @@ namespace LAS{
 
     private:
         std::unordered_map<std::string, ModulePtr> modules{};
-        const LoggerPtr& logger;
 
         std::string moduleLoadDirectory;
         std::string moduleFilesDirectory;
@@ -55,7 +54,7 @@ namespace LAS{
 
     using ModuleManagerPtr  = std::shared_ptr<ModuleManager>;
     namespace Modules{
-        ModulePtr   bindFiletoModule        (const std::string& path, const LoggerPtr& logger, const ImGuiContext& context);
+        ModulePtr   bindFiletoModule        (const std::string& path, const ImGuiContext& context);
         bool        ensureModuleFiles       (std::string parentDirectory, std::string moduleTitle);
         int         compareVersions         (const Version& base, const Version& compare);      // 0 = same major and minor, 1 = compare minor is older, 2 = compare minor is newer,  3 = fatal mismatch
         

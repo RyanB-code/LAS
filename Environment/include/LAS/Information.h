@@ -27,7 +27,6 @@ namespace LAS::Information{
         std::string     rcFilePath  {};
         
         ImGuiContext&       context;
-        Logging::LoggerPtr  logger;
     };
 
     std::string versionToStr (const Version& ver);

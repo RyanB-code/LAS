@@ -2,8 +2,7 @@
 
 using namespace LAS;
 
-DisplayManager::DisplayManager(const LoggerPtr& setLogger)
-    :   logger {setLogger}
+DisplayManager::DisplayManager()
 {
 
 }
@@ -12,7 +11,7 @@ DisplayManager::~DisplayManager(){
 }
 bool DisplayManager::init(const std::string& imGuiIniPath){
     if(!setIniPath(imGuiIniPath)){
-        logger->log("Could not find/create ImGui INI file at [" + imGuiIniPath + "]", Tags{"ImGui Setup", "ERROR"});
+        log_critical("Could not find/create ImGui INI file at [" + imGuiIniPath + "]");
         return false;
     }
 
@@ -121,7 +120,7 @@ bool DisplayManager::setIniPath (const std::string& path, bool createNewFile){
         return false;
 
     // Log that a new file had to be created
-    logger->log("ImGui window configuration at \"" + path + "\" was newly created. Prior window configurations were set to default state.", Tags{"WARNING", "Display Manager"});
+    log_warn("ImGui window configuration at \"" + path + "\" was newly created. Any prior window configurations were set to default." );
 
     iniPath = path;
     return true;
@@ -193,7 +192,7 @@ uint8_t DisplayManager::getWindowID(const std::string& title) const{
 // MARK: PRIVATE FUNCTIONS
 bool DisplayManager::initGLFW(){
     if(!glfwInit()){
-        logger->log("Could not initialize GLFW.", Tags{"GLFW Setup", "ERROR"});
+        log_critical("Could not initialize GLFW.");
         return false;
     }
 
@@ -206,7 +205,7 @@ bool DisplayManager::initGLFW(){
     window = glfwCreateWindow(640, 480, windowTitle.c_str(), NULL, NULL);
 
     if(!window){
-        logger->log("Could not obtain window context", Tags{"GLFW Setup", "ERROR"});
+        log_critical("Could not obtain window context");
         glfwTerminate();
         return false;
     }
@@ -220,7 +219,7 @@ bool DisplayManager::initImgui(std::string iniFilePath){
         iniFilePath = iniPath;
 
     if(!std::filesystem::exists(iniFilePath)){
-        logger->log("Could not find ImGui INI file at [" + iniFilePath + "]", Tags{"ImGui Setup", "ERROR"});
+        log_warn("Could not find ImGui INI file at [" + iniFilePath + "]");
         return false;
     }
 
@@ -238,7 +237,7 @@ bool DisplayManager::initImgui(std::string iniFilePath){
 
     // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
     if(!ImGui_ImplGlfw_InitForOpenGL(window, true) || !ImGui_ImplOpenGL3_Init() ) {
-        logger->log("Could not initialize ImGui with OpenGL/GLFW", Tags{"ImGui Setup", "ERROR"});
+        log_critical("Could not initialize ImGui with OpenGL/GLFW");
         return false;
     }
     
