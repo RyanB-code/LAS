@@ -71,12 +71,12 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
         try{
             int size {std::stoi(args[1])};
             if(size < 5 )
-                return pairErrorWithMessage("Size cannot be below 5");
+                return pairErrorWithMessage("Log Tag size cannot be below 5");
 
             if(size > 200 )
-                return pairErrorWithMessage("Size cannot be greater than 200");
+                return pairErrorWithMessage("Log Tag size cannot be greater than 200");
             
-            auto settings = Logging::getGlobalSettings();
+            LogSettings settings = Logging::getGlobalSettings();
             settings.textBoxWidth_tag = size;
             Logging::setGlobalSettings(settings);
             return pairNormal();
@@ -89,11 +89,11 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
     else if(args[0] == "log-msg-text-box-size"){
         try{
             int size {std::stoi(args[1])};
-            if(size < 30 )
-                return pairErrorWithMessage("Size cannot be below 30");
+            if(size < 20 )
+                return pairErrorWithMessage("Log Message size cannot be below 30");
 
             if(size > 255 )
-                return pairErrorWithMessage("Size cannot be greater than 255");
+                return pairErrorWithMessage("Log Message size cannot be greater than 255");
             
             auto settings = Logging::getGlobalSettings();
             settings.textBoxWidth_msg = size;
