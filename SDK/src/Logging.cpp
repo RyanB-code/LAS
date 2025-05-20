@@ -35,7 +35,15 @@ namespace LAS::Logging {
     int LogOutput::getID() const {
         return ID;
     }
-
+    bool LogOutput::isEnabled() const {
+        return enabled;
+    }
+    void LogOutput::enable() {
+        enabled = true;
+    }
+    void LogOutput::disable() {
+        enabled = false;
+    }
 
     // Logger
     Logger::Logger() {
@@ -58,8 +66,10 @@ namespace LAS::Logging {
 
         Log log {msg, tag, location, time};
 
-        for(const auto& [ID, outputPtr] : outputs)
-            outputPtr->log(log);
+        for(const auto& [ID, outputPtr] : outputs){
+            if(outputPtr->getEnabled())
+                outputPtr->log(log);
+        }
 
         return;
     }
@@ -105,6 +115,11 @@ namespace LAS::Logging {
 
         return outputs.at(ID)->getSettings();
     }
+    bool Logger::enableOutput(int ID) {
+        if(!outputs.contains(ID))
+            return false;
+
+        outputs.at(ID).ena
 
 }
 
@@ -123,6 +138,7 @@ namespace LAS{
         Logging::Logger::getInstance().log(msg, "CRITICAL", location);
     }
 
+    // Logging
     bool Logging::addOutput(LogOutputPtr newOutput) {
         return Logger::getInstance().addOutput(newOutput);
     }
@@ -141,5 +157,18 @@ namespace LAS{
     Logging::LogSettings Logging::getOutputSettings(int ID) {
         return Logger::getInstance().getOutputSettings(ID);
     }
+    bool Logging::enableOutput(int ID){
+        if(!Logging::getInstance().contains(ID))
+            return false;
+
+        return Logging::getInstance().enableOutput(ID);
+    }
+    bool Logging::disableOutput(int ID){
+        if(!Logging::getInstance().contains(ID))
+            return false;
+
+        return Logging::getInstance().disableOutput(ID);
+    }   
+
 }
 
