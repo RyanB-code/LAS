@@ -26,8 +26,8 @@ namespace LAS::Logging {
         bool showMsg                { true };
         bool showLocation           { true };
 
-        uint8_t textBoxWidth_tag    { 5 };   
-        uint16_t textBoxWidth_msg    { 30 };
+        int textBoxWidth_tag    { 5 };   
+        int textBoxWidth_msg   { 30 };
     };
     
     struct Log {
@@ -48,10 +48,10 @@ namespace LAS::Logging {
         LogSettings getSettings () const;
         int         getID       () const;
 
-        virtual void log(const Log& log) const = 0;
+        virtual void log(const Log& log) = 0;
 
     protected:
-        LogSettings settings;
+        LogSettings settings { };
     private:
         int ID;
     };
