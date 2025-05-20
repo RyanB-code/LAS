@@ -311,7 +311,7 @@ bool Shell::handleCommandQueue(bool writeToHistory){
 
         std::string rawInput {inputStream.str()};
         if(writeToHistory)
-                    LAS::ShellHelper::writeToCommandHistory(commandHistoryPath, rawInput); // Write to command history file
+            LAS::ShellHelper::writeToCommandHistory(commandHistoryPath, rawInput); // Write to command history file
 
         // Create alias if in proper format
         if(rawInput.size() >= 5 && rawInput.substr(0,6) == "alias "){ // Need the space in there
