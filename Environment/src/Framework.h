@@ -60,10 +60,10 @@ namespace LAS{
         DisplayManagerPtr   displayManager;
         ShellPtr            shell;
 
-        static constexpr std::string commandGroupName   {"las"};
+        static constexpr char       COMMAND_GROUP_NAME[4]  {"las"};
+        static constexpr int16_t    NUM_CACHED_COMMANDS  { 50 };     // How many previous commands will be added to command history upon startup
 
         bool                setupComplete               { false };
-        uint16_t            cacheLastNumberOfCommands   { 50 };     // How many previous commands will be added to command history upon startup
 
         bool setupShell             (const std::string& rcPath, const std::string& commandHistoryPath);
         bool setupModuleManager     (const std::string& moduleLoadDir, const std::string& moduleFilesDir);

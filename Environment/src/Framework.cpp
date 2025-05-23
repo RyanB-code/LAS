@@ -110,28 +110,28 @@ void Framework::run(){
 // MARK: PRIVATE FUNCTIONS
 // MARK: Setup Functions
 bool Framework::setupShell(const std::string& rcPath, const std::string& commandHistoryPath){
-    using namespace LAS;
-    ShellPtr lasShell { new Shell{} };
-    shell = lasShell;
-
+    shell = std::make_shared<Shell>();
     if(!shell->setRCPath(rcPath)){
-        std::cerr << "Failed to set shell RC file to \"" << rcPath << "\"\n";
+        log_critical("Failed to set shell RC file to [" + rcPath + "]");
         return false;
     }
     if(!shell->setCommandHistoryPath(commandHistoryPath)){
-        std::cerr << "Failed to set shell command history file\n";
+        log_critical("Failed to set shell command history file to [" + commandHistoryPath + "]");
         return false;
     }
+
     // Add commands to command history
     StringVector historyCache { };
-    ShellHelper::retrieveLines(shell->getCommandHistoryPath(), historyCache, cacheLastNumberOfCommands);
+    ShellHelper::retrieveLines(shell->getCommandHistoryPath(), historyCache, NUM_CACHED_COMMANDS);
     for(const auto& commandText : historyCache){
-        shell->getWindow()->addToCommandHistory(commandText);
+        log("here 0", "test");
+        shell->addToCommandHistory(commandText);
     }
+    log("here 1", "test");
 
     // Make las command group
-    if(!shell->addCommandGroup(commandGroupName)){
-        std::cerr << "Failed to create \"" << commandGroupName << "\" command group.\n";
+    if(!shell->addCommandGroup(COMMAND_GROUP_NAME)){
+        log_critical("Failed to create command group name [" + std::string{COMMAND_GROUP_NAME} + "]");
         return false;
     }
 
@@ -153,68 +153,48 @@ void Framework::setupCommands(){
 
 
     // Add to known commands
-    if(!shell->addCommand(commandGroupName, std::move(set))){
+    if(!shell->addCommand(COMMAND_GROUP_NAME, std::move(set))){
         std::ostringstream msg;
         msg << "Command [" << set->getKey() << "] could not be added.\n";
         log_error(msg.str());
     }
-    if(!shell->addCommand(commandGroupName, std::move(manual))){
+    if(!shell->addCommand(COMMAND_GROUP_NAME, std::move(manual))){
         std::ostringstream msg;
         msg << "Command [" << manual->getKey() << "] could not be added.\n";
         log_error(msg.str());
     }
-    if(!shell->addCommand(commandGroupName, std::move(print))){
+    if(!shell->addCommand(COMMAND_GROUP_NAME, std::move(print))){
         std::ostringstream msg;
         msg << "Command [" << print->getKey() << "] could not be added.\n";
         log_error(msg.str());
     }
-    if(!shell->addCommand(commandGroupName, std::move(echo))){
+    if(!shell->addCommand(COMMAND_GROUP_NAME, std::move(echo))){
         std::ostringstream msg;
         msg << "Command [" << echo->getKey() << "] could not be added.\n";
         log_error(msg.str());
     }
-    if(!shell->addCommand(commandGroupName, std::move(modulectl))){
+    if(!shell->addCommand(COMMAND_GROUP_NAME, std::move(modulectl))){
         std::ostringstream msg;
         msg << "Command [" << modulectl->getKey() << "] could not be added.\n";
         log_error(msg.str());
     }
-    if(!shell->addCommand(commandGroupName, std::move(info))){
+    if(!shell->addCommand(COMMAND_GROUP_NAME, std::move(info))){
         std::ostringstream msg;
         msg << "Command [" << info->getKey() << "] could not be added.\n";
         log_error(msg.str());
     }
-    if(!shell->addCommand(commandGroupName, std::move(reload))){
+    if(!shell->addCommand(COMMAND_GROUP_NAME, std::move(reload))){
         std::ostringstream msg;
         msg << "Command [" << reload->getKey() << "] could not be added.\n";
         log_error(msg.str());
     }
-    if(!shell->addCommand(commandGroupName, std::move(displayctl))){
+    if(!shell->addCommand(COMMAND_GROUP_NAME, std::move(displayctl))){
         std::ostringstream msg;
         msg << "Command [" << displayctl->getKey() << "] could not be added.\n";
         log_error(msg.str());
     }
 }
-bool Framework::setupLogger(const std::string& logDir){
 
-    LogToFile logToFile{};
-    if(!logToFile.setPath(LAS::FrameworkSetup::createLogFile(logDir))){
-         std::cerr << "Could not create a log file for the current instance\n";
-         return false;
-    }
-    
-    // If all is good, add LogToFile to logger
-    if(!Logging::addOutput(std::make_shared<LogToFile>(logToFile))){
-        std::cerr << "Could not add default LogToFile as an output for the logger\n";
-        return false;
-    }
-
-    // Log version information
-    log_info("LAS Environment version " + LAS::Environment::getVersion());
-    log_info("LAS SDK version " + LAS::SDK::getVersion());
-
-    log_info("Logger setup successful");
-    return true;
-}
 bool Framework::setupModuleManager(const std::string& moduleLoadDir, const std::string& moduleFilesDir){
     moduleManager = std::make_shared<ModuleManager>( ModuleManager{ });
 
