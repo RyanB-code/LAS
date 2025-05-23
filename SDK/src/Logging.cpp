@@ -67,7 +67,7 @@ namespace LAS::Logging {
         Log log {msg, tag, location, time};
 
         for(const auto& [ID, outputPtr] : outputs){
-            if(outputPtr->getEnabled())
+            if(outputPtr->isEnabled())
                 outputPtr->log(log);
         }
 
@@ -119,12 +119,23 @@ namespace LAS::Logging {
         if(!outputs.contains(ID))
             return false;
 
-        outputs.at(ID).ena
+        outputs.at(ID)->enable();
+        return true;
+    }
+    bool Logger::disableOutput(int ID) {
+        if(!outputs.contains(ID))
+            return false;
 
+        outputs.at(ID)->disable();
+        return true;
+    }
 }
 
 // LAS namespace
 namespace LAS{
+    void log(const std::string& msg, const std::string& tag, const std::source_location& location){
+        Logging::Logger::getInstance().log(msg, tag, location);
+    }
     void log_info(const std::string& msg, const std::source_location& location) {
         Logging::Logger::getInstance().log(msg, "INFO", location);
     }
@@ -158,16 +169,10 @@ namespace LAS{
         return Logger::getInstance().getOutputSettings(ID);
     }
     bool Logging::enableOutput(int ID){
-        if(!Logging::getInstance().contains(ID))
-            return false;
-
-        return Logging::getInstance().enableOutput(ID);
+        return Logger::getInstance().enableOutput(ID);
     }
     bool Logging::disableOutput(int ID){
-        if(!Logging::getInstance().contains(ID))
-            return false;
-
-        return Logging::getInstance().disableOutput(ID);
+        return Logger::getInstance().disableOutput(ID);
     }   
 
 }
