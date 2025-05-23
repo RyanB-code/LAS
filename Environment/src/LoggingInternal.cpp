@@ -149,17 +149,17 @@ LogToConsole::LogToConsole(){
 LogToConsole::~LogToConsole(){
 
 }
-void LogToConsole::log(const Log& log) const {
+void LogToConsole::log(const Log& log) {
     std::ostringstream os;
 
     if(settings.showTime)
         os << '[' << printTime(log.timestamp) << "] ";
 
     if(settings.showTags)
-        os << std::format("[{:^{}}] ", log.tag, settings.textWidth_tag);  // Centers the tag
+        os << std::format("[{:^{}}] ", log.tag, settings.textBoxWidth_tag);  // Centers the tag
 
     if(settings.showMsg)
-        os << std::format("{:<{}} ", log.msg, settings.textWidth_msg);  // Left-align the msg
+        os << std::format("{:<{}} ", log.msg, settings.textBoxWidth_msg);  // Left-align the msg
 
     if(settings.showLocation)
         os << printLocation(log.location);

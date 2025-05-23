@@ -34,11 +34,11 @@ namespace LAS::Logging{
         std::vector<Log> logHistory;
     };
 
-    class LogToConsole {
+    class LogToConsole : public LogOutput {
     public:
         LogToConsole();
         ~LogToConsole();
 
-        void log(const Log& log) const;
+        void log(const Log& log) override;
     };
 }
