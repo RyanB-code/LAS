@@ -20,22 +20,28 @@ Framework::~Framework(){
 // MARK: PUBLIC FUNCTIONS
 bool Framework::setup(){
 
-    FilePaths filePaths;
-
-    if(!LAS::FrameworkSetup::setupFilesystem(filePaths))
+    auto [addConsoleLogSuccess, consoleLogID] {FrameworkSetup::setupBasicLogger()};
+    if(!addConsoleLogSuccess)
         return false;
+
+    // --------------------------------------------------
+    // Use global logging calls for all logging from here
+    // on out
+    // --------------------------------------------------
+
+    FilePaths filePaths;
+    if(!FrameworkSetup::setupFilesystem(filePaths))
+        return false;
+
+    if(!FrameworkSetup::setupFileLogger(filePaths.logDir))
+        return false;
+
+//    Logging::disableOutput(consoleLogID);   // Disable console logging after file logging is established
 
     if(!shell){
         if(!setupShell(filePaths.rcPath, filePaths.commandHistoryPath))
             return false;
     }
-
-    if(!setupLogger(filePaths.logDir))
-        return false;
-
-    // --------------------------------------------------
-    // After logging is setup, use logger for messages
-    // --------------------------------------------------
     
     if(!displayManager){
         if(!setupDisplay(filePaths.imGuiIniPath))
@@ -44,12 +50,6 @@ bool Framework::setup(){
     if(!setupInternalWindows())
         return false;
 
-
-    // --------------------------------------------------
-    // Up until setupInternalWindows() is called, all logs
-    // are displayed in the log file only since no ImGui
-    // window is present to accept and display logs
-    // --------------------------------------------------    
 
     if(!moduleManager){
         if(!setupModuleManager(filePaths.moduleLibDir, filePaths.moduleFilesDir))
@@ -84,6 +84,13 @@ bool Framework::setup(){
 
     // After all is done, mark as complete
     setupComplete = true;
+
+    // Log version information
+    log_info("LAS Environment version " + LAS::Environment::getVersion());
+    log_info("LAS SDK version " + LAS::SDK::getVersion());
+
+    log_info("Logger setup successful");
+
     return true;
 }
 void Framework::run(){
@@ -238,12 +245,10 @@ bool Framework::setupDisplay(const std::string& imGuiIniPath){
 bool Framework::setupInternalWindows(){
 
     // Setup log viewer window
-    LogToWindow logToWindow{ };
-    logToWindow.setSettings(Logging::getGlobalSettings());
+    std::shared_ptr<LogWindow> logWindow { std::make_shared<LogWindow>() };
+    Logging::addOutput(logWindow);
 
-    Logging::addOutput(std::make_shared<LogToWindow>(logToWindow));
-
-    if(!displayManager->addWindow(logToWindow.getWindow())){
+    if(!displayManager->addWindow(logWindow)){
         log_error("Log viewer could not be added to window manager");
         return false;
     }
@@ -410,7 +415,37 @@ namespace LAS::FrameworkSetup{
         }
         return parentDir;
     }
-    bool setupFilesystem(FilePaths& filePaths) {
+
+std::pair<bool, int> setupBasicLogger() {
+    using namespace LAS::Logging;
+
+    LogToConsole basicLogger { };
+    if(!addOutput(std::make_shared<LogToConsole>(basicLogger))){
+        std::cerr << "Cannot setup basic logging.\n";
+        return std::pair(false, -1);
+    }
+
+    return std::pair(true, basicLogger.getID());
+}
+bool setupFileLogger(const std::string& logDir){
+
+    LogToFile logToFile{};
+    if(!logToFile.setPath(LAS::FrameworkSetup::createLogFile(logDir))){
+         log_critical("Could not create a log file for the current instance");
+         return false;
+    }
+    
+    // If all is good, add LogToFile to logger
+    if(!Logging::addOutput(std::make_shared<LogToFile>(logToFile))){
+        log_critical("Could not add a file logger as a log output");
+        return false;
+    }
+
+    log_info("Setup file logging");
+
+    return true;
+}
+bool setupFilesystem(FilePaths& filePaths) {
         // Ensure filesystem is in place
         #ifdef DEBUG
             filePaths.parentDir             = LAS::FrameworkSetup::getExeParentDir();
@@ -418,7 +453,7 @@ namespace LAS::FrameworkSetup{
             #ifdef __linux__
                 std::string home {getenv("HOME")};
             #else
-                std::cerr << "Only Linux is currently supported.\n";
+                log_critical("Only Linux is currently supported.\n");
                 return false;
             #endif
 
@@ -439,24 +474,24 @@ namespace LAS::FrameworkSetup{
         // Check paths are good
         try {
             if(!LAS::ensureDirectory(filePaths.logDir)){
-                std::cerr << "Error finding or creating [" << filePaths.logDir << "]";
+                log_critical("Error finding or creating [" + filePaths.logDir + "]");
                 return false;
             }
             if(!LAS::ensureDirectory(filePaths.moduleLibDir)){
-                std::cerr << "Error finding or creating [" << filePaths.moduleLibDir << "]";
+                log_critical("Error finding or creating [" + filePaths.moduleLibDir + "]");
                 return false;
             }
             if(!LAS::ensureDirectory(filePaths.moduleFilesDir)){
-                std::cerr << "Error finding or creating [" << filePaths.moduleFilesDir << "]";
+                log_critical("Error finding or creating [" + filePaths.moduleFilesDir + "]");
                 return false;
             }
             if(!LAS::ensureDirectory(filePaths.dotLASDir)){
-                std::cerr << "Error finding or creating [" << filePaths.dotLASDir << "]";
+                log_critical("Error finding or creating [" + filePaths.dotLASDir + "]");
                 return false;
             }
         }
         catch(std::filesystem::filesystem_error& e){
-            std::cerr << "Fatal error in LAS filesystem setup.\n\tWhat: " << e.what() << "\n\tFile: " << e.path1().string() << "\n";
+            log_critical(std::format("Fatal error in LAS filesystem setup. What: [{}]. File: [{}]", e.what(), e.path1().string() ));
             return false;
         }
 

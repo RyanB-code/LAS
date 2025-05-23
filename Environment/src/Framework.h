@@ -37,6 +37,10 @@ namespace LAS{
     namespace FrameworkSetup{
         std::string     createLogFile       (const std::string& parentDir);
         std::string     getExeParentDir     ();
+
+        std::pair<bool, int>    setupBasicLogger    ();                             // Returns if the function was successful followed by log output ID
+                                                                                    
+        bool            setupFileLogger     (const std::string& logDir);
         bool            setupFilesystem     (FilePaths& filePaths);
     }
 
@@ -62,7 +66,6 @@ namespace LAS{
         uint16_t            cacheLastNumberOfCommands   { 50 };     // How many previous commands will be added to command history upon startup
 
         bool setupShell             (const std::string& rcPath, const std::string& commandHistoryPath);
-        bool setupLogger            (const std::string& logDir);
         bool setupModuleManager     (const std::string& moduleLoadDir, const std::string& moduleFilesDir);
         bool setupDisplay           (const std::string& iniFilePath);
         bool setupInternalWindows   ();
