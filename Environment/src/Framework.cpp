@@ -123,11 +123,10 @@ bool Framework::setupShell(const std::string& rcPath, const std::string& command
     // Add commands to command history
     StringVector historyCache { };
     ShellHelper::retrieveLines(shell->getCommandHistoryPath(), historyCache, NUM_CACHED_COMMANDS);
+
     for(const auto& commandText : historyCache){
-        log("here 0", "test");
         shell->addToCommandHistory(commandText);
     }
-    log("here 1", "test");
 
     // Make las command group
     if(!shell->addCommandGroup(COMMAND_GROUP_NAME)){
@@ -235,12 +234,8 @@ bool Framework::setupInternalWindows(){
     log_info("Log viewer setup successful");
 
     // Setup console window
-    if(!displayManager->addWindow(shell->getWindow())){
+    if(!displayManager->addWindow(shell)){
         log_error("Console could not be added to window manager");
-        return false;
-    }
-    if(!shell->addOutput(shell->getWindow())){
-        log_error("Console Window's Shell Output could not be added to Shell Outputs");
         return false;
     }
 
