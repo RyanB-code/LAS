@@ -24,36 +24,6 @@ namespace LAS{
 using ShellPtr          = std::shared_ptr<LAS::Shell>;
 
 namespace LAS{
-    /*
-    class ShellOutput{
-    public:
-        ShellOutput();
-        virtual ~ShellOutput();
-
-        virtual void output(const std::ostringstream&)  = 0;
-        virtual void output(const std::string&)         = 0;
-
-        uint8_t getID() const;
-
-    private:
-        uint8_t ID;
-    };
-
-    class ConsoleWindow : public Windowing::Window, public ShellOutput {
-    public:
-        explicit ConsoleWindow(std::queue<std::string>& setQueue);
-        ~ConsoleWindow();
-
-        void draw   ()                              override;
-        void output (const std::ostringstream& os)  override;
-        void output (const std::string& msg)        override;
-
-    private:
-        std::queue<std::string>& queue;
-
-        std::ostringstream  textHistory;
-    };
-    */
 
     class ShellTextBuffer {
     public:

@@ -5,11 +5,6 @@
 
 
 int main(int argc, char **argv){
-
-    // For handling commands
-    // std::vector<std::string>args {argv, argv + argc};
-
-
     LAS::Framework framework { };
     
     if(framework.setup()){
@@ -22,3 +17,4 @@ int main(int argc, char **argv){
 
     return 0;
 } 
+

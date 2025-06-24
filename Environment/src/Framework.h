@@ -38,10 +38,10 @@ namespace LAS{
         std::string     createLogFile       (const std::string& parentDir);
         std::string     getExeParentDir     ();
 
-        std::pair<bool, int>    setupBasicLogger    ();                             // Returns if the function was successful followed by log output ID
-                                                                                    
         bool            setupFileLogger     (const std::string& logDir);
         bool            setupFilesystem     (FilePaths& filePaths);
+        
+        std::pair<bool, int>    setupBasicLogger();     // Return: (bool = function success, int = log output ID)
     }
 
     class Framework final{
@@ -60,8 +60,8 @@ namespace LAS{
         DisplayManagerPtr   displayManager;
         ShellPtr            shell;
 
-        static constexpr char       COMMAND_GROUP_NAME[4]  {"las"};
-        static constexpr int16_t    NUM_CACHED_COMMANDS  { 50 };     // How many previous commands will be added to command history upon startup
+        static constexpr char       COMMAND_GROUP_NAME[4]  {"las"};     // Group for all built in commands
+        static constexpr int16_t    NUM_CACHED_COMMANDS  { 50 };        // How many previous commands will be added to command history upon startup
 
         bool                setupComplete               { false };
 
@@ -69,7 +69,7 @@ namespace LAS{
         bool setupModuleManager     (const std::string& moduleLoadDir, const std::string& moduleFilesDir);
         bool setupDisplay           (const std::string& iniFilePath);
         bool setupInternalWindows   ();
-        void setupCommands          ();                            // This is where to instantiate commands
+        void setupCommands          (); // Instantiate commands here                            
 
         bool loadAllModules         (const std::string& moduleLibDirectory, const std::string& moduleFilesDirectory);
         void loadAllModuleWindows   ();

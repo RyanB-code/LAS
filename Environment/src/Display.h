@@ -44,10 +44,10 @@ namespace LAS{
         bool removeWindow   (uint8_t ID);
         bool removeWindow   (Windowing::Window& window);
 
-        void closeAllModuleWindows();
-        void clearAllModuleWindows();
+        void closeAllModuleWindows();                                                   // Closes windows with MenuOption::MODULE
+        void clearAllModuleWindows();                                                   // Remove windows with MenuOption::MODULE
 
-        bool        setIniPath  (const std::string& path, bool createNewFile=true); // Creates new file if not found
+        bool        setIniPath  (const std::string& path, bool createNewFile=true);     // bool parameter is whether or not file is created if a file isnt found at givenl location
         std::string getIniPath  () const;
 
         bool saveWindowConfig   () const;
