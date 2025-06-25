@@ -2,6 +2,36 @@
 
 namespace LAS::Logging {
 
+    // Logger in here since not needed in API
+    class Logger {
+    public:
+        ~Logger();
+
+        static Logger& getInstance();
+
+        void log            (const std::string& msg, const std::string& tag, const std::source_location& location=std::source_location::current()) const;
+        bool addOutput      (LogOutputPtr output);
+        bool contains       (int ID) const;
+        bool removeOutput   (int outputID);
+
+        void        setGlobalSettings   (const LogSettings& setSettings);           // Updates all LogOutputs to have the same settings
+        bool        setOutputSettings   (int ID, const LogSettings& setSettings);
+
+        LogSettings getGlobalSettings   () const;
+        LogSettings getOutputSettings   (int ID) const; // Throws out_of_range if not there
+
+        bool enableOutput(int ID);
+        bool disableOutput(int ID);
+
+    private:
+        Logger();
+        Logger(const Logger& other) = delete;
+        Logger& operator=(const Logger& other) = delete;
+
+        LogSettings settings { };
+        std::map<int, LogOutputPtr> outputs { };
+    };
+
     std::string printTime(const std::chrono::system_clock::time_point& time) noexcept {
         std::chrono::zoned_time zonedTime { std::chrono::current_zone(), time };
         return std::format("{:%T}", zonedTime).substr(0, 8);
