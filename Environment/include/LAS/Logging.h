@@ -8,17 +8,6 @@
 
 
 namespace LAS::Logging {
-    // Forward Declarations
-    class LogOutput;
-    class Logger;
-
-    // Aliases
-    using ConstLoggerPtr    = std::shared_ptr<const Logger>;
-    using LogOutputPtr      = std::shared_ptr<LogOutput>;
-
-    // Free Helping Functions
-    std::string printTime       (const std::chrono::system_clock::time_point& time)     noexcept;   // HH:MM:SS
-    std::string printLocation   (const std::source_location& location)                  noexcept;   // <File Name> | <Function Name> | <Line> 
 
     struct LogSettings {     
         bool showTime               { true };
@@ -37,7 +26,6 @@ namespace LAS::Logging {
 
         const std::chrono::time_point<std::chrono::system_clock> timestamp;
     };
-    
 
     class LogOutput {
     public:
@@ -61,34 +49,27 @@ namespace LAS::Logging {
         bool enabled { true };
     };
 
-    class Logger {
-    public:
-        ~Logger();
+    using LogOutputPtr      = std::shared_ptr<LogOutput>;
 
-        static Logger& getInstance();
 
-        void log            (const std::string& msg, const std::string& tag, const std::source_location& location=std::source_location::current()) const;
-        bool addOutput      (LogOutputPtr output);
-        bool contains       (int ID) const;
-        bool removeOutput   (int outputID);
+    // For Modules to use to interact with logger
+    bool addOutput      (LogOutputPtr output);
+    bool removeOutput   (int outputID);
 
-        void        setGlobalSettings   (const LogSettings& setSettings);           // Updates all LogOutputs to have the same settings
-        bool        setOutputSettings   (int ID, const LogSettings& setSettings);
+    void        setGlobalSettings   (const LogSettings& setSettings);
+    bool        setOutputSettings   (int ID, const LogSettings& setSettings);
 
-        LogSettings getGlobalSettings   () const;
-        LogSettings getOutputSettings   (int ID) const; // Throws out_of_range if not there
+    LogSettings getGlobalSettings   ();
+    LogSettings getOutputSettings   (int ID); // Throws out_of_range if not there
+        
+    bool enableOutput(int ID);
+    bool disableOutput(int ID);
 
-        bool enableOutput(int ID);
-        bool disableOutput(int ID);
 
-    private:
-        Logger();
-        Logger(const Logger& other) = delete;
-        Logger& operator=(const Logger& other) = delete;
+    // Helper Functions
+    std::string printTime       (const std::chrono::system_clock::time_point& time)     noexcept;   // HH:MM:SS
+    std::string printLocation   (const std::source_location& location)                  noexcept;   // <File Name> | <Function Name> | <Line> 
 
-        LogSettings settings { };
-        std::map<int, LogOutputPtr> outputs { };
-    };
 }
 
 namespace LAS {
@@ -98,17 +79,5 @@ namespace LAS {
     void log_error      (const std::string& msg, const std::source_location& location=std::source_location::current());
     void log_critical   (const std::string& msg, const std::source_location& location=std::source_location::current());
 
-    namespace Logging {
-        bool addOutput      (LogOutputPtr output);
-        bool removeOutput   (int outputID);
-
-        void        setGlobalSettings   (const LogSettings& setSettings);
-        bool        setOutputSettings   (int ID, const LogSettings& setSettings);
-
-        LogSettings getGlobalSettings   ();
-        LogSettings getOutputSettings   (int ID); // Throws out_of_range if not there
-        
-        bool enableOutput(int ID);
-        bool disableOutput(int ID);
-    }
+    
 }
