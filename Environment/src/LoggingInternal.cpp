@@ -91,18 +91,16 @@ void LogWindow::draw() {
     ImGui::SameLine();
     ImGui::Checkbox("Auto Scroll",          &autoScroll);
 
-    // Ensure sizes are not too small
-    if(settings.textBoxWidth_tag < 5)
-        settings.textBoxWidth_tag = 5;
-    if(settings.textBoxWidth_msg < 20)
-        settings.textBoxWidth_msg = 20;
-
 
     ImGui::InputInt("Tag Text Box Size",     &settings.textBoxWidth_tag, 1, 5);
     ImGui::InputInt("Message Text Box Size", &settings.textBoxWidth_msg, 1, 5);
     ImGui::EndChild(); // End Options Child
     
-    
+    // Ensure sizes are not too small
+    if(settings.textBoxWidth_tag < 5)
+        settings.textBoxWidth_tag = 5;
+    if(settings.textBoxWidth_msg < 20)
+        settings.textBoxWidth_msg = 20;
 
     // Log window portion
     ImGui::SeparatorText("Logs");
@@ -124,7 +122,7 @@ void LogWindow::draw() {
         }
         if (settings.showMsg){
             if(log.msg.size() > settings.textBoxWidth_msg)
-                os << std::format("{:^{}}...  ", log.msg.substr(0, settings.textBoxWidth_msg-3), settings.textBoxWidth_msg-3);
+                os << std::format("{:{}}...  ", log.msg.substr(0, settings.textBoxWidth_msg-3), settings.textBoxWidth_msg-3);
             else
                 os << std::format("{:<{}}  ", log.msg, settings.textBoxWidth_msg);
         }
