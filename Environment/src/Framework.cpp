@@ -2,15 +2,7 @@
 
 using namespace LAS;
 
-Framework::Framework (  ModuleManagerPtr    setModuleManager,
-                        DisplayManagerPtr   setDisplayManager,
-                        ShellPtr            setShell
-                    )
-                    :
-                        moduleManager   {setModuleManager},
-                        displayManager  {setDisplayManager},
-                        shell           {setShell}
-{
+Framework::Framework () {
 
 }
 Framework::~Framework(){
@@ -36,25 +28,19 @@ bool Framework::setup(){
     if(!FrameworkSetup::setupFileLogger(filePaths.logDir))
         return false;
 
-//    Logging::disableOutput(consoleLogID);   // Disable console logging after file logging is established
+    Logging::disableOutput(consoleLogID);   // Disable console logging after file logging is established
 
-    if(!shell){
-        if(!setupShell(filePaths.rcPath, filePaths.commandHistoryPath))
-            return false;
-    }
+    if(!setupShell(filePaths.rcPath, filePaths.commandHistoryPath))
+        return false;
     
-    if(!displayManager){
-        if(!setupDisplay(filePaths.imGuiIniPath))
-            return false;
-    }
+    if(!setupDisplay(filePaths.imGuiIniPath))
+        return false;
+
     if(!setupInternalWindows())
         return false;
 
-
-    if(!moduleManager){
-        if(!setupModuleManager(filePaths.moduleLibDir, filePaths.moduleFilesDir))
-            return false;
-    }
+    if(!setupModuleManager(filePaths.moduleLibDir, filePaths.moduleFilesDir))
+        return false;
 
     if(!loadAllModules(filePaths.moduleLibDir, filePaths.moduleFilesDir))
         return false;
@@ -65,7 +51,7 @@ bool Framework::setup(){
     setupCommands();
 
     
-    if(!shell->readRCFile(filePaths.rcPath)){
+    if(!shell.readRCFile(filePaths.rcPath)){
         if(!ShellHelper::defaultInitializeRCFile(filePaths.rcPath)){
             log_critical("Could not find or create new RC file at [" + filePaths.rcPath + "]");
             return false;
@@ -75,12 +61,7 @@ bool Framework::setup(){
     readAllModuleRCFiles();
 
     // Handle RC file commands
-    if(shell)
-        shell->handleCommandQueue(false);
-    else{
-        log_critical("There is no target shell for LAS");
-        return false;
-    }
+    shell.handleCommandQueue(false);
 
     // After all is done, mark as complete
     setupComplete = true;
@@ -99,9 +80,13 @@ void Framework::run(){
         return;
     }
 
+    // 1. Call update on internal controllers
+    // 2. Update all external Module windows
+    
+
     // If refresh() returns true, that means an glfwShouldWindowClose() was called
-    while(!displayManager->refresh()){       
-        shell->handleCommandQueue();
+    while(!displayManager.refresh()){       
+        shell.handleCommandQueue();
     }
 
     return;
@@ -110,26 +95,25 @@ void Framework::run(){
 // MARK: PRIVATE FUNCTIONS
 // MARK: Setup Functions
 bool Framework::setupShell(const std::string& rcPath, const std::string& commandHistoryPath){
-    shell = std::make_shared<Shell>();
-    if(!shell->setRCPath(rcPath)){
+    if(!shell.setRCPath(rcPath)){
         log_critical("Failed to set shell RC file to [" + rcPath + "]");
         return false;
     }
-    if(!shell->setCommandHistoryPath(commandHistoryPath)){
+    if(!shell.setCommandHistoryPath(commandHistoryPath)){
         log_critical("Failed to set shell command history file to [" + commandHistoryPath + "]");
         return false;
     }
 
     // Add commands to command history
     StringVector historyCache { };
-    ShellHelper::retrieveLines(shell->getCommandHistoryPath(), historyCache, NUM_CACHED_COMMANDS);
+    ShellHelper::retrieveLines(shell.getCommandHistoryPath(), historyCache, NUM_CACHED_COMMANDS);
 
     for(const auto& commandText : historyCache){
-        shell->addToCommandHistory(commandText);
+        shell.addToCommandHistory(commandText);
     }
 
     // Make las command group
-    if(!shell->addCommandGroup(COMMAND_GROUP_NAME)){
+    if(!shell.addCommandGroup(COMMAND_GROUP_NAME)){
         log_critical("Failed to create command group name [" + std::string{COMMAND_GROUP_NAME} + "]");
         return false;
     }
@@ -152,42 +136,42 @@ void Framework::setupCommands(){
 
 
     // Add to known commands
-    if(!shell->addCommand(COMMAND_GROUP_NAME, std::move(set))){
+    if(!shell.addCommand(COMMAND_GROUP_NAME, std::move(set))){
         std::ostringstream msg;
         msg << "Command [" << set->getKey() << "] could not be added.\n";
         log_error(msg.str());
     }
-    if(!shell->addCommand(COMMAND_GROUP_NAME, std::move(manual))){
+    if(!shell.addCommand(COMMAND_GROUP_NAME, std::move(manual))){
         std::ostringstream msg;
         msg << "Command [" << manual->getKey() << "] could not be added.\n";
         log_error(msg.str());
     }
-    if(!shell->addCommand(COMMAND_GROUP_NAME, std::move(print))){
+    if(!shell.addCommand(COMMAND_GROUP_NAME, std::move(print))){
         std::ostringstream msg;
         msg << "Command [" << print->getKey() << "] could not be added.\n";
         log_error(msg.str());
     }
-    if(!shell->addCommand(COMMAND_GROUP_NAME, std::move(echo))){
+    if(!shell.addCommand(COMMAND_GROUP_NAME, std::move(echo))){
         std::ostringstream msg;
         msg << "Command [" << echo->getKey() << "] could not be added.\n";
         log_error(msg.str());
     }
-    if(!shell->addCommand(COMMAND_GROUP_NAME, std::move(modulectl))){
+    if(!shell.addCommand(COMMAND_GROUP_NAME, std::move(modulectl))){
         std::ostringstream msg;
         msg << "Command [" << modulectl->getKey() << "] could not be added.\n";
         log_error(msg.str());
     }
-    if(!shell->addCommand(COMMAND_GROUP_NAME, std::move(info))){
+    if(!shell.addCommand(COMMAND_GROUP_NAME, std::move(info))){
         std::ostringstream msg;
         msg << "Command [" << info->getKey() << "] could not be added.\n";
         log_error(msg.str());
     }
-    if(!shell->addCommand(COMMAND_GROUP_NAME, std::move(reload))){
+    if(!shell.addCommand(COMMAND_GROUP_NAME, std::move(reload))){
         std::ostringstream msg;
         msg << "Command [" << reload->getKey() << "] could not be added.\n";
         log_error(msg.str());
     }
-    if(!shell->addCommand(COMMAND_GROUP_NAME, std::move(displayctl))){
+    if(!shell.addCommand(COMMAND_GROUP_NAME, std::move(displayctl))){
         std::ostringstream msg;
         msg << "Command [" << displayctl->getKey() << "] could not be added.\n";
         log_error(msg.str());
@@ -195,13 +179,11 @@ void Framework::setupCommands(){
 }
 
 bool Framework::setupModuleManager(const std::string& moduleLoadDir, const std::string& moduleFilesDir){
-    moduleManager = std::make_shared<ModuleManager>( ModuleManager{ });
-
-    if(!moduleManager->setModuleLoadDirectory(moduleLoadDir)){
+    if(!moduleManager.setModuleLoadDirectory(moduleLoadDir)){
         log_critical("Failed to set module load directory");
         return false;
     }
-    if(!moduleManager->setModuleFilesDirectory(moduleFilesDir)){
+    if(!moduleManager.setModuleFilesDirectory(moduleFilesDir)){
         log_critical("Failed to set module files directory");
         return false;
     }
@@ -210,9 +192,7 @@ bool Framework::setupModuleManager(const std::string& moduleLoadDir, const std::
     return true;
 }
 bool Framework::setupDisplay(const std::string& imGuiIniPath){
-    displayManager = std::make_shared<DisplayManager>();
-
-    if(!displayManager->init(imGuiIniPath)){
+    if(!displayManager.init(imGuiIniPath)){
         log_critical("Error setting up necessary display libraries");
         return false;
     }
@@ -222,24 +202,25 @@ bool Framework::setupDisplay(const std::string& imGuiIniPath){
     return true;
 }
 bool Framework::setupInternalWindows(){
+    using namespace Display;
+    using namespace ModuleFunctions;
 
-    // Setup log viewer window
-    std::shared_ptr<LogWindow> logWindow { std::make_shared<LogWindow>() };
-    Logging::addOutput(logWindow);
+    Logging::addOutput(std::make_shared<LogWindow>(logWindow));
 
-    if(!displayManager->addWindow(logWindow)){
+    std::function<void()> drawFunction { std::bind(&LogWindow::draw, &logWindow) };
+
+    if(!displayManager.addWindow(LOG_WINDOW_NAME, drawFunction)){
         log_error("Log viewer could not be added to window manager");
         return false;
     }
+    logWindow.setShown(displayManager.shown(LOG_WINDOW_NAME));
     log_info("Log viewer setup successful");
 
     // Setup console window
-    if(!displayManager->addWindow(shell)){
+    if(!displayManager.addWindow(SHELL_WINDOW_NAME, shell.draw)){
         log_error("Console could not be added to window manager");
         return false;
     }
-
-
     log_info("Console setup successful");
 
     return true;
@@ -253,7 +234,7 @@ bool Framework::loadAllModules(const std::string& moduleLibDirectory, const std:
 
     try{
         StringVector modulesThatFailedToLoad {};
-        moduleManager->loadAllModules(*ImGui::GetCurrentContext(), modulesThatFailedToLoad, moduleLibDirectory, moduleFilesDirectory); 
+        moduleManager.loadAllModules(*ImGui::GetCurrentContext(), modulesThatFailedToLoad, moduleLibDirectory, moduleFilesDirectory); 
 
         // This is just for logging what failed to load
         if(modulesThatFailedToLoad.size() > 0){
@@ -277,7 +258,7 @@ bool Framework::loadAllModules(const std::string& moduleLibDirectory, const std:
 void Framework::loadAllModuleWindows(){
     int couldntLoad {0};
     
-    for(const auto& name : moduleManager->getModuleNames()){
+    for(const auto& name : moduleManager.getModuleNames()){
         if(!loadModuleWindow(name))
             ++couldntLoad;
     }
@@ -290,10 +271,10 @@ void Framework::loadAllModuleWindows(){
         log_info("All windows successfully loaded from all modules");
 }
 bool Framework::loadModuleWindow(const std::string& name){
-    if(!moduleManager->containsModule(name))
+    if(!moduleManager.containsModule(name))
         return false;
     
-    if(!displayManager->addWindow(moduleManager->getModule(name)->getWindow())){
+    if(!displayManager.addWindow(moduleManager.getModule(name)->getModuleInfo.title, getModuleInfo.drawFunction)){
         log_error("Failed to load window for module [" + name +"]. Module ID or window name collision");
         return false;
     }
@@ -301,7 +282,7 @@ bool Framework::loadModuleWindow(const std::string& name){
     return true;
 }
 void Framework::loadAllModuleCommands(){  
-    StringVector moduleNames {moduleManager->getModuleNames()};
+    StringVector moduleNames {moduleManager.getModuleNames()};
 
     for(auto name : moduleNames){
         StringVector commandsNotLoaded {};
@@ -319,9 +300,9 @@ void Framework::loadAllModuleCommands(){
     }
 }
 bool Framework::loadModuleCommands(const std::string& moduleName, StringVector& commandsNotLoaded) {
-    Module& module {*moduleManager->getModule(moduleName)};
+    Module& module {*moduleManager.getModule(moduleName)};
 
-    if(!shell->addCommandGroup(module.getGroupName()))
+    if(!shell.addCommandGroup(module.getGroupName()))
         return false;
 
     if(module.getCommands().empty())
@@ -329,7 +310,7 @@ bool Framework::loadModuleCommands(const std::string& moduleName, StringVector& 
 
     // Load the commands
     for(auto& command : module.getCommands()){
-        if(!shell->addCommand(module.getGroupName(), std::move(command))){
+        if(!shell.addCommand(module.getGroupName(), std::move(command))){
             commandsNotLoaded.push_back(command->getKey());
         }
     }
@@ -338,22 +319,22 @@ bool Framework::loadModuleCommands(const std::string& moduleName, StringVector& 
 }
 
 void Framework::readAllModuleRCFiles(){
-    StringVector names {moduleManager->getModuleNames()};
+    StringVector names {moduleManager.getModuleNames()};
 
     for(const auto& s : names){
         readModuleRCFile(s);
     }
 }
 bool Framework::readModuleRCFile (const std::string& name){
-    if(!moduleManager->containsModule(name))
+    if(!moduleManager.containsModule(name))
         return false; 
 
-    ModulePtr moduleBuffer {moduleManager->getModule(name)};
+    ModulePtr moduleBuffer {moduleManager.getModule(name)};
 
     std::queue<std::string> commandLines;
     if(LAS::ShellHelper::readRCFile(moduleBuffer->getRCFilePath(), commandLines)){
         for (/*Nothing*/; !commandLines.empty(); commandLines.pop()){
-            shell->addToQueue(commandLines.front());
+            shell.addToQueue(commandLines.front());
         }
     }
     return true;

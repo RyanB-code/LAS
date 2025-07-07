@@ -376,8 +376,8 @@ std::pair<int, std::ostringstream> ModuleControl::execute(const StringVector& ar
     }
 
     if(reload){
-        tempDisplayManager->closeAllModuleWindows();
-        tempDisplayManager->clearAllModuleWindows();
+        tempDisplayManager->closeAllWindows();
+        tempDisplayManager->clearModuleWindows();
         tempModuleManager->clearNonUtilityModules();
 
         // Load Modules
@@ -386,8 +386,9 @@ std::pair<int, std::ostringstream> ModuleControl::execute(const StringVector& ar
 
         // Load Windows
         int windowsNotLoaded{0};
-        for(auto window : tempModuleManager->getAllWindows()){
-            if(!tempDisplayManager->addWindow(window))
+        for(auto name : tempModuleManager->getModuleNames()){
+            auto mod { tempModuleManager->getModule(name) };
+            if(!tempDisplayManager->addWindow(mod->getModuleInfo().title, mod->getModuleInfo().drawFunction))
                 ++windowsNotLoaded;
         }
 
@@ -481,11 +482,7 @@ std::pair<int, std::ostringstream> Reload::execute(const StringVector& args){
 DisplayControl::DisplayControl( std::weak_ptr<DisplayManager> setDisplayManager ) 
     :   Command         { "displayctl", "Interact with the display controller\n"
                                 "save-config          \tSaves the window configuration\n"
-                                "show-window-names    \tShows all windows and their status\n"
                                 "show-all-window-info \tShows all window information\n"
-                                "<ID> <command>\n"
-                                "\t\topen   \tOpens the window\n"
-                                "\t\tclose  \tCloses the window\n"
                                 "<title> <command>\n"
                                 "\t\topen   \tOpens the window\n"
                                 "\t\tclose  \tCloses the window\n"
@@ -511,39 +508,7 @@ std::pair<int, std::ostringstream> DisplayControl::execute(const StringVector& a
         else
             return pairErrorWithMessage("Could not save window configuration\n");
     }
-    else if(args[0] == "show-window-names"){
-       StringVector names;
-       tempDisplayManager->getAllWindowNames(names);
-
-        if(names.empty())
-            return pair(0, "There were no windows found");
-        
-        std::ostringstream msg;
-        for(const auto& s : names)
-            msg << s << '\n';
-        
-        return pair(0, msg.str());
-    }
-    else if(args[0] == "show-window-names"){
-       StringVector names;
-       tempDisplayManager->getAllWindowNames(names);
-
-        if(names.empty())
-            return pair(0, "There were no windows found");
-        
-        std::ostringstream msg;
-        for(const auto& s : names)
-            msg << s << '\n';
-        
-        return pair(0, msg.str());
-    }
     else if(args[0] == "show-all-window-info"){
-       std::vector<uint8_t> IDs;
-       tempDisplayManager->getAllWindowIDs(IDs);
-
-        if(IDs.empty())
-            return pair(0, "There were no windows found");
-        
         constexpr uint8_t idWidth   { 4 };
         constexpr uint8_t nameWidth { 30 };
         constexpr uint8_t openWidth { 7 };
@@ -551,17 +516,16 @@ std::pair<int, std::ostringstream> DisplayControl::execute(const StringVector& a
         uint64_t 	tableWidth 	{ idWidth + nameWidth + openWidth };
 
         std::ostringstream msg;
-        msg << std::format("{:<{}}", "ID",		idWidth);
         msg << std::format("{:<{}}", "Name",	nameWidth);
         msg << std::format("{:<{}}", "Status",	openWidth);
         msg << '\n' << std::format("{:-<{}}", '-', tableWidth) << "\n";
 
-        for(const auto& id : IDs){
-            msg << std::format("{:<{}}", id,		idWidth);
-            msg << std::format("{:<{}}", tempDisplayManager->getWindowStatus(id).title, nameWidth);
+        for(auto itr {tempDisplayManager->cbegin()}; itr != tempDisplayManager->cend(); ++itr){
+            msg << std::format("{:<{}}", itr->second.title, nameWidth);
 
             std::string shownString;
-            tempDisplayManager->getWindowStatus(id).open ? shownString = "open" : shownString = "closed";
+            bool open {tempDisplayManager->shown(itr->second.title)};
+            open ? shownString = "open" : shownString = "closed";
             msg << std::format("{:<{}}", shownString, openWidth);
             msg << '\n';
         }        
@@ -570,16 +534,8 @@ std::pair<int, std::ostringstream> DisplayControl::execute(const StringVector& a
 
 
     if(args.size() == 2){
-
-        int id{ tempDisplayManager->getWindowID(args[0]) };
-
-        try {
-            if(id == 0)
-                id = std::stoi(args[0]);
-        }
-        catch(std::invalid_argument& e){
-            return pairErrorWithMessage("No window was found with title " + args[0]);
-        }
+        if(!tempDisplayManager->containsWindow(args[0]))
+            return pairErrorWithMessage("No window was found with ID " + args[0]);
 
         bool shownStatus { false };
         if(args[1] == "open")
@@ -589,8 +545,8 @@ std::pair<int, std::ostringstream> DisplayControl::execute(const StringVector& a
         else
             return pairInvalidArgument(args[1]);
 
-        if(!tempDisplayManager->setWindowShownStatus(id, shownStatus))
-            return pairErrorWithMessage("No window was found with ID " + id);
+        bool& open {*tempDisplayManager->shown(args[0])};
+        open = shownStatus;
         
         return pairNormal();
     }

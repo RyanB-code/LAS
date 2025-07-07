@@ -30,27 +30,14 @@ bool Module::setRCFilePath(const std::string& path){
     rcFilePath = path;
     return true;
 }
-const Version& Module::getSDKVersion() const{
-    return moduleInfo.sdkVersion;
-}
-const Version& Module::getModuleVersion() const{
-    return moduleInfo.moduleVersion;
-}
-
-std::string Module::getTitle() const{
-    return moduleInfo.title;
-}
-std::string Module::getGroupName() const{
-    return moduleInfo.commandGroupName;
+const ModuleInfo::getModuleInfo() const{
+    return moduleInfo;
 }
 std::string Module::getDirectory() const{
     return directory;
 }
 std::string Module::getRCFilePath() const{
     return rcFilePath;
-}
-WindowPtr Module::getWindow() const{
-    return moduleInfo.window;
 }
 std::vector<CommandPtr>& Module::getCommands(){
     return moduleInfo.commands;

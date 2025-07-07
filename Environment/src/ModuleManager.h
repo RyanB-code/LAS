@@ -31,8 +31,6 @@ namespace LAS{
         ModulePtr           getModule(std::string title)    const;
         const StringVector  getModuleNames()                const;
 
-        WindowList          getAllWindows()                 const;
-
         std::string         getModuleLoadDirectory  () const;
         std::string         getModuleFilesDirectory () const;
         bool                setModuleLoadDirectory  (const std::string& directory);

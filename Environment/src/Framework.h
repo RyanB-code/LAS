@@ -2,7 +2,7 @@
 
 #include "Display.h"
 #include "ModuleManager.h"
-#include "LoggingInternal.h"
+#include "Loggers.h"
 #include "Shell.h"
 #include "CommandsInternal.h"
 
@@ -12,6 +12,7 @@
 #include <LAS/HelperFunctions.h>
 
 #include <iostream>
+#include <functional>
 #include <unordered_map>
 #include <string>
 #include <queue>
@@ -46,24 +47,25 @@ namespace LAS{
 
     class Framework final{
     public:
-        Framework(  ModuleManagerPtr    setModuleManager    =nullptr,
-                    DisplayManagerPtr   setDisplayManager   =nullptr,
-                    ShellPtr            setLasShell         =nullptr
-                );
-        ~Framework  ();
+        Framework();
+        ~Framework();
 
         bool setup  ();
         void run    ();
 
     private:
-        ModuleManagerPtr    moduleManager;
-        DisplayManagerPtr   displayManager;
-        ShellPtr            shell;
+        static constexpr char       COMMAND_GROUP_NAME[4]   {"las"};    // Group for all built in commands
+        static constexpr int16_t    NUM_CACHED_COMMANDS     { 50 };     // How many previous commands will be added to command history upon startup
+        static constexpr uint8_t    MAX_WINDOWS             { 32 };
 
-        static constexpr char       COMMAND_GROUP_NAME[4]  {"las"};     // Group for all built in commands
-        static constexpr int16_t    NUM_CACHED_COMMANDS  { 50 };        // How many previous commands will be added to command history upon startup
+        ModuleManager   moduleManager;
+        DisplayManager  displayManager;
+        Shell           shell;
 
-        bool                setupComplete               { false };
+        bool setupComplete { false };
+
+        Display::LogWindow logWindow { }; // Needed to store logs
+
 
         bool setupShell             (const std::string& rcPath, const std::string& commandHistoryPath);
         bool setupModuleManager     (const std::string& moduleLoadDir, const std::string& moduleFilesDir);

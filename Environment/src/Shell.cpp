@@ -23,8 +23,7 @@ const std::ostringstream& ShellTextBuffer::getText() const {
 
 
 
-Shell::Shell() : Window("Console", MenuOption::UTILITY)
-{
+Shell::Shell() {
 
 }
 Shell::~Shell(){

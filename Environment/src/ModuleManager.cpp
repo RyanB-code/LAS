@@ -179,15 +179,6 @@ const StringVector ModuleManager::getModuleNames() const{
     }
     return names;
 }
-WindowList ModuleManager::getAllWindows()    const{
-    WindowList list;
-
-    for(auto module : modules){
-        list.push_back(module.second->getWindow());
-    }
-
-    return list;
-}
 std::string ModuleManager::getModuleLoadDirectory() const{
     return moduleLoadDirectory;
 }

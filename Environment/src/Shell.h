@@ -16,13 +16,6 @@
 #include <unordered_map>
 
 
-// Forward Declarations
-namespace LAS{
-    class Shell;
-}
-
-using ShellPtr          = std::shared_ptr<LAS::Shell>;
-
 namespace LAS{
 
     class ShellTextBuffer {
@@ -44,7 +37,7 @@ namespace LAS{
         Shell();
         ~Shell();
 
-        void draw() override;   // For drawing the window
+        void draw();   // For drawing the window
     
         // Commands
         bool addCommandGroup    (const std::string& name);

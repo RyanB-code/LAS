@@ -1,7 +1,6 @@
 #pragma once
 
 #include <LAS/Logging.h>
-#include <LAS/Window.h>
 #include <LAS/Commands.h>
 #include <LAS/Information.h>
 
@@ -12,14 +11,13 @@
 
 using namespace LAS::Information;
 using namespace LAS::Logging;
-using namespace LAS::Windowing;
 
 namespace LAS{
 
     class Module;
     using ModulePtr = std::shared_ptr<Module>;
 
-    namespace Modules{
+    namespace ModuleFunctions{
         typedef bool(*LoadModuleInfo)       (ModuleInfo&);      
         typedef bool(*LoadEnvironmentInfo)  (const EnvironmentInfo&); 
         typedef void(*VoidNoParams)         (); 
@@ -27,22 +25,19 @@ namespace LAS{
 
     class Module{
     public:
-        explicit Module(    LAS::Modules::LoadModuleInfo            setLoadModuleInfo,
-                            LAS::Modules::LoadEnvironmentInfo       setLoadEnvironmentInfo,
-                            LAS::Modules::VoidNoParams              setCleanup
+        explicit Module(    LAS::ModuleFunctions::LoadModuleInfo            setLoadModuleInfo,
+                            LAS::ModuleFunctions::LoadEnvironmentInfo       setLoadEnvironmentInfo,
+                            LAS::ModuleFunctions::VoidNoParams              setCleanup
                         );
         ~Module();
 
         bool    setDirectory    (std::string directory);
         bool    setRCFilePath   (const std::string& path);
 
-        const Version&              getSDKVersion()     const;
-        const Version&              getModuleVersion()  const;
-        std::string                 getTitle()          const;
-        std::string                 getGroupName()      const;
+        const ModuleInfo& getModuleInfo() const;
+
         std::string                 getDirectory()      const;
         std::string                 getRCFilePath()     const;
-        WindowPtr                   getWindow()         const;
 
         std::vector<CommandPtr>&    getCommands();
 
@@ -56,8 +51,8 @@ namespace LAS{
         std::string directory;
         std::string rcFilePath;
 
-        LAS::Modules::LoadModuleInfo        loadModuleInfoPtr   {};
-        LAS::Modules::LoadEnvironmentInfo   loadEnvInfoPtr      {};
-        LAS::Modules::VoidNoParams          cleanupPtr          {};
+        LAS::ModuleFunctions::LoadModuleInfo        loadModuleInfoPtr   {};
+        LAS::ModuleFunctions::LoadEnvironmentInfo   loadEnvInfoPtr      {};
+        LAS::ModuleFunctions::VoidNoParams          cleanupPtr          {};
     };
 }
