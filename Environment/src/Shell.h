@@ -32,19 +32,20 @@ namespace LAS{
         std::ostringstream textBuffer;
     };
 
-    class Shell : public Windowing::Window{
+    class Shell {
     public:
         Shell();
         ~Shell();
 
         void draw();   // For drawing the window
+        void setShown (std::shared_ptr<bool> set);
     
         // Commands
         bool addCommandGroup    (const std::string& name);
         bool removeCommandGroup (const std::string& name);
-        const std::unordered_map<std::string, CommandPtr>& getGroup (const std::string& name) const;        // Throws out of range if not found
+        const std::unordered_map<std::string, std::shared_ptr<Command>>& getGroup (const std::string& name) const;        // Throws out of range if not found
 
-        bool addCommand             (const std::string& groupName, CommandPtr command);                         // Adds command to list of known commands
+        bool addCommand             (const std::string& groupName,  std::shared_ptr<Command> command);                         // Adds command to list of known commands
         bool addToCommandHistory    (const std::string& text);
  
         bool getAllGroupsManuals    (std::ostringstream& os)                                const;
@@ -77,7 +78,7 @@ namespace LAS{
 
 
     private:
-        std::unordered_map  <std::string, std::unordered_map<std::string, CommandPtr>>  commands{ };    // Holds commands by group
+        std::unordered_map  <std::string, std::unordered_map<std::string, std::shared_ptr<LAS::Command>>>  commands{ };    // Holds commands by group
         std::unordered_map  <std::string, std::string>                                  aliases { };
 
         std::queue          <std::string>   commandQueue    { };
@@ -86,7 +87,10 @@ namespace LAS{
 
         std::string rcPath              { };
         std::string commandHistoryPath  { };
+        
+        std::shared_ptr<bool> shown;
     };
+
 
     namespace ShellHelper{
         bool        readRCFile              (const std::string& path, std::queue<std::string>& queue);

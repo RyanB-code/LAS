@@ -7,6 +7,7 @@
 #include <GLFW/glfw3.h>
 
 #include <map>
+#include <iostream>
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
@@ -31,13 +32,13 @@ namespace LAS{
             std::string             title { };
             std::shared_ptr<bool>   shown { };
 
-            LAS::ModuleFunctions::DrawFunction drawFunction;
+            std::function<void()> drawFunction;
         };
 
         bool ensureIniExists (const std::string& path);  
 
-        bool initGLFW(GLFWwindow* window, const std::string& title);
-        bool initImgui(GLFWwindow* window, const std::string& iniPath);
+        bool initGLFW(GLFWwindow** window, const std::string& title);
+        bool initImgui(GLFWwindow** window, const std::string& iniPath);
 
         std::string makeKey (const std::string& text);
 
@@ -72,7 +73,7 @@ namespace LAS{
         std::string getIniPath  () const;
         bool saveWindowConfig   () const;
 
-        bool    addWindow       (const std::string& title, LAS::ModuleFunctions::DrawFunction drawFunction);
+        bool    addWindow       (const std::string& title, std::function<void()> drawFunction);
         bool    containsWindow  (const std::string& title) const;
         Display::Info& at       (const std::string& title);         // Throws the same as map::at
 
@@ -85,10 +86,10 @@ namespace LAS{
         std::map<std::string, Display::Info>::const_iterator cend() const;
 
     private:
-        static constexpr char  windowTitle[23] { "Life Application Suite" };
+        static constexpr char  WINDOW_TITLE[23] { "Life Application Suite" };
 
         std::string iniPath;
-        GLFWwindow* window;
+        GLFWwindow* window {nullptr};
 
         std::map<std::string, Display::Info> windowInformation { };
 

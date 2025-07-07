@@ -2,9 +2,9 @@
 
 using namespace LAS;
 
-Module::Module( LAS::Modules::LoadModuleInfo            setLoadModuleInfo,
-                LAS::Modules::LoadEnvironmentInfo       setLoadEnvironmentInfo,
-                LAS::Modules::VoidNoParams              setCleanup) :
+Module::Module( LAS::ModuleFunctions::LoadModuleInfo            setLoadModuleInfo,
+                LAS::ModuleFunctions::LoadEnvironmentInfo       setLoadEnvironmentInfo,
+                LAS::ModuleFunctions::VoidNoParams              setCleanup) :
         loadModuleInfoPtr   {setLoadModuleInfo},
         loadEnvInfoPtr      {setLoadEnvironmentInfo},
         cleanupPtr          {setCleanup}
@@ -30,7 +30,7 @@ bool Module::setRCFilePath(const std::string& path){
     rcFilePath = path;
     return true;
 }
-const ModuleInfo::getModuleInfo() const{
+const ModuleInfo& Module::getModuleInfo() const{
     return moduleInfo;
 }
 std::string Module::getDirectory() const{
@@ -39,7 +39,7 @@ std::string Module::getDirectory() const{
 std::string Module::getRCFilePath() const{
     return rcFilePath;
 }
-std::vector<CommandPtr>& Module::getCommands(){
+std::vector<std::shared_ptr<Command>>& Module::getCommands(){
     return moduleInfo.commands;
 }
 void Module::cleanup(){

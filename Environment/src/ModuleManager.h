@@ -39,7 +39,7 @@ namespace LAS{
         void loadAllModules  (ImGuiContext& context, StringVector& modulesNotLoaded, std::string loadDirectory="", std::string filesDirectory=""); // Clears the StringVector first
         bool loadModule      (std::string moduleFilesDirectory, ImGuiContext& context, const std::string& fileName);
 
-        void clearNonUtilityModules();
+        void clearModules   ();
 
     private:
         std::unordered_map<std::string, ModulePtr> modules{};

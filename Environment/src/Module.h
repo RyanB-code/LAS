@@ -21,7 +21,7 @@ namespace LAS{
         typedef bool(*LoadModuleInfo)       (ModuleInfo&);      
         typedef bool(*LoadEnvironmentInfo)  (const EnvironmentInfo&); 
         typedef void(*VoidNoParams)         (); 
-    };
+    }
 
     class Module{
     public:
@@ -39,7 +39,7 @@ namespace LAS{
         std::string                 getDirectory()      const;
         std::string                 getRCFilePath()     const;
 
-        std::vector<CommandPtr>&    getCommands();
+        std::vector<std::shared_ptr<Command>>&    getCommands();
 
         bool    loadModuleInfo();
         bool    loadEnvInfo(const EnvironmentInfo& envInfo);

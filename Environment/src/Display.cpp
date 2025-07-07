@@ -15,7 +15,7 @@ bool Display::ensureIniExists (const std::string& path){
         return false;
 }
 
-bool Display::initGLFW(GLFWwindow* window, const std::string& title){
+bool Display::initGLFW(GLFWwindow** window, const std::string& title){
     if(!glfwInit()){
         log_critical("Could not initialize GLFW.");
         return false;
@@ -27,7 +27,7 @@ bool Display::initGLFW(GLFWwindow* window, const std::string& title){
 
     
     // Creates the window in windowed mode
-    window = glfwCreateWindow(640, 480, title.c_str(), NULL, NULL);
+    *window = glfwCreateWindow(640, 480, title.c_str(), NULL, NULL);
 
     if(!window){
         log_critical("Could not obtain window context");
@@ -35,16 +35,17 @@ bool Display::initGLFW(GLFWwindow* window, const std::string& title){
         return false;
     }
 
-    glfwMakeContextCurrent(window);
+    glfwMakeContextCurrent(*window);
 
     return true;
 }
-bool Display::initImgui(GLFWwindow* window, const std::string& iniFilePath){
+bool Display::initImgui(GLFWwindow** window, const std::string& iniFilePath){
 
     if(!std::filesystem::exists(iniFilePath)){
         log_warn("Could not find ImGui INI file at [" + iniFilePath + "]");
         return false;
     }
+
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -59,7 +60,7 @@ bool Display::initImgui(GLFWwindow* window, const std::string& iniFilePath){
     // Setup Platform/Renderer backends
 
     // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
-    if(!ImGui_ImplGlfw_InitForOpenGL(window, true) || !ImGui_ImplOpenGL3_Init() ) {
+    if(!ImGui_ImplGlfw_InitForOpenGL(*window, true) || !ImGui_ImplOpenGL3_Init() ) {
         log_critical("Could not initialize ImGui with OpenGL/GLFW");
         return false;
     }
@@ -70,8 +71,9 @@ bool Display::initImgui(GLFWwindow* window, const std::string& iniFilePath){
 std::string Display::makeKey(const std::string& text) {
     std::string key;
 
-    std::transform(text.begin(), text.end(), key.begin(),
-                [](unsigned char c) { return std::tolower(c); });
+    for(const char& c : text)
+        key += tolower(c);
+
     return key;
 }
 
@@ -174,10 +176,10 @@ bool DisplayManager::init(const std::string& imGuiIniPath){
 
     iniPath = imGuiIniPath;
 
-    if(!initGLFW(window, windowTitle))
+    if(!initGLFW(&window, WINDOW_TITLE))
         return false;
 
-    if(!initImgui(window, imGuiIniPath))
+    if(!initImgui(&window, iniPath))
         return false;
 
     return true;    
@@ -225,12 +227,12 @@ bool DisplayManager:: saveWindowConfig() const{
     ImGui::SaveIniSettingsToDisk(iniPath.c_str());
     return true;
 }
-bool DisplayManager::addWindow(const std::string& title, LAS::ModuleFunctions::DrawFunction drawFunction){
+bool DisplayManager::addWindow(const std::string& title, std::function<void()> drawFunction){
     std::string key { Display::makeKey(title) };
 
     if(windowInformation.contains(key))
         return false;
-    
+
     return windowInformation.try_emplace(key, Info{title, std::make_shared<bool>(false), drawFunction}).second;
 }
 bool DisplayManager::containsWindow(const std::string& title) const {

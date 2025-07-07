@@ -2,7 +2,6 @@
 
 
 using namespace LAS;
-using namespace LAS::Windowing;
 
 ShellTextBuffer::ShellTextBuffer() {
 
@@ -32,7 +31,7 @@ Shell::~Shell(){
 
 void Shell::draw(){
 
-    if(!ImGui::Begin(title.c_str(), &shown)){
+    if(!ImGui::Begin(Display::SHELL_WINDOW_NAME, &*shown)){
         ImGui::End();
         return;
     }
@@ -159,11 +158,15 @@ void Shell::draw(){
 
     ImGui::End();
 }
+void Shell::setShown(std::shared_ptr<bool> set) {
+    shown = set;
+    return;
+}
 bool Shell::addCommandGroup(const std::string& name){
     if(commands.contains(name))
         return false;
   
-    return commands.try_emplace(name, std::unordered_map<std::string, CommandPtr>{}).second;
+    return commands.try_emplace(name, std::unordered_map<std::string, std::shared_ptr<Command>>{}).second;
 }
 bool Shell::removeCommandGroup (const std::string& name){
     if(commands.contains(name)){
@@ -173,15 +176,15 @@ bool Shell::removeCommandGroup (const std::string& name){
     else
         return false;
 }
-const std::unordered_map<std::string, CommandPtr>& Shell::getGroup (const std::string& name) const{
+const std::unordered_map<std::string, std::shared_ptr<Command>>& Shell::getGroup (const std::string& name) const{
     if(!commands.contains(name))
         throw std::out_of_range{"No command group\"" + name + "\" found."};
     
     return 
         commands.at(name);
 }
-bool Shell::addCommand(const std::string& groupName, CommandPtr command){
-    if(!commands.contains(groupName))
+bool Shell::addCommand(const std::string& groupName, std::shared_ptr<Command> command){
+    if(!commands.contains(groupName) || !command)
         return false;
     
     try{
@@ -191,7 +194,7 @@ bool Shell::addCommand(const std::string& groupName, CommandPtr command){
         if(group.contains(command->getKey()))
             return false;
 
-        group.try_emplace(command->getKey(), std::move(command));
+        group.try_emplace(command->getKey(), command);
         return true;
     }
     catch(std::out_of_range& e){
@@ -216,8 +219,8 @@ bool Shell::getGroupManual(std::ostringstream& os, const std::string& groupName)
     // 32 spaces is the size of 2 tabs and 20 chars
     static const std::string padding {"                                "};
 
-    for(const auto& command : getGroup(groupName)){
-        std::string description {command.second->getDescription()};
+    for(auto& [key, command] : getGroup(groupName)){
+        std::string description {command->getDescription()};
         size_t charNum { 0 };
 
         while(charNum < description.size()){
@@ -229,7 +232,7 @@ bool Shell::getGroupManual(std::ostringstream& os, const std::string& groupName)
             ++charNum;
         }
 
-        os << std::format("\t{:20}\t", command.second->getKey());
+        os << std::format("\t{:20}\t", command->getKey());
         os << std::format("\t{}\n", description);
         
     }
@@ -326,14 +329,14 @@ bool Shell::handleCommandQueue(bool writeToHistory){
                 auto& group  {getGroup(firstArg) };     // Sets the group
                 arguments.erase(arguments.begin());     // Removes the group from arg list
 
-                std::string command {arguments [0]};    // Contains first actual command to be run
+                std::string commandString {arguments [0]};    // Contains first actual command to be run
                 arguments.erase(arguments.begin());     // Removes the command key from arg list, leaving just the arguments
 
                 // Verify command exists
-                if(group.contains(command))
-                    consoleTextBuffer.write(group.at(command)->execute(arguments).second.str());   // Execute command and pass to every output
+                if(group.contains(commandString))
+                    consoleTextBuffer.write(group.at(commandString)->execute(arguments).second.str());   // Execute command and pass to every output
                 else
-                    consoleTextBuffer.write("Command \"" + command + "\" not found in group \"" + firstArg + "\".\n");
+                    consoleTextBuffer.write("Command \"" + commandString + "\" not found in group \"" + firstArg + "\".\n");
             }
             catch(std::out_of_range& e){
                 consoleTextBuffer.write("Could not find command group \"" + firstArg + "\".\n");

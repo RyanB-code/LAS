@@ -3,16 +3,12 @@
 #include <string>
 #include <vector>
 #include <imgui/imgui.h>
+#include <functional>
 
 #include "LAS/Logging.h"
 #include "LAS/Commands.h"
 
 namespace LAS{
-
-    namespace ModuleFunctions {
-        typedef void(*UpdateFunction)();
-        typedef void(*DrawFunction)();
-    }
 
     namespace Information{
         struct Version{
@@ -26,10 +22,11 @@ namespace LAS{
 
             std::string             title               { };
             std::string             commandGroupName    { };
-            std::vector<CommandPtr> commands            { };
+
+            std::vector<std::shared_ptr<Command>> commands { };
  
-            ModuleFunctions::UpdateFunction updateFunction { };
-            ModuleFunctions::DrawFunction   drawFunction   { };
+            std::function<void()>     updateFunction;
+            std::function<void()>     drawFunction;
        };
         struct EnvironmentInfo {
             std::string     directory   {};

@@ -8,7 +8,7 @@ namespace LAS::Commands{
 
 
 
-Manual::Manual(std::weak_ptr<Shell> setShell)
+Manual::Manual(std::shared_ptr<Shell> setShell)
     :   Command {"man", "Show manual pages"},
         shell   {setShell}
 {
@@ -18,20 +18,13 @@ Manual::~Manual(){
 
 }
 std::pair<int, std::ostringstream> Manual::execute(const StringVector&){
-    std::shared_ptr<Shell> tempShell { shell.lock() };
-
-    if(!tempShell)
-        return pairErrorWithMessage("\tCould not access necessary shell\n");
-
     std::ostringstream os;
-    tempShell->getAllGroupsManuals(os);
+    shell->getAllGroupsManuals(os);
 
     return pair(0, os.str());
 }
 // MARK: Set
-Set::Set(   std::weak_ptr<DisplayManager> setDM,
-            std::weak_ptr<ModuleManager>  setMM,
-            std::weak_ptr<Shell>          setShell 
+Set::Set(   std::shared_ptr<DisplayManager> setDM, std::shared_ptr<ModuleManager>  setMM, std::shared_ptr<Shell> setShell 
         ) 
         :   Command {"set",     "<setting> <value>\n"
                                 "log-tag-text-box-size <int>\tSets the text box size for log tags\n"
@@ -52,13 +45,6 @@ Set::~Set(){
 
 }
 std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
-    std::shared_ptr<DisplayManager> tempDisplayManager { displayManager.lock()};
-    std::shared_ptr<ModuleManager>  tempModuleManager  { moduleManager.lock()};
-    std::shared_ptr<Shell>          tempShell          { shell.lock() };
-
-    if(!tempDisplayManager|| !tempModuleManager)
-        return pair(-1, "\tCould not access necessary items\n");
-    
     std::pair<int, std::ostringstream> returnBuf;
 
     if(args.size() < 2){
@@ -170,7 +156,7 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
             return pairInvalidArgument(args[1]);
     }
     else if(args[0] == "rc-file-path"){
-        if(tempShell->setRCPath(args[1], false))
+        if(shell->setRCPath(args[1], false))
             return pairNormal();
         else
             return pairErrorWithMessage("Could not set RC file path to \"" + args[1] + "\"\n");
@@ -178,12 +164,13 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
     else{
         return pairInvalidArgument(args[0]);
     }
+
+    return pairInvalidArgument(args[0]);
+
 }
 
 // MARK: Print
-Print::Print(   std::weak_ptr<DisplayManager> setDM,
-                std::weak_ptr<ModuleManager>  setMM
-            )
+Print::Print(   std::shared_ptr<DisplayManager> setDM, std::shared_ptr<ModuleManager>  setMM )
         :   Command {"print",   "Prints information\n"
                                 "<arg> [option]\n"
                                 "\t--settings [option]\t Show all settings\n"
@@ -200,12 +187,6 @@ Print::~Print(){
 
 }
 std::pair<int, std::ostringstream> Print::execute(const StringVector& args) {
-    std::shared_ptr<DisplayManager> tempDisplayManager { displayManager.lock()};
-    std::shared_ptr<ModuleManager>  tempModuleManager  { moduleManager.lock()};
-
-    if(!tempDisplayManager|| !tempModuleManager)
-        return pairErrorWithMessage("\tCould not access necessary items\n");
-    
     std::ostringstream os;
 
     bool addLogSettings {false}, addModuleSettings{false}, addDisplaySettings{false}, optionFound{false};
@@ -255,7 +236,7 @@ std::pair<int, std::ostringstream> Print::execute(const StringVector& args) {
     }
     if(addModuleSettings){
         os <<   "Module Manager Settings:\n"  
-                "\tModule Directory: " << tempModuleManager->getModuleLoadDirectory() << "\n";
+                "\tModule Directory: " << moduleManager->getModuleLoadDirectory() << "\n";
     }
     if(addDisplaySettings)
         os <<   "Display Settings:\n"
@@ -289,10 +270,7 @@ std::pair<int, std::ostringstream> Echo::execute(const StringVector& args) {
 }
 
 // MARK: Module Control
-ModuleControl::ModuleControl(   std::weak_ptr<DisplayManager>   setDisplayManager,
-                                std::weak_ptr<ModuleManager>    setModuleManager,
-                                std::weak_ptr<Shell>            setShell
-                            )
+ModuleControl::ModuleControl(   std::shared_ptr<DisplayManager>   setDisplayManager, std::shared_ptr<ModuleManager> setModuleManager, std::shared_ptr<Shell> setShell )
     :   Command {"modulectl",   "Interact with the module controller\n"
                                 "<action> <command> [optional]\n"
                                 "set <arg>\t\t\tApplies changes\n" 
@@ -311,14 +289,6 @@ ModuleControl::~ModuleControl(){
 
 }
 std::pair<int, std::ostringstream> ModuleControl::execute(const StringVector& args){
-    std::shared_ptr<DisplayManager> tempDisplayManager { displayManager.lock()};
-    std::shared_ptr<ModuleManager>  tempModuleManager  { moduleManager.lock()};
-    std::shared_ptr<Shell>          tempShell          { shell.lock()};
-
-
-    if(!tempDisplayManager|| !tempModuleManager || !tempShell)
-        return pairErrorWithMessage("Could not access necessary items");
-
     // 0 = verb, 1 = what, 2 = option/dir, 3 = directory
     
     bool setDirectory       { false };
@@ -365,30 +335,30 @@ std::pair<int, std::ostringstream> ModuleControl::execute(const StringVector& ar
             }
 
             // Set directory
-            if(!tempModuleManager->setModuleLoadDirectory(args[3]))
+            if(!moduleManager->setModuleLoadDirectory(args[3]))
                 return pairErrorWithMessage("Failed to set module directory to \"" + args[3] + "\"\nProcess aborted\n");
         }
         else{
             // No optional found
-            if(!tempModuleManager->setModuleLoadDirectory(args[3]))
+            if(!moduleManager->setModuleLoadDirectory(args[3]))
                 return pairErrorWithMessage("Failed to set module directory to \"" + args[3] + "\"\n");
         }
     }
 
     if(reload){
-        tempDisplayManager->closeAllWindows();
-        tempDisplayManager->clearModuleWindows();
-        tempModuleManager->clearNonUtilityModules();
+        displayManager->closeAllWindows();
+        displayManager->clearModuleWindows();
+        moduleManager->clearModules();
 
         // Load Modules
         StringVector notLoaded{};
-        tempModuleManager->loadAllModules(*ImGui::GetCurrentContext(), notLoaded);
+        moduleManager->loadAllModules(*ImGui::GetCurrentContext(), notLoaded);
 
         // Load Windows
         int windowsNotLoaded{0};
-        for(auto name : tempModuleManager->getModuleNames()){
-            auto mod { tempModuleManager->getModule(name) };
-            if(!tempDisplayManager->addWindow(mod->getModuleInfo().title, mod->getModuleInfo().drawFunction))
+        for(auto name : moduleManager->getModuleNames()){
+            auto mod { moduleManager->getModule(name) };
+            if(!displayManager->addWindow(mod->getModuleInfo().title, std::function<void()>{mod->getModuleInfo().drawFunction}))
                 ++windowsNotLoaded;
         }
 
@@ -416,21 +386,21 @@ std::pair<int, std::ostringstream> ModuleControl::execute(const StringVector& ar
     }
 
     if(reloadByName){
-        if(!tempModuleManager->containsModule(args[1]))
+        if(!moduleManager->containsModule(args[1]))
             return pairErrorWithMessage("Could not find module \"" + args[1] + "\"\n");
 
-        std::string moduleRCFilePath {tempModuleManager->getModule(args[1])->getRCFilePath()};
+        std::string moduleRCFilePath {moduleManager->getModule(args[1])->getRCFilePath()};
         std::queue<std::string> lines;
 
         LAS::ShellHelper::readRCFile(moduleRCFilePath, lines);          // Read RC file 
         for (/*Nothing*/; !lines.empty(); lines.pop())                  // Add to command queue
-            tempShell->addToQueue(lines.front());
+            shell->addToQueue(lines.front());
         return pairNormal();        
     }
 
     if(listModules){
         std::ostringstream os;
-        for(auto& s : tempModuleManager->getModuleNames()){
+        for(auto& s : moduleManager->getModuleNames()){
             os << s << "\n";
         }
         return pair(0, os.str());
@@ -454,7 +424,7 @@ std::pair<int, std::ostringstream> Information::execute(const StringVector&) {
 }
 
 // MARK: Reload
-Reload::Reload(std::weak_ptr<Shell> setShell)
+Reload::Reload(std::shared_ptr<Shell> setShell)
     :   Command {"reload", "Runs the Environment's .las-rc file\n"},
         shell   {setShell}
 {
@@ -464,22 +434,17 @@ Reload::~Reload(){
 
 }
 std::pair<int, std::ostringstream> Reload::execute(const StringVector& args){
-    std::shared_ptr<Shell> tempShell { shell.lock() };
-
-    if(!tempShell)
-        return pairErrorWithMessage("\tCould not access necessary shell\n");
-
     // Reset all aliases
-    tempShell->removeAllAliases();
+    shell->removeAllAliases();
 
-    if(!tempShell->readRCFile())
-        return pairErrorWithMessage("\tFailure to read RC file at \"" + tempShell->getRCPath() + "\"\n");
+    if(!shell->readRCFile())
+        return pairErrorWithMessage("\tFailure to read RC file at \"" + shell->getRCPath() + "\"\n");
     else
         return pairNormal();
 
 }
 // MARK: Display Control
-DisplayControl::DisplayControl( std::weak_ptr<DisplayManager> setDisplayManager ) 
+DisplayControl::DisplayControl(std::shared_ptr<DisplayManager> setDisplayManager ) 
     :   Command         { "displayctl", "Interact with the display controller\n"
                                 "save-config          \tSaves the window configuration\n"
                                 "show-all-window-info \tShows all window information\n"
@@ -495,15 +460,10 @@ DisplayControl::~DisplayControl(){
 
 }
 std::pair<int, std::ostringstream> DisplayControl::execute(const StringVector& args){
-    std::shared_ptr<DisplayManager> tempDisplayManager { displayManager.lock() };
-
-    if(!tempDisplayManager)
-        return pairErrorWithMessage("\tCould not access necessary display manager\n");
-
     if(args.empty())
         return pairErrorWithMessage("This command requires at least one argument\n");
     else if(args[0] == "save-config"){
-        if(tempDisplayManager->saveWindowConfig())
+        if(displayManager->saveWindowConfig())
             return pairNormal();
         else
             return pairErrorWithMessage("Could not save window configuration\n");
@@ -520,11 +480,11 @@ std::pair<int, std::ostringstream> DisplayControl::execute(const StringVector& a
         msg << std::format("{:<{}}", "Status",	openWidth);
         msg << '\n' << std::format("{:-<{}}", '-', tableWidth) << "\n";
 
-        for(auto itr {tempDisplayManager->cbegin()}; itr != tempDisplayManager->cend(); ++itr){
+        for(auto itr {displayManager->cbegin()}; itr != displayManager->cend(); ++itr){
             msg << std::format("{:<{}}", itr->second.title, nameWidth);
 
             std::string shownString;
-            bool open {tempDisplayManager->shown(itr->second.title)};
+            bool open {displayManager->shown(itr->second.title)};
             open ? shownString = "open" : shownString = "closed";
             msg << std::format("{:<{}}", shownString, openWidth);
             msg << '\n';
@@ -534,7 +494,7 @@ std::pair<int, std::ostringstream> DisplayControl::execute(const StringVector& a
 
 
     if(args.size() == 2){
-        if(!tempDisplayManager->containsWindow(args[0]))
+        if(!displayManager->containsWindow(args[0]))
             return pairErrorWithMessage("No window was found with ID " + args[0]);
 
         bool shownStatus { false };
@@ -545,7 +505,7 @@ std::pair<int, std::ostringstream> DisplayControl::execute(const StringVector& a
         else
             return pairInvalidArgument(args[1]);
 
-        bool& open {*tempDisplayManager->shown(args[0])};
+        bool& open {*displayManager->shown(args[0])};
         open = shownStatus;
         
         return pairNormal();

@@ -22,9 +22,6 @@ namespace LAS{
         std::string key, description;
     };
 
-    using CommandPtr    = std::unique_ptr<Command>;
-    using CommandList   = std::vector<CommandPtr>;
-
     namespace CommandHelper{
         std::pair<int, std::ostringstream> pair                     (int returnCode, const std::string& msg);
         std::pair<int, std::ostringstream> pairNormal               ();

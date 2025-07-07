@@ -11,13 +11,15 @@ ModuleManager::~ModuleManager(){
 
 }
 bool ModuleManager::addModule(const ModulePtr& module){
+    const ModuleInfo& info {module->getModuleInfo()};
+
     // Check if modules contains a module of the same title before adding
-    if(modules.contains(module->getTitle())){
+    if(modules.contains(info.title)){
         return false;
     }
     else{
-        modules.try_emplace(module->getTitle(), module);
-        return modules.contains(module->getTitle());        // verify module has been added successfully by checking and returning
+        modules.try_emplace(info.title, module);
+        return modules.contains(info.title);        // verify module has been added successfully by checking and returning
     }
 }
 bool ModuleManager::removeModule(std::string title){
@@ -73,6 +75,7 @@ bool ModuleManager::loadModule  (std::string parentDirectory, ImGuiContext& cont
     }
     
     ModulePtr moduleBuffer;
+    const ModuleInfo& info { moduleBuffer->getModuleInfo() };
     try{
         moduleBuffer = LAS::Modules::bindFiletoModule(fileName, context);
     }
@@ -83,7 +86,7 @@ bool ModuleManager::loadModule  (std::string parentDirectory, ImGuiContext& cont
 
     // This writes library information to the buffer
     if(!moduleBuffer->loadModuleInfo()){
-        log_error("loadModuleInfo() returned false from Module [" + moduleBuffer->getTitle() + "]. Loading procedure terminated");
+        log_error("loadModuleInfo() returned false from Module [" + info.title + "]. Loading procedure terminated");
         return false;
     }
 
@@ -102,22 +105,22 @@ bool ModuleManager::loadModule  (std::string parentDirectory, ImGuiContext& cont
             return false;
             break;
         case 3:
-            log_error("Command group is empty from Module [" + moduleBuffer->getTitle() + "]");
+            log_error("Command group is empty from Module [" + info.title + "]");
             return false;
             break;
         case 4:
-            log_error("Command group name rejected from Module [" + moduleBuffer->getTitle() + "]");
+            log_error("Command group name rejected from Module [" + info.title + "]");
             return false;
             break;
         case 5:
         case 6:
-            log_warn("SDK version mismatch. Issues may occur. Module [" + moduleBuffer->getTitle() + "] made with SDK version " + versionToStr(moduleBuffer->getSDKVersion()) + "."
+            log_warn("SDK version mismatch. Issues may occur. Module [" + info.title + "] made with SDK version " + versionToStr(info.sdkVersion) + "."
                         "Environment SDK is version  " + LAS::SDK::getVersion());
             break;
         case 7:
             fatalMsg    << "Fatal version mismatch. Environment SDK is " << LAS::SDK::getVersion() 
-                        << ". Module [" << moduleBuffer->getTitle() 
-                        << "] SDK version is " << versionToStr(moduleBuffer->getSDKVersion());
+                        << ". Module [" << info.title 
+                        << "] SDK version is " << versionToStr(info.sdkVersion);
             log_error( fatalMsg.str());
             return false;
             break;
@@ -127,7 +130,7 @@ bool ModuleManager::loadModule  (std::string parentDirectory, ImGuiContext& cont
             break;
     }
 
-    std::string formattedTitle { LAS::TextManip::ensureAlNumNoSpaces(moduleBuffer->getTitle())};
+    std::string formattedTitle { LAS::TextManip::ensureAlNumNoSpaces(info.title)};
     parentDirectory = LAS::TextManip::ensureSlash(parentDirectory);
 
     std::string rcPathTitle = {formattedTitle};
@@ -143,39 +146,39 @@ bool ModuleManager::loadModule  (std::string parentDirectory, ImGuiContext& cont
 
     // Check directories can be made
     if(!LAS::ensureDirectory(moduleFilesDirectory)){
-        log_error("Could not find or create directory [" + moduleFilesDirectory + "] for Module [" + moduleBuffer->getTitle() + "]");
+        log_error("Could not find or create directory [" + moduleFilesDirectory + "] for Module [" + info.title + "]");
         return false;
     }
     if(!LAS::ensureFile(moduleRCFilePath)){
-        log_error("Could not find or create file [" + moduleRCFilePath + "] for Module [" + moduleBuffer->getTitle() + "]");
+        log_error("Could not find or create file [" + moduleRCFilePath + "] for Module [" + info.title + "]");
         return false;
     }
 
-    log_info("Checks passed for Module [" + moduleBuffer->getTitle() + "] version " + versionToStr(moduleBuffer->getModuleVersion()));
+    log_info("Checks passed for Module [" + info.title + "] version " + versionToStr(info.moduleVersion));
     log_info("Setting up module...");
 
 
     // Pass environment info only if all files could be created
     EnvironmentInfo envInfo {moduleFilesDirectory, moduleRCFilePath, context};
     if(!moduleBuffer->loadEnvInfo(envInfo)){
-        log_error("Failed loading environment info from Module [" + moduleBuffer->getTitle() + "]");
+        log_error("Failed loading environment info from Module [" + info.title + "]");
         return false;
     }
 
     if(!addModule(moduleBuffer)){
-        log_error("Could not add module [" + moduleBuffer->getTitle() + "]");
+        log_error("Could not add module [" + info.title + "]");
         return false;
     }
     
-    log_info("Setup complete for Module [" + moduleBuffer->getTitle() + "]");
+    log_info("Setup complete for Module [" + info.title + "]");
 
     return true;
 }
 
 const StringVector ModuleManager::getModuleNames() const{
     StringVector names;
-    for(auto module : modules){
-        names.push_back(module.second->getTitle());
+    for(auto [key, modulePtr] : modules){
+        names.push_back(modulePtr->getModuleInfo().title);
     }
     return names;
 }
@@ -203,27 +206,16 @@ bool ModuleManager::setModuleFilesDirectory(const std::string& directory){
     moduleFilesDirectory = qualifiedDirectory;
     return true;
 }
-void ModuleManager::clearNonUtilityModules(){
-    std::unordered_map<std::string, ModulePtr>::iterator itr;
-
-    std::vector<std::unordered_map<std::string, ModulePtr>::iterator> modulesToErase{};
-
-    for(itr = modules.begin(); itr != modules.end(); ++itr){
-        if(itr->second->getWindow()->getMenuOption() != Windowing::MenuOption::UTILITY)
-           modulesToErase.push_back(itr);
-    }
-
-    for(auto i : modulesToErase){
-        i->second->cleanup();
-        modules.erase(i);
-    }
+void ModuleManager::clearModules() {
+    modules.clear();
 }
-
 
 // MARK: LASCore Namespace 
 namespace LAS::Modules{
 
     ModulePtr bindFiletoModule(const std::string& path, const ImGuiContext& context){
+        using namespace ModuleFunctions;
+
         void* lib {dlopen(path.c_str(), RTLD_LAZY)};    // Map the shared object file
 
         if(!lib)
@@ -245,10 +237,12 @@ namespace LAS::Modules{
         if(!module)
             return 1;
 
-        if(module->getTitle().empty())
+        const ModuleInfo& info { module->getModuleInfo() };
+
+        if(info.title.empty())
             return 2;
 
-        std::string groupName {module->getGroupName()};
+        std::string groupName {info.commandGroupName};
         if(groupName.empty())
             return 3;
         
@@ -259,7 +253,7 @@ namespace LAS::Modules{
         }
 
         const Version sdkVersion    {LAS::SDK::getVersionMajor(), LAS::SDK::getVersionMinor(), LAS::SDK::getVersionPatch()};
-        const Version moduleVersion {module->getSDKVersion()};
+        const Version moduleVersion {info.sdkVersion};
         std::ostringstream msg;
 
         switch (Modules::compareVersions(sdkVersion, moduleVersion)){
