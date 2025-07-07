@@ -58,13 +58,13 @@ namespace LAS{
         static constexpr int16_t    NUM_CACHED_COMMANDS     { 50 };     // How many previous commands will be added to command history upon startup
         static constexpr uint8_t    MAX_WINDOWS             { 32 };
 
-        std::shared_ptr<ModuleManager>   moduleManager;
-        std::shared_ptr<DisplayManager>  displayManager;
-        std::shared_ptr<Shell>           shell;
+        std::shared_ptr<ModuleManager>      moduleManager;
+        std::shared_ptr<DisplayManager>     displayManager;
+        std::shared_ptr<Shell>              shell;
+        std::shared_ptr<Display::LogWindow> logWindow { }; // Needed to store logs
 
         bool setupComplete { false };
 
-        Display::LogWindow logWindow { }; // Needed to store logs
 
 
         bool setupShell             (const std::string& rcPath, const std::string& commandHistoryPath);

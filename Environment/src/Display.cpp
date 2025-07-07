@@ -283,16 +283,24 @@ void DisplayManager::drawWindows(){
 
     for(auto& [key, value] : windowInformation){
         if(ImGui::BeginMainMenuBar()){
-            if(key == Display::makeKey(LOG_WINDOW_NAME) || key == Display::makeKey(SHELL_WINDOW_NAME) )
-                ImGui::BeginMenu("Utilities");
-            else
-                ImGui::BeginMenu("Modules");
-
-            ImGui::MenuItem(value.title.c_str(), NULL, &*value.shown);
-            ImGui::EndMenu();
+            if(value.title == LOG_WINDOW_NAME || value.title == SHELL_WINDOW_NAME ) {
+                if(ImGui::BeginMenu("Utilities")){
+                    ImGui::MenuItem(value.title.c_str(), NULL, &*value.shown);
+                    ImGui::EndMenu();
+                }
+            }
+            else{
+                if(ImGui::BeginMenu("Modules")){
+                    ImGui::MenuItem(value.title.c_str(), NULL, &*value.shown);
+                    ImGui::EndMenu();
+                }
+            }   
             
             ImGui::EndMainMenuBar();
         }
+
+        if(*value.shown)
+            value.drawFunction();
     }
 }
 

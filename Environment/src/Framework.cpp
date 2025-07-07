@@ -33,7 +33,6 @@ bool Framework::setup(){
     if(!FrameworkSetup::setupFileLogger(filePaths.logDir))
         return false;
 
- //   Logging::disableOutput(consoleLogID);   // Disable console logging after file logging is established
 
     if(!setupShell(filePaths.rcPath, filePaths.commandHistoryPath))
         return false;
@@ -44,6 +43,8 @@ bool Framework::setup(){
     if(!setupInternalWindows())
         return false;
 
+    Logging::disableOutput(consoleLogID);   // Disable console logging after console logging is established
+                                            
     if(!setupModuleManager(filePaths.moduleLibDir, filePaths.moduleFilesDir))
         return false;
 
@@ -210,15 +211,17 @@ bool Framework::setupInternalWindows(){
     using namespace Display;
     using namespace ModuleFunctions;
 
-    Logging::addOutput(std::make_shared<LogWindow>(logWindow));
+    logWindow = std::make_shared<LogWindow>( );
 
-    std::function<void()> logDraw { std::bind(&LogWindow::draw, &logWindow) };
+    Logging::addOutput(logWindow);
+
+    std::function<void()> logDraw { std::bind(&LogWindow::draw, &*logWindow) };
 
     if(!displayManager->addWindow(LOG_WINDOW_NAME, logDraw)){
         log_error("Log viewer could not be added to window manager");
         return false;
     }
-    logWindow.setShown(displayManager->shown(LOG_WINDOW_NAME));
+    logWindow->setShown(displayManager->shown(LOG_WINDOW_NAME));
     log_info("Log viewer setup successful");
 
     // Setup console window
