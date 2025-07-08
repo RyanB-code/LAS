@@ -55,7 +55,7 @@ bool Framework::setup(){
 
     // Non fatal if these fail
     loadAllModuleCommands();
-    loadAllModuleWindows();
+    loadAllModuleFunctions();
     setupCommands();
 
     
@@ -297,11 +297,11 @@ bool Framework::loadAllModules(const std::string& moduleLibDirectory, const std:
 
     return true;
 }
-void Framework::loadAllModuleWindows(){
+void Framework::loadAllModuleFunctions(){
     int couldntLoad {0};
     
     for(const auto& name : moduleManager->getModuleNames()){
-        if(!loadModuleWindow(name))
+        if(!loadModuleFunctions(name))
             ++couldntLoad;
     }
     if(couldntLoad > 0){
@@ -312,22 +312,21 @@ void Framework::loadAllModuleWindows(){
     else
         log_info("All windows successfully loaded from all modules");
 }
-bool Framework::loadModuleWindow(const std::string& name){
+bool Framework::loadModuleFunctions(const std::string& name){
     if(!moduleManager->containsModule(name))
         return false;
 
     auto module { *moduleManager->getModule(name) };
     
+    if(!addUpdateFunction(module.getModuleInfo().updateFunction)){
+        log_error("Failed to load update function for module [" + name +"]. Max number of Modules reached");
+        return false;
+    }
     if(!displayManager->addWindow(module.getModuleInfo().title, module.getModuleInfo().drawFunction)){
         log_error("Failed to load window for module [" + name +"].  Window name collision");
         return false;
     }
     
-    if(!addUpdateFunction(module.getModuleInfo().updateFunction)){
-        log_error("Failed to load update function for module [" + name +"]. Max number of Modules reached");
-        return false;
-    }
-
     
     return true;
 }

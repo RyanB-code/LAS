@@ -78,8 +78,8 @@ namespace LAS{
         void setupCommands          (); // Instantiate commands here                            
 
         bool loadAllModules         (const std::string& moduleLibDirectory, const std::string& moduleFilesDirectory);
-        void loadAllModuleWindows   ();
-        bool loadModuleWindow       (const std::string& name);
+        void loadAllModuleFunctions ();
+        bool loadModuleFunctions    (const std::string& name);
         void loadAllModuleCommands  ();                                 
         bool loadModuleCommands     (const std::string& moduleName, StringVector& commandsNotLoaded);
 
