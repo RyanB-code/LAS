@@ -86,7 +86,7 @@ namespace LAS{
         std::map<std::string, Display::Info>::const_iterator cend() const;
 
     private:
-        static constexpr char  WINDOW_TITLE[23] { "Life Application Suite" };
+        static constexpr char  WINDOW_TITLE[] { "Life Application Suite" };
 
         std::string iniPath;
         GLFWwindow* window {nullptr};
