@@ -75,7 +75,6 @@ bool ModuleManager::loadModule  (std::string parentDirectory, ImGuiContext& cont
     }
     
     ModulePtr moduleBuffer;
-    const ModuleInfo& info { moduleBuffer->getModuleInfo() };
     try{
         moduleBuffer = LAS::Modules::bindFiletoModule(fileName, context);
     }
@@ -83,6 +82,8 @@ bool ModuleManager::loadModule  (std::string parentDirectory, ImGuiContext& cont
         log_warn(std::string{e.what()} + " from file [" + fileName + ".");
         return false;
     }
+
+    const ModuleInfo& info { moduleBuffer->getModuleInfo() };
 
     // This writes library information to the buffer
     if(!moduleBuffer->loadModuleInfo()){
