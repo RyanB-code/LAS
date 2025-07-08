@@ -88,9 +88,13 @@ void Framework::run(){
         return;
     }
 
-    // 1. Call update on internal controllers
-    // 2. Update all external Module windows
-    
+    // Call every Module's update function they provided
+    // Use modifiedEnd() to avoid unnecessary iterations to empty function objects with std::array
+    for(auto itr{updateFunctions.cbegin()}; itr != modifiedEnd(); ++itr){
+        auto func { *itr };
+        if(func)
+            func();
+    }
 
     // If refresh() returns true, that means an glfwShouldWindowClose() was called
     while(!displayManager->refresh()){       
@@ -315,9 +319,15 @@ bool Framework::loadModuleWindow(const std::string& name){
     auto module { *moduleManager->getModule(name) };
     
     if(!displayManager->addWindow(module.getModuleInfo().title, module.getModuleInfo().drawFunction)){
-        log_error("Failed to load window for module [" + name +"]. Module ID or window name collision");
+        log_error("Failed to load window for module [" + name +"].  Window name collision");
         return false;
     }
+    
+    if(!addUpdateFunction(module.getModuleInfo().updateFunction)){
+        log_error("Failed to load update function for module [" + name +"]. Max number of Modules reached");
+        return false;
+    }
+
     
     return true;
 }

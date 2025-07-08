@@ -54,14 +54,19 @@ namespace LAS{
     private:
         static constexpr char       COMMAND_GROUP_NAME[4]   {"las"};    // Group for all built in commands
         static constexpr int16_t    NUM_CACHED_COMMANDS     { 50 };     // How many previous commands will be added to command history upon startup
-        static constexpr uint8_t    MAX_WINDOWS             { 32 };
+        static constexpr uint8_t    MAX_MODULES             { 32 };
+
+        bool setupComplete { false };
 
         std::shared_ptr<ModuleManager>      moduleManager;
         std::shared_ptr<DisplayManager>     displayManager;
         std::shared_ptr<Shell>              shell;
         std::shared_ptr<Display::LogWindow> logWindow { }; // Needed to store logs
-
-        bool setupComplete { false };
+                                                           
+        std::array<std::function<void()>, MAX_MODULES> updateFunctions;
+        int nextIndex { 0 };
+        bool addUpdateFunction(std::function<void()> func);
+        std::array<std::function<void()>, MAX_MODULES>::const_iterator modifiedEnd();
 
 
         std::pair<bool, int> setupLoggers();
