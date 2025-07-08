@@ -12,13 +12,14 @@ Framework::~Framework(){
 // MARK: PUBLIC FUNCTIONS
 bool Framework::setup(){
 
-    moduleManager = std::make_shared<ModuleManager>( );
-    displayManager = std::make_shared<DisplayManager>( );
-    shell = std::make_shared<Shell>( );
+    moduleManager   = std::make_shared<ModuleManager>( );
+    displayManager  = std::make_shared<DisplayManager>( );
+    shell           = std::make_shared<Shell>( );
 
 
-    auto [addConsoleLogSuccess, consoleLogID] {FrameworkSetup::setupBasicLogger()};
-    if(!addConsoleLogSuccess)
+    auto [setupLoggersSuccess, consoleLogID] {setupLoggers()};
+
+    if(!setupLoggersSuccess)
         return false;
 
     // --------------------------------------------------
@@ -33,6 +34,8 @@ bool Framework::setup(){
     if(!FrameworkSetup::setupFileLogger(filePaths.logDir))
         return false;
 
+    Logging::disableOutput(consoleLogID);   // Disable console logging after file logging is established
+    log_info("Setup file logging");
 
     if(!setupShell(filePaths.rcPath, filePaths.commandHistoryPath))
         return false;
@@ -43,7 +46,6 @@ bool Framework::setup(){
     if(!setupInternalWindows())
         return false;
 
-    Logging::disableOutput(consoleLogID);   // Disable console logging after console logging is established
                                             
     if(!setupModuleManager(filePaths.moduleLibDir, filePaths.moduleFilesDir))
         return false;
@@ -97,9 +99,39 @@ void Framework::run(){
 
     return;
 }
+bool Framework::addUpdateFunction(std::function<void()> func) {
+    // If not already used, add new entry
+    if(nextIndex < MAX_MODULES){
+        updateFunctions[nextIndex] = func;
+        ++nextIndex;
+        return true;
+    }
 
-// MARK: PRIVATE FUNCTIONS
-// MARK: Setup Functions
+    return false;
+}
+std::array<std::function<void()>, Framework::MAX_MODULES>::const_iterator Framework::modifiedEnd(){
+     if(nextIndex > 0)
+        return updateFunctions.cbegin() + nextIndex;
+    else
+        return updateFunctions.cend();
+}
+std::pair<bool, int> Framework::setupLoggers() {
+    using namespace LAS::Logging;
+
+    LogToConsole basicLogger { };
+    if(!addOutput(std::make_shared<LogToConsole>(basicLogger))){
+        std::cerr << "Cannot setup basic logging.\n";
+        return std::pair(false, -1);
+    }
+
+    logWindow = std::make_shared<LAS::Display::LogWindow>( );
+    if(!addOutput(logWindow)){
+        std::cerr << "Cannot setup console logging.\n";
+        return std::pair(false, -1);
+    }
+
+    return std::pair(true, basicLogger.getID());
+}
 bool Framework::setupShell(const std::string& rcPath, const std::string& commandHistoryPath){
     if(!shell->setRCPath(rcPath)){
         log_critical("Failed to set shell RC file to [" + rcPath + "]");
@@ -210,10 +242,6 @@ bool Framework::setupDisplay(const std::string& imGuiIniPath){
 bool Framework::setupInternalWindows(){
     using namespace Display;
     using namespace ModuleFunctions;
-
-    logWindow = std::make_shared<LogWindow>( );
-
-    Logging::addOutput(logWindow);
 
     std::function<void()> logDraw { std::bind(&LogWindow::draw, &*logWindow) };
 
@@ -384,17 +412,7 @@ namespace LAS::FrameworkSetup{
         return parentDir;
     }
 
-std::pair<bool, int> setupBasicLogger() {
-    using namespace LAS::Logging;
 
-    LogToConsole basicLogger { };
-    if(!addOutput(std::make_shared<LogToConsole>(basicLogger))){
-        std::cerr << "Cannot setup basic logging.\n";
-        return std::pair(false, -1);
-    }
-
-    return std::pair(true, basicLogger.getID());
-}
 bool setupFileLogger(const std::string& logDir){
 
     LogToFile logToFile{};
@@ -409,7 +427,6 @@ bool setupFileLogger(const std::string& logDir){
         return false;
     }
 
-    log_info("Setup file logging");
 
     return true;
 }

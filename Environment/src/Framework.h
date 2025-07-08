@@ -41,8 +41,6 @@ namespace LAS{
 
         bool            setupFileLogger     (const std::string& logDir);
         bool            setupFilesystem     (FilePaths& filePaths);
-        
-        std::pair<bool, int>    setupBasicLogger();     // Return: (bool = function success, int = log output ID)
     }
 
     class Framework final{
@@ -66,6 +64,7 @@ namespace LAS{
         bool setupComplete { false };
 
 
+        std::pair<bool, int> setupLoggers();
 
         bool setupShell             (const std::string& rcPath, const std::string& commandHistoryPath);
         bool setupModuleManager     (const std::string& moduleLoadDir, const std::string& moduleFilesDir);
