@@ -88,17 +88,17 @@ void Framework::run(){
         return;
     }
 
-    // Call every Module's update function they provided
-    // Use modifiedEnd() to avoid unnecessary iterations to empty function objects with std::array
-    for(auto itr{updateFunctions.cbegin()}; itr != modifiedEnd(); ++itr){
-        auto func { *itr };
-        if(func)
-            func();
-    }
-
-    // If refresh() returns true, that means an glfwShouldWindowClose() was called
+        // If refresh() returns true, that means an glfwShouldWindowClose() was called
     while(!displayManager->refresh()){       
         shell->handleCommandQueue();
+
+        // Call every Module's update function they provided
+        // Use modifiedEnd() to avoid unnecessary iterations to empty function objects with std::array
+        for(auto itr{updateFunctions.cbegin()}; itr != modifiedEnd(); ++itr){
+            auto func { *itr };
+            if(func)
+                func();
+        }
     }
 
     return;
