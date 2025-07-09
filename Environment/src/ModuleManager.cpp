@@ -24,9 +24,8 @@ bool ModuleManager::addModule(const ModulePtr& module){
 }
 bool ModuleManager::removeModule(std::string title){
     if(modules.contains(title)){
-        modules.at(title)->cleanup();
-        modules.erase(title);
-        return !modules.contains(title); // Return the inverse of contain() -> ie if modules still contains a member of the key (contains returns true), the return variable will be false since the erase did not work correctly
+        modules.erase(title);               // cleanup() is automatically called so do not need to specifically call it
+        return !modules.contains(title);    // Return the inverse of contain() -> ie if modules still contains a member of the key (contains returns true), the return variable will be false since the erase did not work correctly
     }
     else{
         // Return true if the element already doesn't exist
