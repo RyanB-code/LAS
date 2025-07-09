@@ -39,13 +39,15 @@ bool Framework::setup(){
 
     if(!setupShell(filePaths.rcPath, filePaths.commandHistoryPath))
         return false;
-    
+
     if(!setupDisplay(filePaths.imGuiIniPath))
         return false;
+
 
     if(!setupInternalWindows())
         return false;
 
+    setupCommands(); // Sets up internal commands so only needs DM, MM, and Shell to work
                                             
     if(!setupModuleManager(filePaths.moduleLibDir, filePaths.moduleFilesDir))
         return false;
@@ -77,8 +79,6 @@ bool Framework::setup(){
     // Log version information
     log_info("LAS Environment version " + LAS::Environment::getVersion());
     log_info("LAS SDK version " + LAS::SDK::getVersion());
-
-    log_info("Logger setup successful");
 
     return true;
 }
