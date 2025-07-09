@@ -73,8 +73,10 @@ namespace LAS{
         std::string getIniPath  () const;
         bool saveWindowConfig   () const;
 
-        bool    addWindow       (const std::string& title, std::function<void()> drawFunction);
-        bool    containsWindow  (const std::string& title) const;
+        bool addWindow       (const std::string& title, std::function<void()> drawFunction);
+        bool containsWindow  (const std::string& title) const;
+        bool removeWindow    (const std::string& title);
+
         Display::Info& at       (const std::string& title);         // Throws the same as map::at
 
         std::shared_ptr<bool>   shown (const std::string& title);    

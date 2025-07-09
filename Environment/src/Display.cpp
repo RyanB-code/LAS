@@ -238,6 +238,14 @@ bool DisplayManager::addWindow(const std::string& title, std::function<void()> d
 bool DisplayManager::containsWindow(const std::string& title) const {
     return windowInformation.contains(Display::makeKey(title));
 }
+bool DisplayManager::removeWindow(const std::string& title) {
+    if(windowInformation.contains(title)){
+        windowInformation.erase(title);
+        return !windowInformation.contains(title); // Return the inverse of contain() -> ie if modules still contains a member of the key (contains returns true), the return variable will be false since the erase did not work correctly
+    }
+        
+    return true;
+}
 std::shared_ptr<bool> DisplayManager::shown(const std::string& title){
     std::string key {Display::makeKey(title)};
 
