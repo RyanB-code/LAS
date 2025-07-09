@@ -79,11 +79,12 @@ namespace LAS{
 
         bool loadAllModules         (const std::string& moduleLibDirectory, const std::string& moduleFilesDirectory);
         void loadAllModuleFunctions ();
-        bool loadModuleFunctions    (const std::string& name);
         void loadAllModuleCommands  ();                                 
-        bool loadModuleCommands     (const std::string& moduleName, StringVector& commandsNotLoaded);
-
+        void setupAllModules        ();
+                                        
         void readAllModuleRCFiles   ();
         bool readModuleRCFile       (const std::string& name);
+
+        void removeModule           (std::unordered_map<std::string, ModulePtr>::const_iterator itr); // Goes through all managers and deletes information
     };
 }

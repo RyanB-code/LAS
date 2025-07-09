@@ -56,9 +56,9 @@ bool Framework::setup(){
     // Non fatal if these fail
     loadAllModuleCommands();
     loadAllModuleFunctions();
-    setupCommands();
+    setupAllModules();
 
-    
+
     if(!shell->readRCFile(filePaths.rcPath)){
         if(!ShellHelper::defaultInitializeRCFile(filePaths.rcPath)){
             log_critical("Could not find or create new RC file at [" + filePaths.rcPath + "]");
@@ -162,64 +162,6 @@ bool Framework::setupShell(const std::string& rcPath, const std::string& command
 
     return true;
 }
-// MARK:: Add Commands
-void Framework::setupCommands(){
-    using namespace LAS::Commands;
-
-    // Instantiate commands
-    Set                         set         {displayManager, moduleManager, shell};
-    Manual                      manual      {shell};
-    Print                       print       {displayManager, moduleManager};
-    Echo                        echo        { };
-    ModuleControl               modulectl   {displayManager, moduleManager, shell };
-    LAS::Commands::Information  info        { };
-    Reload                      reload      {shell};
-    DisplayControl              displayctl  {displayManager};
-
-
-    // Add to known commands
-    if(!shell->addCommand(COMMAND_GROUP_NAME, std::make_shared<Set>(set))){
-        std::ostringstream msg;
-        msg << "Command [" << set.getKey() << "] could not be added.\n";
-        log_error(msg.str());
-    }
-    if(!shell->addCommand(COMMAND_GROUP_NAME, std::make_shared<Manual>(manual))){
-        std::ostringstream msg;
-        msg << "Command [" << manual.getKey() << "] could not be added.\n";
-        log_error(msg.str());
-    }
-    if(!shell->addCommand(COMMAND_GROUP_NAME, std::make_shared<Print>(print))){
-        std::ostringstream msg;
-        msg << "Command [" << print.getKey() << "] could not be added.\n";
-        log_error(msg.str());
-    }
-    if(!shell->addCommand(COMMAND_GROUP_NAME, std::make_shared<Echo>(echo))){
-        std::ostringstream msg;
-        msg << "Command [" << echo.getKey() << "] could not be added.\n";
-        log_error(msg.str());
-    }
-    if(!shell->addCommand(COMMAND_GROUP_NAME, std::make_shared<ModuleControl>(modulectl))){
-        std::ostringstream msg;
-        msg << "Command [" << modulectl.getKey() << "] could not be added.\n";
-        log_error(msg.str());
-    }
-    if(!shell->addCommand(COMMAND_GROUP_NAME, std::make_shared<LAS::Commands::Information>(info))){
-        std::ostringstream msg;
-        msg << "Command [" << info.getKey() << "] could not be added.\n";
-        log_error(msg.str());
-    }
-    if(!shell->addCommand(COMMAND_GROUP_NAME, std::make_shared<Reload>(reload))){
-        std::ostringstream msg;
-        msg << "Command [" << reload.getKey() << "] could not be added.\n";
-        log_error(msg.str());
-    }
-    if(!shell->addCommand(COMMAND_GROUP_NAME, std::make_shared<DisplayControl>(displayctl))){
-        std::ostringstream msg;
-        msg << "Command [" << displayctl.getKey() << "] could not be added.\n";
-        log_error(msg.str());
-    }
-}
-
 bool Framework::setupModuleManager(const std::string& moduleLoadDir, const std::string& moduleFilesDir){
     if(!moduleManager->setModuleLoadDirectory(moduleLoadDir)){
         log_critical("Failed to set module load directory");
@@ -267,7 +209,62 @@ bool Framework::setupInternalWindows(){
 
     return true;
 }
-// MARK: Load Functions
+void Framework::setupCommands(){
+    using namespace LAS::Commands;
+
+    // Instantiate commands
+    Set                         set         {displayManager, moduleManager, shell};
+    Manual                      manual      {shell};
+    Print                       print       {displayManager, moduleManager};
+    Echo                        echo        { };
+    ModuleControl               modulectl   {displayManager, moduleManager, shell };
+    LAS::Commands::Information  info        { };
+    Reload                      reload      {shell};
+    DisplayControl              displayctl  {displayManager};
+
+
+    // Add to known commands
+    if(!shell->addCommand(COMMAND_GROUP_NAME, std::make_shared<Set>(set))){
+        std::ostringstream msg;
+        msg << "Command [" << set.getKey() << "] could not be added.\n";
+        log_error(msg.str());
+    }
+    if(!shell->addCommand(COMMAND_GROUP_NAME, std::make_shared<Manual>(manual))){
+        std::ostringstream msg;
+        msg << "Command [" << manual.getKey() << "] could not be added.\n";
+        log_error(msg.str());
+    }
+    if(!shell->addCommand(COMMAND_GROUP_NAME, std::make_shared<Print>(print))){
+        std::ostringstream msg;
+        msg << "Command [" << print.getKey() << "] could not be added.\n";
+        log_error(msg.str());
+    }
+    if(!shell->addCommand(COMMAND_GROUP_NAME, std::make_shared<Echo>(echo))){
+        std::ostringstream msg;
+        msg << "Command [" << echo.getKey() << "] could not be added.\n";
+        log_error(msg.str());
+    }
+    if(!shell->addCommand(COMMAND_GROUP_NAME, std::make_shared<ModuleControl>(modulectl))){
+        std::ostringstream msg;
+        msg << "Command [" << modulectl.getKey() << "] could not be added.\n";
+        log_error(msg.str());
+    }
+    if(!shell->addCommand(COMMAND_GROUP_NAME, std::make_shared<LAS::Commands::Information>(info))){
+                std::ostringstream msg;
+        msg << "Command [" << info.getKey() << "] could not be added.\n";
+        log_error(msg.str());
+    }
+    if(!shell->addCommand(COMMAND_GROUP_NAME, std::make_shared<Reload>(reload))){
+        std::ostringstream msg;
+        msg << "Command [" << reload.getKey() << "] could not be added.\n";
+        log_error(msg.str());
+    }
+    if(!shell->addCommand(COMMAND_GROUP_NAME, std::make_shared<DisplayControl>(displayctl))){
+        std::ostringstream msg;
+        msg << "Command [" << displayctl.getKey() << "] could not be added.\n";
+        log_error(msg.str());
+    }
+}
 bool Framework::loadAllModules(const std::string& moduleLibDirectory, const std::string& moduleFilesDirectory) {
     if(!ImGui::GetCurrentContext()){
         log_critical("No ImGuiContext found");
@@ -276,7 +273,7 @@ bool Framework::loadAllModules(const std::string& moduleLibDirectory, const std:
 
     try{
         StringVector modulesThatFailedToLoad {};
-        moduleManager->loadAllModules(*ImGui::GetCurrentContext(), modulesThatFailedToLoad, moduleLibDirectory, moduleFilesDirectory); 
+        moduleManager->loadAllModules(modulesThatFailedToLoad); 
 
         // This is just for logging what failed to load
         if(modulesThatFailedToLoad.size() > 0){
@@ -297,82 +294,94 @@ bool Framework::loadAllModules(const std::string& moduleLibDirectory, const std:
 
     return true;
 }
-void Framework::loadAllModuleFunctions(){
+void Framework::loadAllModuleFunctions() {
     int couldntLoad {0};
-    
-    for(const auto& name : moduleManager->getModuleNames()){
-        if(!loadModuleFunctions(name))
+
+    for(auto itr {moduleManager->cbegin()}; itr != moduleManager->cend(); ++itr){
+        const ModuleInfo& info { itr->second->getModuleInfo()};
+
+        if(!addUpdateFunction(info.updateFunction)){
+            log_error("Failed to load update function for module [" + info.title +"]. Max number of Modules reached");
+            removeModule(itr);
             ++couldntLoad;
+            continue;
+        }
+        if(!displayManager->addWindow(info.title, info.drawFunction)){
+            log_error("Failed to load window for module [" + info.title +"].  Window name collision");
+            removeModule(itr);
+            ++couldntLoad;
+            continue;
+        }
     }
-    if(couldntLoad > 0){
-        std::ostringstream msg;
-        msg << "There were [" << couldntLoad << "] windows that could not be loaded from modules";
-        log_warn(msg.str());
-    }
+
+    if(couldntLoad > 0)
+        log_warn(std::format("There were [{}] windows that could not be loaded from modules", couldntLoad));
     else
         log_info("All windows successfully loaded from all modules");
 }
-bool Framework::loadModuleFunctions(const std::string& name){
-    if(!moduleManager->containsModule(name))
-        return false;
-
-    auto module { *moduleManager->getModule(name) };
-    
-    if(!addUpdateFunction(module.getModuleInfo().updateFunction)){
-        log_error("Failed to load update function for module [" + name +"]. Max number of Modules reached");
-        return false;
-    }
-    if(!displayManager->addWindow(module.getModuleInfo().title, module.getModuleInfo().drawFunction)){
-        log_error("Failed to load window for module [" + name +"].  Window name collision");
-        return false;
-    }
-    
-    
-    return true;
-}
 void Framework::loadAllModuleCommands(){  
-    StringVector moduleNames {moduleManager->getModuleNames()};
+    int couldntLoad { 0 };
 
-    for(auto name : moduleNames){
-        StringVector commandsNotLoaded {};
-        loadModuleCommands(name, commandsNotLoaded); 
+    for(auto itr { moduleManager->cbegin() }; itr != moduleManager->cend(); ++itr){
+        Module& module {*itr->second};
+        const ModuleInfo& info { module.getModuleInfo() };
 
-        // Report how many commands were not loaded
-        if(!commandsNotLoaded.empty()){
-            std::ostringstream msg;
-            msg << "[" << commandsNotLoaded.size() << "] commands could not be loaded from Module [" << name << "]";
-            log_warn(msg.str());
-            commandsNotLoaded.clear();
+        if(!shell->addCommandGroup(info.commandGroupName)){
+            log_error("Failed to load commands for Module [" + info.title +"].");
+            removeModule(itr);
+            ++couldntLoad;
+            continue;
+        }   
+
+        if(module.getCommands().empty())
+            continue;
+
+        // Load the commands
+        int commandsNotLoaded { 0 };
+        for(auto& command : module.getCommands()){
+            if(!shell->addCommand(info.commandGroupName, command))
+                ++commandsNotLoaded;
         }
-        else
-            log_info("All commands loaded successfully from module [" + name + "]");
-    }
-}
-bool Framework::loadModuleCommands(const std::string& moduleName, StringVector& commandsNotLoaded) {
-    Module& module {*moduleManager->getModule(moduleName)};
 
-    if(!shell->addCommandGroup(module.getModuleInfo().commandGroupName))
-        return false;
-
-    if(module.getCommands().empty())
-        return true;
-
-    // Load the commands
-    for(auto& command : module.getCommands()){
-        if(!shell->addCommand(module.getModuleInfo().commandGroupName, command)){
-            commandsNotLoaded.push_back(command->getKey());
-        }
+        if(commandsNotLoaded > 0)
+            log_warn(std::format("There were [{}] commands not loaded from Module [{}]", couldntLoad, info.title));
     }
 
-    return true;
+    if(couldntLoad > 0)
+        log_warn(std::format("There were [{}] Modules that could not load commands", couldntLoad));
+    else
+        log_info("All commands successfully loaded from all modules");
 }
+void Framework::setupAllModules() {
+    int couldntSetup { 0 };
 
+    log_info("Setting up all Modules...");
+
+    for(auto itr {moduleManager->cbegin() }; itr != moduleManager->cend(); ++itr){
+        std::string title { itr->second->getModuleInfo().title };
+
+        if(!displayManager->containsWindow(title)){
+            ++couldntSetup;
+            removeModule(itr);
+            continue;
+        }
+
+        if(!moduleManager->setupModule(*ImGui::GetCurrentContext(), title, displayManager->at(title).shown)){
+            ++couldntSetup;
+            removeModule(itr);
+            continue;
+        }
+    }
+
+    if(couldntSetup > 0)
+        log_warn(std::format("There were [{}] Modules that could not be setup", couldntSetup));
+    else
+        log_info("All Modules successfully setup");
+
+}
 void Framework::readAllModuleRCFiles(){
-    StringVector names {moduleManager->getModuleNames()};
-
-    for(const auto& s : names){
-        readModuleRCFile(s);
-    }
+    for(auto itr {moduleManager->cbegin() }; itr != moduleManager->cend(); ++itr)
+        readModuleRCFile(itr->second->getModuleInfo().title);
 }
 bool Framework::readModuleRCFile (const std::string& name){
     if(!moduleManager->containsModule(name))
@@ -388,7 +397,15 @@ bool Framework::readModuleRCFile (const std::string& name){
     }
     return true;
 }
+void Framework::removeModule(std::unordered_map<std::string, ModulePtr>::const_iterator itr ){
+    const ModuleInfo& info { itr->second->getModuleInfo() };
 
+    log_warn(std::format("Removing Module [{}]", info.title));
+
+    displayManager->removeWindow(info.title);
+    moduleManager->removeModule(info.title);
+    shell->removeCommandGroup(info.commandGroupName);
+}
 
 
 // MARK: LAS::FrameworkSetup Namespace
