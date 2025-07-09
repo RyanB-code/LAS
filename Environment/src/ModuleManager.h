@@ -26,10 +26,10 @@ namespace LAS{
 
         bool addModule      (const ModulePtr& module);
         bool removeModule   (std::string title);
-        bool containsModule (std::string title)             const;
+        bool containsModule (std::string title) const;
 
-        ModulePtr           getModule(std::string title)    const;
-        const StringVector  getModuleNames()                const;
+        ModulePtr   getModule(std::string title) const;
+        ModulePtr   getModule(std::unordered_map<std::string, ModulePtr>::const_iterator itr) const;
 
         std::string         getModuleLoadDirectory  () const;
         std::string         getModuleFilesDirectory () const;
@@ -41,6 +41,8 @@ namespace LAS{
 
         void clearModules   ();
 
+        std::unordered_map<std::string, ModulePtr>::const_iterator cbegin() const;
+        std::unordered_map<std::string, ModulePtr>::const_iterator cend() const;
     private:
         std::unordered_map<std::string, ModulePtr> modules{};
 

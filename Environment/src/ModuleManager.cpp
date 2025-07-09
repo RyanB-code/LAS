@@ -210,6 +210,13 @@ bool ModuleManager::setModuleFilesDirectory(const std::string& directory){
 void ModuleManager::clearModules() {
     modules.clear();
 }
+std::unordered_map<std::string, ModulePtr>::const_iterator ModuleManager::cbegin() const{
+    return modules.cbegin();
+}
+std::unordered_map<std::string, ModulePtr>::const_iterator ModuleManager::cend() const {
+    return modules.cend();
+}
+
 
 // MARK: LASCore Namespace 
 namespace LAS::Modules{
