@@ -352,13 +352,13 @@ std::pair<int, std::ostringstream> ModuleControl::execute(const StringVector& ar
 
         // Load Modules
         StringVector notLoaded{};
-        moduleManager->loadAllModules(*ImGui::GetCurrentContext(), notLoaded);
+        moduleManager->loadAllModules(notLoaded);
 
         // Load Windows
         int windowsNotLoaded{0};
-        for(auto name : moduleManager->getModuleNames()){
-            auto mod { moduleManager->getModule(name) };
-            if(!displayManager->addWindow(mod->getModuleInfo().title, std::function<void()>{mod->getModuleInfo().drawFunction}))
+        for(auto itr { moduleManager->cbegin() }; itr != moduleManager->cend(); ++itr){
+            auto mod { *itr->second };
+            if(!displayManager->addWindow(mod.getModuleInfo().title, std::function<void()>{mod.getModuleInfo().drawFunction}))
                 ++windowsNotLoaded;
         }
 
@@ -400,8 +400,8 @@ std::pair<int, std::ostringstream> ModuleControl::execute(const StringVector& ar
 
     if(listModules){
         std::ostringstream os;
-        for(auto& s : moduleManager->getModuleNames()){
-            os << s << "\n";
+        for(auto itr { moduleManager->cbegin() }; itr != moduleManager->cend(); ++itr){
+            os << itr->second->getModuleInfo().title << "\n";
         }
         return pair(0, os.str());
     }
