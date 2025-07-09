@@ -44,15 +44,10 @@ ModulePtr ModuleManager::getModule(std::string title) const{
 bool ModuleManager::containsModule(std::string title) const{
     return modules.contains(title);
 }
-void ModuleManager::loadAllModules(ImGuiContext& context, StringVector& modulesNotLoaded, std::string loadDirectory, std::string filesDirectory){
+void ModuleManager::loadAllModules(StringVector& modulesNotLoaded){
     modulesNotLoaded.erase(modulesNotLoaded.begin(), modulesNotLoaded.end());
 
-    if(loadDirectory.empty())
-        loadDirectory = moduleLoadDirectory;
-    if(filesDirectory.empty())
-        filesDirectory = moduleFilesDirectory;
-    
-    const   std::filesystem::path   qualifiedDirectory  {LAS::TextManip::ensureSlash(loadDirectory)};   // Path with slashes
+    const   std::filesystem::path   qualifiedDirectory  {LAS::TextManip::ensureSlash(moduleLoadDirectory)};   // Path with slashes
 
     if(!std::filesystem::exists(qualifiedDirectory)){
         throw std::filesystem::filesystem_error("Directory for modules does not exist", qualifiedDirectory, std::error_code());
@@ -60,13 +55,13 @@ void ModuleManager::loadAllModules(ImGuiContext& context, StringVector& modulesN
 
     // Iterate over directory and attempt to load each file
 	for(auto const& file : std::filesystem::directory_iterator(qualifiedDirectory)){
-        if(!loadModule(filesDirectory, context, file.path()))
+        if(!loadModule(moduleFilesDirectory, file.path()))
             modulesNotLoaded.push_back(file.path());
 	}
 
     return;
 }
-bool ModuleManager::loadModule  (std::string parentDirectory, ImGuiContext& context, const std::string& fileName){
+bool ModuleManager::loadModule  (std::string parentDirectory, const std::string& fileName){
 
     // Reject if not named correctly
     if(!fileName.ends_with(moduleNameSuffix)){
@@ -76,7 +71,7 @@ bool ModuleManager::loadModule  (std::string parentDirectory, ImGuiContext& cont
     
     ModulePtr moduleBuffer;
     try{
-        moduleBuffer = LAS::Modules::bindFiletoModule(fileName, context);
+        moduleBuffer = LAS::Modules::bindFiletoModule(fileName);
     }
     catch(std::exception& e){
         log_warn(std::string{e.what()} + " from file [" + fileName + ".");
@@ -131,57 +126,14 @@ bool ModuleManager::loadModule  (std::string parentDirectory, ImGuiContext& cont
             break;
     }
 
-    std::string formattedTitle { LAS::TextManip::ensureAlNumNoSpaces(info.title)};
-    parentDirectory = LAS::TextManip::ensureSlash(parentDirectory);
-
-    std::string rcPathTitle = {formattedTitle};
-
-    // Makes rcPath all lower case
-    for(auto& c : rcPathTitle){
-        if(std::isalpha(c))
-            c = std::tolower(c);
-    }
-
-    std::string moduleFilesDirectory    {LAS::TextManip::ensureSlash(parentDirectory) + LAS::TextManip::ensureSlash(formattedTitle)};
-    std::string moduleRCFilePath        {moduleFilesDirectory + '.' + rcPathTitle + "-rc"};
-
-    // Check directories can be made
-    if(!LAS::ensureDirectory(moduleFilesDirectory)){
-        log_error("Could not find or create directory [" + moduleFilesDirectory + "] for Module [" + info.title + "]");
-        return false;
-    }
-    if(!LAS::ensureFile(moduleRCFilePath)){
-        log_error("Could not find or create file [" + moduleRCFilePath + "] for Module [" + info.title + "]");
-        return false;
-    }
-
     log_info("Checks passed for Module [" + info.title + "] version " + versionToStr(info.moduleVersion));
-    log_info("Setting up module...");
-
-
-    // Pass environment info only if all files could be created
-    EnvironmentInfo envInfo {moduleFilesDirectory, moduleRCFilePath, context};
-    if(!moduleBuffer->loadEnvInfo(envInfo)){
-        log_error("Failed loading environment info from Module [" + info.title + "]");
-        return false;
-    }
-
+ 
     if(!addModule(moduleBuffer)){
         log_error("Could not add module [" + info.title + "]");
         return false;
-    }
-    
-    log_info("Setup complete for Module [" + info.title + "]");
+    } 
 
     return true;
-}
-
-const StringVector ModuleManager::getModuleNames() const{
-    StringVector names;
-    for(auto [key, modulePtr] : modules){
-        names.push_back(modulePtr->getModuleInfo().title);
-    }
-    return names;
 }
 std::string ModuleManager::getModuleLoadDirectory() const{
     return moduleLoadDirectory;
@@ -207,6 +159,48 @@ bool ModuleManager::setModuleFilesDirectory(const std::string& directory){
     moduleFilesDirectory = qualifiedDirectory;
     return true;
 }
+bool ModuleManager::setupModule(ImGuiContext& context, const std::string& title, std::shared_ptr<bool> shown){
+    // Pass environment info only if all files could be created
+    Module& module { *getModule(title) };
+    const ModuleInfo& info { module.getModuleInfo() };
+
+    // Setup module files 
+    std::string formattedTitle  { LAS::TextManip::ensureAlNumNoSpaces(info.title) };
+    std::string parentDirectory { LAS::TextManip::ensureSlash(moduleFilesDirectory) };
+
+    std::string rcPathTitle { formattedTitle };
+
+    // Makes rcPath all lower case
+    for(auto& c : rcPathTitle){
+        if(std::isalpha(c))
+            c = std::tolower(c);
+    }
+
+    std::string filesDirectory    {LAS::TextManip::ensureSlash(parentDirectory) + LAS::TextManip::ensureSlash(formattedTitle)};
+    std::string rcFilePath        {filesDirectory + '.' + rcPathTitle + "-rc"};
+
+    // Check directories can be made
+    if(!LAS::ensureDirectory(filesDirectory)){
+        log_error("Could not find or create directory [" + filesDirectory + "] for Module [" + info.title + "]");
+        return false;
+    }
+    if(!LAS::ensureFile(rcFilePath)){
+        log_error("Could not find or create file [" + rcFilePath + "] for Module [" + info.title + "]");
+        return false;
+    }
+
+
+    EnvironmentInfo envInfo {filesDirectory, rcFilePath, context, shown};
+    if(!module.loadEnvInfo(envInfo)){
+        log_error("Failed loading environment info from Module [" + info.title + "]");
+        return false;
+    }
+ 
+    log_info("Setup complete for Module [" + info.title + "]");
+    return true;
+}
+
+
 void ModuleManager::clearModules() {
     modules.clear();
 }
@@ -221,7 +215,7 @@ std::unordered_map<std::string, ModulePtr>::const_iterator ModuleManager::cend()
 // MARK: LASCore Namespace 
 namespace LAS::Modules{
 
-    ModulePtr bindFiletoModule(const std::string& path, const ImGuiContext& context){
+    ModulePtr bindFiletoModule(const std::string& path){
         using namespace ModuleFunctions;
 
         void* lib {dlopen(path.c_str(), RTLD_LAZY)};    // Map the shared object file

@@ -36,8 +36,10 @@ namespace LAS{
         bool                setModuleLoadDirectory  (const std::string& directory);
         bool                setModuleFilesDirectory (const std::string& directory);
 
-        void loadAllModules  (ImGuiContext& context, StringVector& modulesNotLoaded, std::string loadDirectory="", std::string filesDirectory=""); // Clears the StringVector first
-        bool loadModule      (std::string moduleFilesDirectory, ImGuiContext& context, const std::string& fileName);
+        void loadAllModules  (StringVector& modulesNotLoaded); // Clears the StringVector first
+        bool loadModule      (std::string moduleFilesDirectory, const std::string& fileName);
+
+        bool setupModule(ImGuiContext& context, const std::string& title, std::shared_ptr<bool> shown);
 
         void clearModules   ();
 
@@ -54,7 +56,7 @@ namespace LAS{
 
     using ModuleManagerPtr  = std::shared_ptr<ModuleManager>;
     namespace Modules{
-        ModulePtr   bindFiletoModule        (const std::string& path, const ImGuiContext& context);
+        ModulePtr   bindFiletoModule        (const std::string& path);
         bool        ensureModuleFiles       (std::string parentDirectory, std::string moduleTitle);
         int         compareVersions         (const Version& base, const Version& compare);      // 0 = same major and minor, 1 = compare minor is older, 2 = compare minor is newer,  3 = fatal mismatch
         
