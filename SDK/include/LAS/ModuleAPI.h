@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Window.h"
 #include "Logging.h"
 #include "Commands.h"
 #include "Information.h"
