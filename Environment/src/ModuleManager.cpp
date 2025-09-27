@@ -219,8 +219,10 @@ namespace LAS::Modules{
 
         void* lib {dlopen(path.c_str(), RTLD_LAZY)};    // Map the shared object file
 
-        if(!lib)
+        if(!lib){
+            log_error("Error loading module. dlopen() failed. What: " + std::string{dlerror()} );
             throw std::runtime_error{"Failed to create handle from shared object file"};     // Do not continue if library could not be opened
+        }
 
         // Bind the API funcions
         LoadModuleInfo      loadModuleInfo    {reinterpret_cast<LoadModuleInfo>     (dlsym(lib, "LASM_loadModuleInfo"))};
