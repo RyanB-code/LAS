@@ -17,11 +17,11 @@ namespace LAS{
             uint8_t patch;
         };
         struct ModuleInfo {
-            Version                 sdkVersion          { };
-            Version                 moduleVersion       { };
+            Version     sdkVersion          { };
+            Version     moduleVersion       { };
 
-            std::string             title               { };
-            std::string             commandGroupName    { };
+            std::string title               { };
+            std::string shortTag            { };
 
             std::vector<std::shared_ptr<Command>> commands { };
  

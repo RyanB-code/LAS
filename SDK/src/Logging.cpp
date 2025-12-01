@@ -1,47 +1,8 @@
 #include <LAS/Logging.h>
 
+#include <algorithm>
+
 namespace LAS::Logging {
-
-    // Logger in here since not needed in API
-    class Logger {
-    public:
-        ~Logger();
-
-        static Logger& getInstance();
-
-        void log            (const std::string& msg, const std::string& tag, const std::source_location& location=std::source_location::current()) const;
-        bool addOutput      (LogOutputPtr output);
-        bool contains       (int ID) const;
-        bool removeOutput   (int outputID);
-
-        void        setGlobalSettings   (const LogSettings& setSettings);           // Updates all LogOutputs to have the same settings
-        bool        setOutputSettings   (int ID, const LogSettings& setSettings);
-
-        LogSettings getGlobalSettings   () const;
-        LogSettings getOutputSettings   (int ID) const; // Throws out_of_range if not there
-
-        bool enableOutput(int ID);
-        bool disableOutput(int ID);
-
-    private:
-        Logger();
-        Logger(const Logger& other) = delete;
-        Logger& operator=(const Logger& other) = delete;
-
-        LogSettings settings { };
-        std::map<int, LogOutputPtr> outputs { };
-    };
-
-    std::string printTime(const std::chrono::system_clock::time_point& time) noexcept {
-        std::chrono::zoned_time zonedTime { std::chrono::current_zone(), time };
-        return std::format("{:%T}", zonedTime).substr(0, 8);
-    }
-    std::string printLocation(const std::source_location& location)	noexcept {
-        std::ostringstream os;
-        os << "[" << location.file_name() << " | " << location.function_name() << " | " << location.line() << "]";
-        return os.str();
-    }
-
 
     // LogOutput
     LogOutput::LogOutput(const LogSettings& setSettings) : settings { setSettings } {
@@ -52,10 +13,6 @@ namespace LAS::Logging {
 
         ID = ++givenIDs;
     }
-    LogOutput::~LogOutput(){
-
-    }
-
     void LogOutput::setSettings(const LogSettings& setSettings){
         settings = setSettings;
     }
@@ -75,18 +32,62 @@ namespace LAS::Logging {
         enabled = false;
     }
 
-    // Logger
-    Logger::Logger() {
+    // Helper Functions
+    std::string printTime(const std::chrono::system_clock::time_point& time) noexcept {
+        std::chrono::zoned_time zonedTime { std::chrono::current_zone(), time };
+        return std::format("{:%T}", zonedTime).substr(0, 8);
+    }
+    std::string printLocation(const std::source_location& location)	noexcept {
+        std::ostringstream os;
+        os << "[" << location.file_name() << " | " << location.function_name() << " | " << location.line() << "]";
+        return os.str();
+    }
 
-    }
-    Logger::~Logger(){
 
-    }
-    Logger& Logger::getInstance() {
-        static Logger instance;
-        return instance;
-    }
-    void Logger::log(const std::string& msg, const std::string& tag, const std::source_location& location) const {
+    // Logger in here since not needed in API
+    class Logger {
+        public:
+            ~Logger() = default;
+
+            static Logger& getInstance(){
+                static Logger instance;
+                return instance;
+            }
+
+            void log(
+                    const std::string& msg, 
+                    const std::string& severityTag, 
+                    const std::source_location& location=std::source_location::current()
+                    ) const;
+
+            bool addOutput      (LogOutputPtr output);
+            bool contains       (int ID) const { return outputs.contains(ID); }
+            bool removeOutput   (int outputID);
+
+            void        setGlobalSettings   (const LogSettings& setSettings);           // Updates all LogOutputs to have the same settings
+            bool        setOutputSettings   (int ID, const LogSettings& setSettings);
+
+            LogSettings getGlobalSettings   () const { return settings; }
+            LogSettings getOutputSettings   (int ID) const;                 // Throws out_of_range if not there
+
+            bool enableOutput(int ID);
+            bool disableOutput(int ID);
+
+            void setModuleTag(const std::string& tag) { moduleTag = tag; }
+
+        private:
+            Logger() { }
+            Logger(const Logger& other) = delete;
+            Logger& operator=(const Logger& other) = delete;
+
+            LogSettings settings { };
+            std::map<int, LogOutputPtr> outputs { };
+
+            std::string moduleTag { "NULL" };
+    };
+
+
+    void Logger::log(const std::string& msg, const std::string& severityTag, const std::source_location& location) const {
         if(outputs.empty()){
             std::puts("There are no log outputs.");
             return;
@@ -94,7 +95,7 @@ namespace LAS::Logging {
 
         const std::chrono::zoned_time time { std::chrono::current_zone(), std::chrono::system_clock::now() };
 
-        Log log {msg, tag, location, time};
+        Log log {msg, severityTag, moduleTag, location, time};
 
         for(const auto& [ID, outputPtr] : outputs){
             if(outputPtr->isEnabled())
@@ -108,9 +109,6 @@ namespace LAS::Logging {
             return false;
 
         return outputs.try_emplace(newOutput->getID(), newOutput).second;
-    }
-    bool Logger::contains(int ID) const {
-        return outputs.contains(ID);
     }
     bool Logger::removeOutput(int ID) {
         auto iterator { outputs.find(ID) };
@@ -135,9 +133,6 @@ namespace LAS::Logging {
         outputs.at(ID)->setSettings(setSettings);
 
         return true;
-    }
-    LogSettings Logger::getGlobalSettings() const {
-        return settings;
     }
     LogSettings Logger::getOutputSettings(int ID) const{
         if(!outputs.contains(ID))
