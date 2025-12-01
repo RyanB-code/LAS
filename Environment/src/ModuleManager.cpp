@@ -80,8 +80,8 @@ bool ModuleManager::loadModule  (std::string parentDirectory, const std::string&
     const ModuleInfo& info { moduleBuffer->getModuleInfo() };
 
     // This writes library information to the buffer
-    if(!moduleBuffer->loadModuleInfo()){
-        log_error("loadModuleInfo() returned false from Module [" + info.title + "]. Loading procedure terminated");
+    if(!moduleBuffer->loadInfo()){
+        log_error("Module::loadInfo() returned false from Module [" + info.title + "]. Loading procedure terminated");
         return false;
     }
 
@@ -190,7 +190,13 @@ bool ModuleManager::setupModule(ImGuiContext& context, const std::string& title,
 
 
     EnvironmentInfo envInfo {filesDirectory, rcFilePath, context, shown};
-    if(!module.loadEnvInfo(envInfo)){
+    
+    // Ensure logging is updated when control is handed to module. And updated again when control returned
+    Logging::setModuleTag(info.shortTag);
+    bool initFailed { module.init(envInfo) };
+    Logging::setModuleTag("LAS");
+
+    if(!initFailed){
         log_error("Failed loading environment info from Module [" + info.title + "]");
         return false;
     }
@@ -225,16 +231,16 @@ namespace LAS::Modules{
         }
 
         // Bind the API funcions
-        LoadModuleInfo      loadModuleInfo    {reinterpret_cast<LoadModuleInfo>     (dlsym(lib, "LASM_loadModuleInfo"))};
-        LoadEnvironmentInfo loadEnvInfo       {reinterpret_cast<LoadEnvironmentInfo>(dlsym(lib, "LASM_init"))};
-        VoidNoParams        cleanup           {reinterpret_cast<VoidNoParams>       (dlsym(lib, "LASM_cleanup"))};
+        LoadModuleInfo  loadModuleInfo  {reinterpret_cast<LoadModuleInfo>   (dlsym(lib, "LASM_loadModuleInfo"))};
+        InitModule      initModule      {reinterpret_cast<InitModule>       (dlsym(lib, "LASM_init"))};
+        VoidNoParams    cleanup         {reinterpret_cast<VoidNoParams>     (dlsym(lib, "LASM_cleanup"))};
 
         // Do not continue if binding functions failed
-        if(!loadModuleInfo || !loadEnvInfo ||!cleanup)
+        if(!loadModuleInfo || !initModule ||!cleanup)
             throw std::runtime_error{"Failed to find necessary function signatures"};     // Do not continue if library could not be opened
 
 
-        return std::make_shared<Module>(loadModuleInfo, loadEnvInfo, cleanup);
+        return std::make_shared<Module>(loadModuleInfo, initModule, cleanup);
     }
     int verifyModuleInformation(const ModulePtr& module) {
         if(!module)
@@ -245,7 +251,7 @@ namespace LAS::Modules{
         if(info.title.empty())
             return 2;
 
-        std::string groupName {info.commandGroupName};
+        std::string groupName {info.shortTag};
         if(groupName.empty())
             return 3;
         

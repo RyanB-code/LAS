@@ -19,30 +19,35 @@ namespace LAS{
 
     namespace ModuleFunctions{
         typedef bool(*LoadModuleInfo)       (ModuleInfo&);      
-        typedef bool(*LoadEnvironmentInfo)  (const EnvironmentInfo&); 
+        typedef bool(*InitModule)           (const EnvironmentInfo&); 
         typedef void(*VoidNoParams)         (); 
     }
 
+    struct ModuleUpdate {
+        std::string moduleTag;
+        std::function<void()>  updateFunction;
+    };
+
     class Module{
     public:
-        explicit Module(    LAS::ModuleFunctions::LoadModuleInfo            setLoadModuleInfo,
-                            LAS::ModuleFunctions::LoadEnvironmentInfo       setLoadEnvironmentInfo,
-                            LAS::ModuleFunctions::VoidNoParams              setCleanup
+        explicit Module(    LAS::ModuleFunctions::LoadModuleInfo   setLoadModuleInfo,
+                            LAS::ModuleFunctions::InitModule       setModuleInit,
+                            LAS::ModuleFunctions::VoidNoParams     setCleanup
                         );
         ~Module();
 
-        bool    setDirectory    (std::string directory);
-        bool    setRCFilePath   (const std::string& path);
+        bool setDirectory    (std::string directory);
+        bool setRCFilePath   (const std::string& path);
 
-        const ModuleInfo& getModuleInfo() const;
-
-        std::string                 getDirectory()      const;
-        std::string                 getRCFilePath()     const;
+        const ModuleInfo&   getModuleInfo()     const;
+        ModuleUpdate        getModuleUpdate()   const;
+        std::string         getDirectory()      const;
+        std::string         getRCFilePath()     const;
 
         std::vector<std::shared_ptr<Command>>&    getCommands();
 
-        bool    loadModuleInfo();
-        bool    loadEnvInfo(const EnvironmentInfo& envInfo);
+        bool    loadInfo();
+        bool    init(const EnvironmentInfo& envInfo);
         void    cleanup();
         
     private:
@@ -51,8 +56,8 @@ namespace LAS{
         std::string directory;
         std::string rcFilePath;
 
-        LAS::ModuleFunctions::LoadModuleInfo        loadModuleInfoPtr   {};
-        LAS::ModuleFunctions::LoadEnvironmentInfo   loadEnvInfoPtr      {};
-        LAS::ModuleFunctions::VoidNoParams          cleanupPtr          {};
+        LAS::ModuleFunctions::LoadModuleInfo    loadModuleInfoPtr   { };
+        LAS::ModuleFunctions::InitModule        initModulePtr       { };
+        LAS::ModuleFunctions::VoidNoParams      cleanupPtr          { };
     };
 }

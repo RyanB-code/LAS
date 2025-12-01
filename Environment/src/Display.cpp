@@ -2,6 +2,7 @@
 
 using namespace LAS;
 using namespace Display;
+using namespace LAS::Logging;
 
 bool Display::ensureIniExists (const std::string& path){
     if(std::filesystem::exists(path))
@@ -17,7 +18,7 @@ bool Display::ensureIniExists (const std::string& path){
 
 bool Display::initGLFW(GLFWwindow** window, const std::string& title){
     if(!glfwInit()){
-        log_critical("Could not initialize GLFW.");
+        log_fatal("Could not initialize GLFW.");
         return false;
     }
 
@@ -30,7 +31,7 @@ bool Display::initGLFW(GLFWwindow** window, const std::string& title){
     *window = glfwCreateWindow(640, 480, title.c_str(), NULL, NULL);
 
     if(!window){
-        log_critical("Could not obtain window context");
+        log_fatal("Could not obtain window context");
         glfwTerminate();
         return false;
     }
@@ -61,7 +62,7 @@ bool Display::initImgui(GLFWwindow** window, const std::string& iniFilePath){
 
     // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
     if(!ImGui_ImplGlfw_InitForOpenGL(*window, true) || !ImGui_ImplOpenGL3_Init() ) {
-        log_critical("Could not initialize ImGui with OpenGL/GLFW");
+        log_fatal("Could not initialize ImGui with OpenGL/GLFW");
         return false;
     }
     
@@ -82,11 +83,8 @@ std::string Display::makeKey(const std::string& text) {
 LogWindow::LogWindow() : LogOutput{ } {
 
 }
-LogWindow::~LogWindow() {
-
-}
 void LogWindow::log(const Log& log) {
-    Log logCopy {log.msg, log.tag, log.location, log.timestamp};
+    Log logCopy {log.msg, log.severityTag, log.moduleTag, log.location, log.timestamp};
     logHistory.push_back(logCopy);
 }
 void LogWindow::setShown(std::shared_ptr<bool> set) {
@@ -103,7 +101,9 @@ void LogWindow::draw() {
     static bool autoScroll      { true };
     ImGui::Checkbox("Show Time",            &settings.showTime); 
     ImGui::SameLine();
-    ImGui::Checkbox("Show Tags",            &settings.showTags);
+    ImGui::Checkbox("Show Severity Tag",    &settings.showSeverityTag);
+    ImGui::SameLine();
+    ImGui::Checkbox("Show Module Tag",      &settings.showModuleTag);
     ImGui::SameLine();
     ImGui::Checkbox("Show Message",         &settings.showMsg);
     ImGui::SameLine();
@@ -131,15 +131,14 @@ void LogWindow::draw() {
         std::ostringstream os{};    // Buffer to store formatted log
 
         if (settings.showTime)
-            os << '[' << printTime(log.timestamp) << "]  ";
+            os << std::format("[{}]  ", printTime(log.timestamp));
 
-        if (settings.showTags) {
-            os << '[';
-            os << std::format("{:^{}}", log.tag, settings.textBoxWidth_tag);
-            os << "] ";       
-     
-            os << " ";
-        }
+        if(settings.showSeverityTag)
+            os << std::format("[{:^{}}]  ", log.severityTag, settings.textBoxWidth_tag);
+
+        if(settings.showModuleTag)
+            os << std::format("[{:^{}}]  ", log.moduleTag, settings.textBoxWidth_tag);  
+
         if (settings.showMsg){
             if(log.msg.size() > settings.textBoxWidth_msg)
                 os << std::format("{:{}}...  ", log.msg.substr(0, settings.textBoxWidth_msg-3), settings.textBoxWidth_msg-3);
@@ -159,6 +158,17 @@ void LogWindow::draw() {
     ImGui::EndChild();
     ImGui::End();
 }
+
+
+
+
+
+
+
+
+
+
+
 DisplayManager::DisplayManager()
 {
 
@@ -170,7 +180,7 @@ bool DisplayManager::init(const std::string& imGuiIniPath){
     using namespace Display;
 
     if(!ensureIniExists(imGuiIniPath)){
-        log_critical("Could not find/create ImGui INI file at [" + imGuiIniPath + "]");
+        log_fatal("Could not find/create ImGui INI file at [" + imGuiIniPath + "]");
         return false;
     }
 
@@ -227,13 +237,13 @@ bool DisplayManager:: saveWindowConfig() const{
     ImGui::SaveIniSettingsToDisk(iniPath.c_str());
     return true;
 }
-bool DisplayManager::addWindow(const std::string& title, std::function<void()> drawFunction){
+bool DisplayManager::addWindow(const std::string& title, const std::string& tag, std::function<void()> drawFunction){
     std::string key { Display::makeKey(title) };
 
     if(windowInformation.contains(key))
         return false;
 
-    return windowInformation.try_emplace(key, Info{title, std::make_shared<bool>(false), drawFunction}).second;
+    return windowInformation.try_emplace(key, ModuleDraw{title, tag, std::make_shared<bool>(false), drawFunction}).second;
 }
 bool DisplayManager::containsWindow(const std::string& title) const {
     return windowInformation.contains(Display::makeKey(title));
@@ -266,13 +276,13 @@ void DisplayManager::clearModuleWindows() {
             windowInformation.erase(itr);
     }
 }
-std::map<std::string, Display::Info>::const_iterator DisplayManager::cbegin() const {
+std::map<std::string, Display::ModuleDraw>::const_iterator DisplayManager::cbegin() const {
     return windowInformation.cbegin();
 }
-std::map<std::string, Display::Info>::const_iterator DisplayManager::cend() const {
+std::map<std::string, Display::ModuleDraw>::const_iterator DisplayManager::cend() const {
     return windowInformation.cend();
 }
-Display::Info& DisplayManager::at(const std::string& title) {
+Display::ModuleDraw& DisplayManager::at(const std::string& title) {
     return windowInformation.at(Display::makeKey(title));
 }
 void DisplayManager::drawWindows(){    
@@ -290,6 +300,8 @@ void DisplayManager::drawWindows(){
     }
 
     for(auto& [key, value] : windowInformation){
+        Logging::setModuleTag(value.tag);
+
         if(ImGui::BeginMainMenuBar()){
             if(value.title == LOG_WINDOW_NAME || value.title == SHELL_WINDOW_NAME ) {
                 if(ImGui::BeginMenu("Utilities")){

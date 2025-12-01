@@ -63,7 +63,7 @@ bool Framework::setup(){
 
     if(!shell->readRCFile(filePaths.rcPath)){
         if(!ShellHelper::defaultInitializeRCFile(filePaths.rcPath)){
-            log_critical("Could not find or create new RC file at [" + filePaths.rcPath + "]");
+            log_fatal("Could not find or create new RC file at [" + filePaths.rcPath + "]");
             return false;
         }
     }
@@ -88,32 +88,39 @@ void Framework::run(){
         return;
     }
 
-        // If refresh() returns true, that means an glfwShouldWindowClose() was called
-    while(!displayManager->refresh()){       
+    bool exitCalled { false };
+    while(!exitCalled){       
+        Logging::setModuleTag(COMMAND_GROUP_NAME);
         shell->handleCommandQueue();
+
+        exitCalled = displayManager->refresh(); // If returns true, that means an glfwShouldWindowClose() was called
+        // Reset module tag here if needed
 
         // Call every Module's update function they provided
         // Use modifiedEnd() to avoid unnecessary iterations to empty function objects with std::array
         for(auto itr{updateFunctions.cbegin()}; itr != modifiedEnd(); ++itr){
-            auto func { *itr };
-            if(func)
-                func();
+            auto moduleUpdate { *itr };
+
+            if(moduleUpdate.updateFunction){
+                Logging::setModuleTag(moduleUpdate.moduleTag);
+                moduleUpdate.updateFunction();
+            }
         }
     }
 
     return;
 }
-bool Framework::addUpdateFunction(std::function<void()> func) {
+bool Framework::addUpdateFunction(ModuleUpdate update) {
     // If not already used, add new entry
     if(nextIndex < MAX_MODULES){
-        updateFunctions[nextIndex] = func;
+        updateFunctions[nextIndex] = update;
         ++nextIndex;
         return true;
     }
 
     return false;
 }
-std::array<std::function<void()>, Framework::MAX_MODULES>::const_iterator Framework::modifiedEnd(){
+std::array<ModuleUpdate, Framework::MAX_MODULES>::const_iterator Framework::modifiedEnd(){
      if(nextIndex > 0)
         return updateFunctions.cbegin() + nextIndex;
     else
@@ -134,15 +141,17 @@ std::pair<bool, int> Framework::setupLoggers() {
         return std::pair(false, -1);
     }
 
+    setModuleTag(COMMAND_GROUP_NAME);
+
     return std::pair(true, basicLogger.getID());
 }
 bool Framework::setupShell(const std::string& rcPath, const std::string& commandHistoryPath){
     if(!shell->setRCPath(rcPath)){
-        log_critical("Failed to set shell RC file to [" + rcPath + "]");
+        log_fatal("Failed to set shell RC file to [" + rcPath + "]");
         return false;
     }
     if(!shell->setCommandHistoryPath(commandHistoryPath)){
-        log_critical("Failed to set shell command history file to [" + commandHistoryPath + "]");
+        log_fatal("Failed to set shell command history file to [" + commandHistoryPath + "]");
         return false;
     }
 
@@ -156,7 +165,7 @@ bool Framework::setupShell(const std::string& rcPath, const std::string& command
 
     // Make las command group
     if(!shell->addCommandGroup(COMMAND_GROUP_NAME)){
-        log_critical("Failed to create command group name [" + std::string{COMMAND_GROUP_NAME} + "]");
+        log_fatal("Failed to create command group name [" + std::string{COMMAND_GROUP_NAME} + "]");
         return false;
     }
 
@@ -164,11 +173,11 @@ bool Framework::setupShell(const std::string& rcPath, const std::string& command
 }
 bool Framework::setupModuleManager(const std::string& moduleLoadDir, const std::string& moduleFilesDir){
     if(!moduleManager->setModuleLoadDirectory(moduleLoadDir)){
-        log_critical("Failed to set module load directory");
+        log_fatal("Failed to set module load directory");
         return false;
     }
     if(!moduleManager->setModuleFilesDirectory(moduleFilesDir)){
-        log_critical("Failed to set module files directory");
+        log_fatal("Failed to set module files directory");
         return false;
     }
 
@@ -177,7 +186,7 @@ bool Framework::setupModuleManager(const std::string& moduleLoadDir, const std::
 }
 bool Framework::setupDisplay(const std::string& imGuiIniPath){
     if(!displayManager->init(imGuiIniPath)){
-        log_critical("Error setting up necessary display libraries");
+        log_fatal("Error setting up necessary display libraries");
         return false;
     }
 
@@ -191,7 +200,7 @@ bool Framework::setupInternalWindows(){
 
     std::function<void()> logDraw { std::bind(&LogWindow::draw, &*logWindow) };
 
-    if(!displayManager->addWindow(LOG_WINDOW_NAME, logDraw)){
+    if(!displayManager->addWindow(LOG_WINDOW_NAME, COMMAND_GROUP_NAME, logDraw)){
         log_error("Log viewer could not be added to window manager");
         return false;
     }
@@ -200,7 +209,7 @@ bool Framework::setupInternalWindows(){
 
     // Setup console window
     std::function<void()> shellDraw {std::bind(&Shell::draw, shell) };
-    if(!displayManager->addWindow(SHELL_WINDOW_NAME, shellDraw)){
+    if(!displayManager->addWindow(SHELL_WINDOW_NAME, COMMAND_GROUP_NAME, shellDraw)){
         log_error("Console could not be added to window manager");
         return false;
     }
@@ -267,7 +276,7 @@ void Framework::setupCommands(){
 }
 bool Framework::loadAllModules(const std::string& moduleLibDirectory, const std::string& moduleFilesDirectory) {
     if(!ImGui::GetCurrentContext()){
-        log_critical("No ImGuiContext found");
+        log_fatal("No ImGuiContext found");
         return false;
     }
 
@@ -288,7 +297,7 @@ bool Framework::loadAllModules(const std::string& moduleLibDirectory, const std:
             log_info("All Modules loaded successfully");
     }
     catch(std::filesystem::filesystem_error& e){
-        log_critical("Could not find module directory [" + std::string{e.path1()} + "] to load Modules");
+        log_fatal("Could not find module directory [" + std::string{e.path1()} + "] to load Modules");
         return false;
     }
 
@@ -299,14 +308,15 @@ void Framework::loadAllModuleFunctions() {
 
     for(auto itr {moduleManager->cbegin()}; itr != moduleManager->cend(); ++itr){
         const ModuleInfo& info { itr->second->getModuleInfo()};
+        const ModuleUpdate& update { itr->second->getModuleUpdate()};
 
-        if(!addUpdateFunction(info.updateFunction)){
+        if(!addUpdateFunction(update)){
             log_error("Failed to load update function for module [" + info.title +"]. Max number of Modules reached");
             removeModule(itr);
             ++couldntLoad;
             continue;
         }
-        if(!displayManager->addWindow(info.title, info.drawFunction)){
+        if(!displayManager->addWindow(info.title, info.shortTag, info.drawFunction)){
             log_error("Failed to load window for module [" + info.title +"].  Window name collision");
             removeModule(itr);
             ++couldntLoad;
@@ -326,7 +336,7 @@ void Framework::loadAllModuleCommands(){
         Module& module {*itr->second};
         const ModuleInfo& info { module.getModuleInfo() };
 
-        if(!shell->addCommandGroup(info.commandGroupName)){
+        if(!shell->addCommandGroup(info.shortTag)){
             log_error("Failed to load commands for Module [" + info.title +"].");
             removeModule(itr);
             ++couldntLoad;
@@ -339,7 +349,7 @@ void Framework::loadAllModuleCommands(){
         // Load the commands
         int commandsNotLoaded { 0 };
         for(auto& command : module.getCommands()){
-            if(!shell->addCommand(info.commandGroupName, command))
+            if(!shell->addCommand(info.shortTag, command))
                 ++commandsNotLoaded;
         }
 
@@ -404,7 +414,7 @@ void Framework::removeModule(std::unordered_map<std::string, ModulePtr>::const_i
 
     displayManager->removeWindow(info.title);
     moduleManager->removeModule(info.title);
-    shell->removeCommandGroup(info.commandGroupName);
+    shell->removeCommandGroup(info.shortTag);
 }
 
 
@@ -443,13 +453,13 @@ bool setupFileLogger(const std::string& logDir){
 
     LogToFile logToFile{};
     if(!logToFile.setPath(LAS::FrameworkSetup::createLogFile(logDir))){
-         log_critical("Could not create a log file for the current instance");
+         log_fatal("Could not create a log file for the current instance");
          return false;
     }
     
     // If all is good, add LogToFile to logger
     if(!Logging::addOutput(std::make_shared<LogToFile>(logToFile))){
-        log_critical("Could not add a file logger as a log output");
+        log_fatal("Could not add a file logger as a log output");
         return false;
     }
 
@@ -464,7 +474,7 @@ bool setupFilesystem(FilePaths& filePaths) {
             #ifdef __linux__
                 std::string home {getenv("HOME")};
             #else
-                log_critical("Only Linux is currently supported.\n");
+                log_fatal("Only Linux is currently supported.\n");
                 return false;
             #endif
 
@@ -485,24 +495,24 @@ bool setupFilesystem(FilePaths& filePaths) {
         // Check paths are good
         try {
             if(!LAS::ensureDirectory(filePaths.logDir)){
-                log_critical("Error finding or creating [" + filePaths.logDir + "]");
+                log_fatal("Error finding or creating [" + filePaths.logDir + "]");
                 return false;
             }
             if(!LAS::ensureDirectory(filePaths.moduleLibDir)){
-                log_critical("Error finding or creating [" + filePaths.moduleLibDir + "]");
+                log_fatal("Error finding or creating [" + filePaths.moduleLibDir + "]");
                 return false;
             }
             if(!LAS::ensureDirectory(filePaths.moduleFilesDir)){
-                log_critical("Error finding or creating [" + filePaths.moduleFilesDir + "]");
+                log_fatal("Error finding or creating [" + filePaths.moduleFilesDir + "]");
                 return false;
             }
             if(!LAS::ensureDirectory(filePaths.dotLASDir)){
-                log_critical("Error finding or creating [" + filePaths.dotLASDir + "]");
+                log_fatal("Error finding or creating [" + filePaths.dotLASDir + "]");
                 return false;
             }
         }
         catch(std::filesystem::filesystem_error& e){
-            log_critical(std::format("Fatal error in LAS filesystem setup. What: [{}]. File: [{}]", e.what(), e.path1().string() ));
+            log_fatal(std::format("Fatal error in LAS filesystem setup. What: [{}]. File: [{}]", e.what(), e.path1().string() ));
             return false;
         }
 

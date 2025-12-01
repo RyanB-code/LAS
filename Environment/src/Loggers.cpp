@@ -26,16 +26,17 @@ void LogToFile::log(const Log& log) {
     std::ostringstream os{};    // Buffer to store formatted log
 
     if (settings.showTime)
-        os << '[' << printTime(log.timestamp) << "]  ";
+        os << std::format("[{}]  ", printTime(log.timestamp));
 
-    if (settings.showTags) {
-        os << '[';
-        os << std::format("{:^{}}", log.tag, settings.textBoxWidth_tag);
-        os << "]  ";           
-    }
-    if (settings.showMsg) {
+    if (settings.showSeverityTag) 
+        os << std::format("[{:^{}}]  ", log.severityTag, settings.textBoxWidth_tag);
+
+    if (settings.showModuleTag)
+        os << std::format("[{:^{}}]  ", log.moduleTag, settings.textBoxWidth_tag);
+
+    if (settings.showMsg) 
         os << std::format("{:<{}}  ", log.msg, settings.textBoxWidth_msg);
-    }
+
     if (settings.showLocation)
         os << printLocation(log.location);
 
@@ -67,10 +68,13 @@ void LogToConsole::log(const Log& log) {
     std::ostringstream os;
 
     if(settings.showTime)
-        os << '[' << printTime(log.timestamp) << "] ";
+        os << std::format("[{}]  ", printTime(log.timestamp));
 
-    if(settings.showTags)
-        os << std::format("[{:^{}}] ", log.tag, settings.textBoxWidth_tag);  // Centers the tag
+    if(settings.showSeverityTag)
+        os << std::format("[{:^{}}]  ", log.severityTag, settings.textBoxWidth_tag);  // centers the tag
+
+    if(settings.showSeverityTag)
+        os << std::format("[{:^{}}]  ", log.moduleTag, settings.textBoxWidth_tag);  // Centers the tag
 
     if(settings.showMsg)
         os << std::format("{:<{}} ", log.msg, settings.textBoxWidth_msg);  // Left-align the msg

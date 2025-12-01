@@ -30,7 +30,8 @@ Set::Set(   std::shared_ptr<DisplayManager> setDM, std::shared_ptr<ModuleManager
                                 "log-tag-text-box-size <int>\tSets the text box size for log tags\n"
                                 "log-msg-text-box-size <int>\tSets the text box size for log messages\n"
                                 "show-log-time <bool>   \t\tToggle showing of log times\n"
-                                "show-log-tag  <bool>   \t\tToggle showing of log tags\n"
+                                "show-log-moduleTag  <bool> \t\tToggle showing of log module tag\n"
+                                "show-log-severiyTag <bool>\tToggle showing log severity tag\n"
                                 "show-log-msg  <bool>   \t\tToggle showing of log messages\n"
                                 "show-log-location <bool>   \tToggle showing of log location\n"
                                 "rc-file-path <path>    \t\tSet desired RC file for the LAS Environment. It will not create file in path specified if not found\n"
@@ -107,16 +108,30 @@ std::pair<int, std::ostringstream> Set::execute(const StringVector& args) {
         else
             return pairInvalidArgument(args[1]);
     }
-    else if(args[0] == "show-log-tag"){
+    else if(args[0] == "show-log-moduleTag"){
+        auto settings = Logging::getGlobalSettings();
         if(stringValueTrue(args[1])){
-            auto settings = Logging::getGlobalSettings();
-            settings.showTags = true;
+            settings.showModuleTag = true;
             Logging::setGlobalSettings(settings);
             return pairNormal();
         }
         else if(stringValueFalse(args[1])){
-            auto settings = Logging::getGlobalSettings();
-            settings.showTags = false;
+            settings.showModuleTag = false;
+            Logging::setGlobalSettings(settings);
+            return pairNormal();
+        }
+        else
+            return pairInvalidArgument(args[1]);
+    }
+    else if(args[0] == "show-log-severiyTag"){
+        auto settings = Logging::getGlobalSettings();
+        if(stringValueTrue(args[1])){
+            settings.showSeverityTag = true;
+            Logging::setGlobalSettings(settings);
+            return pairNormal();
+        }
+        else if(stringValueFalse(args[1])){
+            settings.showSeverityTag = false;
             Logging::setGlobalSettings(settings);
             return pairNormal();
         }
@@ -228,7 +243,8 @@ std::pair<int, std::ostringstream> Print::execute(const StringVector& args) {
         LogSettings settings {Logging::getGlobalSettings()};
         os <<   "Log Settings:\n"
                 "\tShow Time:       \t"         << std::boolalpha << settings.showTime <<  "\n"
-                "\tShow Tags:       \t"         << std::boolalpha << settings.showTags <<  "\n"
+                "\tShow Severity Tag:\t"        << std::boolalpha << settings.showSeverityTag <<  "\n"
+                "\tShow Module Tag:\t"          << std::boolalpha << settings.showModuleTag <<  "\n"
                 "\tShow Message:    \t"         << std::boolalpha << settings.showMsg <<  "\n"
                 "\tShow Location:   \t"         << std::boolalpha << settings.showLocation <<  "\n"
                 "\tTag Text Box Size:     "     << (int)settings.textBoxWidth_tag <<  "\n"
@@ -357,8 +373,8 @@ std::pair<int, std::ostringstream> ModuleControl::execute(const StringVector& ar
         // Load Windows
         int windowsNotLoaded{0};
         for(auto itr { moduleManager->cbegin() }; itr != moduleManager->cend(); ++itr){
-            auto mod { *itr->second };
-            if(!displayManager->addWindow(mod.getModuleInfo().title, std::function<void()>{mod.getModuleInfo().drawFunction}))
+            const ModuleInfo& info { itr->second->getModuleInfo() };
+            if(!displayManager->addWindow(info.title, info.shortTag, info.drawFunction))
                 ++windowsNotLoaded;
         }
 

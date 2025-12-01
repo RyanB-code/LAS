@@ -19,17 +19,16 @@
 #include </usr/include/GL/glext.h>
 #include </usr/include/GL/glxext.h>
 
-using namespace LAS::Logging;
-
 namespace LAS{
 
     namespace Display{
 
-        static constexpr char LOG_WINDOW_NAME[11]   { "Log Viewer" };
-        static constexpr char SHELL_WINDOW_NAME[8]  { "Console" };
+        static constexpr char LOG_WINDOW_NAME[]     = { "Log Viewer" };
+        static constexpr char SHELL_WINDOW_NAME[]   = { "Console" };
 
-        struct Info {
+        struct ModuleDraw {
             std::string             title { };
+            std::string             tag   { };  
             std::shared_ptr<bool>   shown { };
 
             std::function<void()> drawFunction;
@@ -42,20 +41,20 @@ namespace LAS{
 
         std::string makeKey (const std::string& text);
 
-        class LogWindow : public LogOutput {
+        class LogWindow : public Logging::LogOutput {
         public:
              LogWindow();
-            ~LogWindow();
+            ~LogWindow() = default;
 
             void draw();
-            void log(const Log& log) override;
+            void log(const Logging::Log& log) override;
 
             void setShown (std::shared_ptr<bool> set);
 
             int getLogOutputID() const;
 
         private:
-            std::vector<Log> logHistory;
+            std::vector<Logging::Log> logHistory;
             std::shared_ptr<bool> shown;
         };
 
@@ -73,19 +72,19 @@ namespace LAS{
         std::string getIniPath  () const;
         bool saveWindowConfig   () const;
 
-        bool addWindow       (const std::string& title, std::function<void()> drawFunction);
+        bool addWindow       (const std::string& title, const std::string& tag, std::function<void()> drawFunction);
         bool containsWindow  (const std::string& title) const;
         bool removeWindow    (const std::string& title);
 
-        Display::Info& at       (const std::string& title);         // Throws the same as map::at
+        Display::ModuleDraw& at       (const std::string& title);         // Throws the same as map::at
 
         std::shared_ptr<bool>   shown (const std::string& title);    
 
         void    closeAllWindows     () const;
         void    clearModuleWindows  ();
 
-        std::map<std::string, Display::Info>::const_iterator cbegin() const;
-        std::map<std::string, Display::Info>::const_iterator cend() const;
+        std::map<std::string, Display::ModuleDraw>::const_iterator cbegin() const;
+        std::map<std::string, Display::ModuleDraw>::const_iterator cend() const;
 
     private:
         static constexpr char  WINDOW_TITLE[] { "Life Application Suite" };
@@ -93,7 +92,7 @@ namespace LAS{
         std::string iniPath;
         GLFWwindow* window {nullptr};
 
-        std::map<std::string, Display::Info> windowInformation { };
+        std::map<std::string, Display::ModuleDraw> windowInformation { };
 
         void drawWindows();
     };

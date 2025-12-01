@@ -63,10 +63,11 @@ namespace LAS{
         std::shared_ptr<Shell>              shell;
         std::shared_ptr<Display::LogWindow> logWindow { }; // Needed to store logs
                                                            
-        std::array<std::function<void()>, MAX_MODULES> updateFunctions;
+        std::array<ModuleUpdate, MAX_MODULES> updateFunctions;
         int nextIndex { 0 };
-        bool addUpdateFunction(std::function<void()> func);
-        std::array<std::function<void()>, MAX_MODULES>::const_iterator modifiedEnd();
+
+        bool addUpdateFunction(ModuleUpdate);
+        std::array<ModuleUpdate, MAX_MODULES>::const_iterator modifiedEnd();
 
 
         std::pair<bool, int> setupLoggers();

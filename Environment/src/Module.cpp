@@ -2,11 +2,11 @@
 
 using namespace LAS;
 
-Module::Module( LAS::ModuleFunctions::LoadModuleInfo            setLoadModuleInfo,
-                LAS::ModuleFunctions::LoadEnvironmentInfo       setLoadEnvironmentInfo,
-                LAS::ModuleFunctions::VoidNoParams              setCleanup) :
+Module::Module( LAS::ModuleFunctions::LoadModuleInfo    setLoadModuleInfo,
+                LAS::ModuleFunctions::InitModule        setModuleInit,
+                LAS::ModuleFunctions::VoidNoParams      setCleanup) :
         loadModuleInfoPtr   {setLoadModuleInfo},
-        loadEnvInfoPtr      {setLoadEnvironmentInfo},
+        initModulePtr       {setModuleInit},
         cleanupPtr          {setCleanup}
 {
 
@@ -33,6 +33,9 @@ bool Module::setRCFilePath(const std::string& path){
 const ModuleInfo& Module::getModuleInfo() const{
     return moduleInfo;
 }
+ModuleUpdate Module::getModuleUpdate() const {
+    return ModuleUpdate { moduleInfo.shortTag, moduleInfo.updateFunction };
+}
 std::string Module::getDirectory() const{
     return directory;
 }
@@ -46,14 +49,14 @@ void Module::cleanup(){
     if(cleanupPtr)
         cleanupPtr();
 }
-bool Module::loadModuleInfo(){
+bool Module::loadInfo(){
     if(!loadModuleInfoPtr(moduleInfo))
         return false;
     else
         return true;
 }
-bool Module::loadEnvInfo(const EnvironmentInfo& envInfo){
-    if(!loadEnvInfoPtr(envInfo))
+bool Module::init(const EnvironmentInfo& envInfo){
+    if(!initModulePtr(envInfo))
         return false;
    
     if(setDirectory(envInfo.directory) && setRCFilePath(envInfo.rcFilePath))
