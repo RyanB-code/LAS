@@ -77,11 +77,10 @@ namespace LAS::Logging {
 }
 
 namespace LAS {
-    void log            (const std::string& msg, const std::string& tag, const std::source_location& location=std::source_location::current());
+    void log_trace      (const std::string& msg, const std::source_location& location=std::source_location::current());
+    void log_debug      (const std::string& msg, const std::source_location& location=std::source_location::current());
     void log_info       (const std::string& msg, const std::source_location& location=std::source_location::current());
     void log_warn       (const std::string& msg, const std::source_location& location=std::source_location::current());
     void log_error      (const std::string& msg, const std::source_location& location=std::source_location::current());
-    void log_critical   (const std::string& msg, const std::source_location& location=std::source_location::current());
-
-    
+    void log_fatal      (const std::string& msg, const std::source_location& location=std::source_location::current());
 }

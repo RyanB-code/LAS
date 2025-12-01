@@ -154,12 +154,26 @@ namespace LAS::Logging {
         outputs.at(ID)->disable();
         return true;
     }
+
+
+    void setModuleTag(std::string tag){
+        if(tag.empty()){
+            Logging::Logger::getInstance().setModuleTag("NULL");
+            return;
+        }
+        
+        std::transform(tag.begin(), tag.end(), tag.begin(), ::toupper);
+        Logging::Logger::getInstance().setModuleTag(tag);
+    }
 }
 
 // LAS namespace
 namespace LAS{
-    void log(const std::string& msg, const std::string& tag, const std::source_location& location){
-        Logging::Logger::getInstance().log(msg, tag, location);
+    void log_trace(const std::string& msg, const std::source_location& location) {
+        Logging::Logger::getInstance().log(msg, "TRACE", location);
+    }
+    void log_debug(const std::string& msg, const std::source_location& location) {
+        Logging::Logger::getInstance().log(msg, "DEBUG", location);
     }
     void log_info(const std::string& msg, const std::source_location& location) {
         Logging::Logger::getInstance().log(msg, "INFO", location);
@@ -170,9 +184,10 @@ namespace LAS{
     void log_error(const std::string& msg, const std::source_location& location) {
         Logging::Logger::getInstance().log(msg, "ERROR", location);
     }
-    void log_critical(const std::string& msg, const std::source_location& location) {
-        Logging::Logger::getInstance().log(msg, "CRITICAL", location);
+    void log_fatal(const std::string& msg, const std::source_location& location) {
+        Logging::Logger::getInstance().log(msg, "FATAL", location);
     }
+
 
     // Logging
     bool Logging::addOutput(LogOutputPtr newOutput) {
