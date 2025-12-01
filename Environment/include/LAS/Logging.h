@@ -11,7 +11,8 @@ namespace LAS::Logging {
 
     struct LogSettings {     
         bool showTime               { true };
-        bool showTags               { true };
+        bool showSeverityTag        { true };
+        bool showModuleTag          { true };
         bool showMsg                { true };
         bool showLocation           { true };
 
@@ -21,7 +22,8 @@ namespace LAS::Logging {
     
     struct Log {
         const std::string           msg;
-        const std::string           tag;
+        const std::string           severityTag;
+        const std::string           moduleTag;
         const std::source_location  location;
 
         const std::chrono::time_point<std::chrono::system_clock> timestamp;
@@ -30,7 +32,7 @@ namespace LAS::Logging {
     class LogOutput {
     public:
         LogOutput(const LogSettings& setSettings=LogSettings{ }); // No more than 50 outputs allowed. Throws out of range if exceeded
-        virtual ~LogOutput();
+        virtual ~LogOutput() = default;
 
         void        setSettings (const LogSettings& setSettings);
         LogSettings getSettings () const;
@@ -70,14 +72,15 @@ namespace LAS::Logging {
     std::string printTime       (const std::chrono::system_clock::time_point& time)     noexcept;   // HH:MM:SS
     std::string printLocation   (const std::source_location& location)                  noexcept;   // <File Name> | <Function Name> | <Line> 
 
+    // Change the tag for the logger
+    void setModuleTag   (std::string tag);
 }
 
 namespace LAS {
-    void log            (const std::string& msg, const std::string& tag, const std::source_location& location=std::source_location::current());
+    void log_trace      (const std::string& msg, const std::source_location& location=std::source_location::current());
+    void log_debug      (const std::string& msg, const std::source_location& location=std::source_location::current());
     void log_info       (const std::string& msg, const std::source_location& location=std::source_location::current());
     void log_warn       (const std::string& msg, const std::source_location& location=std::source_location::current());
     void log_error      (const std::string& msg, const std::source_location& location=std::source_location::current());
-    void log_critical   (const std::string& msg, const std::source_location& location=std::source_location::current());
-
-    
+    void log_fatal      (const std::string& msg, const std::source_location& location=std::source_location::current());
 }
