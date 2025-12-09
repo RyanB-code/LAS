@@ -300,8 +300,6 @@ void DisplayManager::drawWindows(){
     }
 
     for(auto& [key, value] : windowInformation){
-        Logging::setModuleTag(value.tag);
-
         if(ImGui::BeginMainMenuBar()){
             if(value.title == LOG_WINDOW_NAME || value.title == SHELL_WINDOW_NAME ) {
                 if(ImGui::BeginMenu("Utilities")){
@@ -319,8 +317,18 @@ void DisplayManager::drawWindows(){
             ImGui::EndMainMenuBar();
         }
 
-        if(*value.shown)
+        Logging::setModuleTag(value.tag);
+        if(*value.shown){
+            // ---------------------
+            // The commented out code here if for timing how long each Module takes to render
+            // -------------------
+            //using namespace std::chrono;
+            //auto before { steady_clock::now() };
             value.drawFunction();
+            //auto after { steady_clock::now() };
+            //std::cout << std::format("{} draw: {}\n", key, duration_cast<milliseconds>(after - before).count());
+        }
+        Logging::setModuleTag("LAS");
     }
 }
 

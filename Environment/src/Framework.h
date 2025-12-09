@@ -18,6 +18,7 @@
 #include <queue>
 #include <chrono>
 #include <exception>
+#include <thread>
 
 namespace LAS{
 
@@ -52,9 +53,16 @@ namespace LAS{
         void run    ();
 
     private:
-        static constexpr char       COMMAND_GROUP_NAME[4]   {"las"};    // Group for all built in commands
+        static constexpr char       COMMAND_GROUP_NAME[]    {"las"};    // Group for all built in commands
         static constexpr int16_t    NUM_CACHED_COMMANDS     { 50 };     // How many previous commands will be added to command history upon startup
         static constexpr uint8_t    MAX_MODULES             { 32 };
+
+        // Only change the divisor, since that is the target per second
+        static constexpr std::chrono::milliseconds UPDATE_INTERVAL  { 1000 / 100 }; // Update 100 times per second 
+        static constexpr std::chrono::milliseconds FRAME_INTERVAL   { 1000 / 60 };  // Refresh frame 60 times a second 
+
+        // Wakeup every X ms
+        static constexpr std::chrono::milliseconds SLEEP_INTERVAL   { 3 };
 
         bool setupComplete { false };
 

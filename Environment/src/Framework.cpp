@@ -83,29 +83,61 @@ bool Framework::setup(){
     return true;
 }
 void Framework::run(){
+    using namespace std::chrono;
+
     if(!setupComplete){
         std::cerr << "Application must be setup before running\n";
         return;
     }
 
+    steady_clock::time_point START { steady_clock::now() };
+
+    steady_clock::time_point currentTime    { steady_clock::now() };
+    steady_clock::time_point lastTime       { currentTime };
+    milliseconds updateAccumulator          { milliseconds{0} };
+    milliseconds frameAccumulator           { milliseconds{0} };
+
     bool exitCalled { false };
     while(!exitCalled){       
         Logging::setModuleTag(COMMAND_GROUP_NAME);
-        shell->handleCommandQueue();
 
-        exitCalled = displayManager->refresh(); // If returns true, that means an glfwShouldWindowClose() was called
-        // Reset module tag here if needed
+        // Setup timing
+        currentTime = steady_clock::now();
+        auto delta { currentTime - lastTime };
+        lastTime = currentTime;
+        
+        updateAccumulator += duration_cast<milliseconds>(delta);
+        frameAccumulator += duration_cast<milliseconds>(delta);
+        
 
-        // Call every Module's update function they provided
-        // Use modifiedEnd() to avoid unnecessary iterations to empty function objects with std::array
-        for(auto itr{updateFunctions.cbegin()}; itr != modifiedEnd(); ++itr){
-            auto moduleUpdate { *itr };
+        // Call backend update functions
+        if(updateAccumulator >= UPDATE_INTERVAL){
+            updateAccumulator -= UPDATE_INTERVAL;
 
-            if(moduleUpdate.updateFunction){
-                Logging::setModuleTag(moduleUpdate.moduleTag);
-                moduleUpdate.updateFunction();
+            shell->handleCommandQueue();
+
+            // Call every Module's update function they provided
+            // Use modifiedEnd() to avoid unnecessary iterations to empty function objects with std::array
+            for(auto itr{updateFunctions.cbegin()}; itr != modifiedEnd(); ++itr){
+                auto moduleUpdate { *itr };
+
+                if(moduleUpdate.updateFunction){
+                    Logging::setModuleTag(moduleUpdate.moduleTag);
+                    moduleUpdate.updateFunction();
+                }
             }
+            Logging::setModuleTag(COMMAND_GROUP_NAME);
         }
+
+
+        // New frame rendering
+        if(frameAccumulator >= FRAME_INTERVAL){
+            frameAccumulator -= FRAME_INTERVAL;
+            exitCalled = displayManager->refresh(); // If returns true, that means an glfwShouldWindowClose() was called
+        }
+
+        // Wakeup thread every X ms
+        std::this_thread::sleep_for(SLEEP_INTERVAL); 
     }
 
     return;
