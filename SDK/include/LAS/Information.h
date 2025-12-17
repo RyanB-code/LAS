@@ -5,7 +5,6 @@
 #include <imgui/imgui.h>
 #include <functional>
 
-#include "LAS/Logging.h"
 #include "LAS/Commands.h"
 
 namespace LAS{
@@ -33,7 +32,6 @@ namespace LAS{
             std::string     rcFilePath  {};
         
             ImGuiContext&           context;
-            std::shared_ptr<bool>   moduleShown;
         };
 
         std::string versionToStr (const Version& ver);
