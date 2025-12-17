@@ -44,20 +44,18 @@ bool Framework::setup(){
         return false;
 
 
-    if(!setupInternalWindows())
-        return false;
+    setupInternalWindows();
 
     setupCommands(); // Sets up internal commands so only needs DM, MM, and Shell to work
                                             
     if(!setupModuleManager(filePaths.moduleLibDir, filePaths.moduleFilesDir))
         return false;
 
-    if(!loadAllModules(filePaths.moduleLibDir, filePaths.moduleFilesDir))
+    if(!loadAllModules())
         return false;
 
     // Non fatal if these fail
     loadAllModuleCommands();
-    loadAllModuleFunctions();
     setupAllModules();
 
 
@@ -118,12 +116,19 @@ void Framework::run(){
 
             // Call every Module's update function they provided
             // Use modifiedEnd() to avoid unnecessary iterations to empty function objects with std::array
-            for(auto itr{updateFunctions.cbegin()}; itr != modifiedEnd(); ++itr){
-                auto moduleUpdate { *itr };
+            for(const auto& [title, items] : moduleManager->getUpdateList() ){
+                try{
+                    if(items.function){
+                        Logging::setModuleTag(items.tag);
+                        items.function();
+                    }
+                }
+                catch(std::exception& e){
+                    log_fatal(std::format("Unhandled exception from Module '{}' caught in LAS. What: {}", items.tag, e.what() ));  
+                    Logging::setModuleTag(COMMAND_GROUP_NAME);
+                    log_warn(std::format("Shutting down Module '{}'...", items.tag));
 
-                if(moduleUpdate.updateFunction){
-                    Logging::setModuleTag(moduleUpdate.moduleTag);
-                    moduleUpdate.updateFunction();
+                    
                 }
             }
             Logging::setModuleTag(COMMAND_GROUP_NAME);
@@ -133,7 +138,7 @@ void Framework::run(){
         // New frame rendering
         if(frameAccumulator >= FRAME_INTERVAL){
             frameAccumulator -= FRAME_INTERVAL;
-            exitCalled = displayManager->refresh(); // If returns true, that means an glfwShouldWindowClose() was called
+            exitCalled = displayManager->refresh(moduleManager->getDrawList()); // If returns true, that means an glfwShouldWindowClose() was called
         }
 
         // Wakeup thread every X ms
@@ -141,22 +146,6 @@ void Framework::run(){
     }
 
     return;
-}
-bool Framework::addUpdateFunction(ModuleUpdate update) {
-    // If not already used, add new entry
-    if(nextIndex < MAX_MODULES){
-        updateFunctions[nextIndex] = update;
-        ++nextIndex;
-        return true;
-    }
-
-    return false;
-}
-std::array<ModuleUpdate, Framework::MAX_MODULES>::const_iterator Framework::modifiedEnd(){
-     if(nextIndex > 0)
-        return updateFunctions.cbegin() + nextIndex;
-    else
-        return updateFunctions.cend();
 }
 std::pair<bool, int> Framework::setupLoggers() {
     using namespace LAS::Logging;
@@ -226,29 +215,19 @@ bool Framework::setupDisplay(const std::string& imGuiIniPath){
 
     return true;
 }
-bool Framework::setupInternalWindows(){
-    using namespace Display;
-    using namespace ModuleFunctions;
+void Framework::setupInternalWindows(){ 
+    using namespace LAS::Display;
 
-    std::function<void()> logDraw { std::bind(&LogWindow::draw, &*logWindow) };
-
-    if(!displayManager->addWindow(LOG_WINDOW_NAME, COMMAND_GROUP_NAME, logDraw)){
-        log_error("Log viewer could not be added to window manager");
-        return false;
-    }
-    logWindow->setShown(displayManager->shown(LOG_WINDOW_NAME));
-    log_info("Log viewer setup successful");
-
-    // Setup console window
-    std::function<void()> shellDraw {std::bind(&Shell::draw, shell) };
-    if(!displayManager->addWindow(SHELL_WINDOW_NAME, COMMAND_GROUP_NAME, shellDraw)){
-        log_error("Console could not be added to window manager");
-        return false;
-    }
-    shell->setShown(displayManager->shown(SHELL_WINDOW_NAME));
-    log_info("Console setup successful");
-
-    return true;
+    displayManager->addInternalWindow(
+            LOG_WINDOW_NAME, 
+            COMMAND_GROUP_NAME, 
+            std::bind(&LogWindow::draw, &*logWindow) 
+        );
+    displayManager->addInternalWindow(
+            SHELL_WINDOW_NAME, 
+            COMMAND_GROUP_NAME, 
+            std::bind(&Shell::draw, shell) 
+        );
 }
 void Framework::setupCommands(){
     using namespace LAS::Commands;
@@ -306,27 +285,9 @@ void Framework::setupCommands(){
         log_error(msg.str());
     }
 }
-bool Framework::loadAllModules(const std::string& moduleLibDirectory, const std::string& moduleFilesDirectory) {
-    if(!ImGui::GetCurrentContext()){
-        log_fatal("No ImGuiContext found");
-        return false;
-    }
-
+bool Framework::loadAllModules() {
     try{
-        StringVector modulesThatFailedToLoad {};
-        moduleManager->loadAllModules(modulesThatFailedToLoad); 
-
-        // This is just for logging what failed to load
-        if(modulesThatFailedToLoad.size() > 0){
-            std::ostringstream msg;
-            msg << "There were [" << modulesThatFailedToLoad.size() << "] Modules that could not be loaded: ";
-            for(const auto& s : modulesThatFailedToLoad){
-                msg << "[" << s << "] ";
-            }
-            log_warn(msg.str());
-        }
-        else
-            log_info("All Modules loaded successfully");
+        moduleManager->loadAllModules(); 
     }
     catch(std::filesystem::filesystem_error& e){
         log_fatal("Could not find module directory [" + std::string{e.path1()} + "] to load Modules");
@@ -335,42 +296,16 @@ bool Framework::loadAllModules(const std::string& moduleLibDirectory, const std:
 
     return true;
 }
-void Framework::loadAllModuleFunctions() {
-    int couldntLoad {0};
-
-    for(auto itr {moduleManager->cbegin()}; itr != moduleManager->cend(); ++itr){
-        const ModuleInfo& info { itr->second->getModuleInfo()};
-        const ModuleUpdate& update { itr->second->getModuleUpdate()};
-
-        if(!addUpdateFunction(update)){
-            log_error("Failed to load update function for module [" + info.title +"]. Max number of Modules reached");
-            removeModule(itr);
-            ++couldntLoad;
-            continue;
-        }
-        if(!displayManager->addWindow(info.title, info.shortTag, info.drawFunction)){
-            log_error("Failed to load window for module [" + info.title +"].  Window name collision");
-            removeModule(itr);
-            ++couldntLoad;
-            continue;
-        }
-    }
-
-    if(couldntLoad > 0)
-        log_warn(std::format("There were [{}] windows that could not be loaded from modules", couldntLoad));
-    else
-        log_info("All windows successfully loaded from all modules");
-}
 void Framework::loadAllModuleCommands(){  
     int couldntLoad { 0 };
 
-    for(auto itr { moduleManager->cbegin() }; itr != moduleManager->cend(); ++itr){
-        Module& module {*itr->second};
+    for(const auto& [title, modulePtr] : moduleManager->getModuleList() ){
+        Module& module { *modulePtr };
         const ModuleInfo& info { module.getModuleInfo() };
 
         if(!shell->addCommandGroup(info.shortTag)){
-            log_error("Failed to load commands for Module [" + info.title +"].");
-            removeModule(itr);
+            moduleManager->removeModule(title);
+            log_error("Failed to load commands for Module [" + info.title +"]. Module removed.");
             ++couldntLoad;
             continue;
         }   
@@ -395,58 +330,22 @@ void Framework::loadAllModuleCommands(){
         log_info("All commands successfully loaded from all modules");
 }
 void Framework::setupAllModules() {
-    int couldntSetup { 0 };
-
     log_info("Setting up all Modules...");
-
-    for(auto itr {moduleManager->cbegin() }; itr != moduleManager->cend(); ++itr){
-        std::string title { itr->second->getModuleInfo().title };
-
-        if(!displayManager->containsWindow(title)){
-            ++couldntSetup;
-            removeModule(itr);
-            continue;
-        }
-
-        if(!moduleManager->setupModule(*ImGui::GetCurrentContext(), title, displayManager->at(title).shown)){
-            ++couldntSetup;
-            removeModule(itr);
-            continue;
-        }
-    }
-
-    if(couldntSetup > 0)
-        log_warn(std::format("There were [{}] Modules that could not be setup", couldntSetup));
-    else
-        log_info("All Modules successfully setup");
-
+    moduleManager->setupAllModules( *ImGui::GetCurrentContext() );
 }
 void Framework::readAllModuleRCFiles(){
-    for(auto itr {moduleManager->cbegin() }; itr != moduleManager->cend(); ++itr)
-        readModuleRCFile(itr->second->getModuleInfo().title);
+    for(const auto& [title, modulePtr] : moduleManager->getModuleList() )
+        readModuleRCFile(modulePtr->getRCFilePath());
 }
-bool Framework::readModuleRCFile (const std::string& name){
-    if(!moduleManager->containsModule(name))
-        return false; 
-
-    ModulePtr moduleBuffer {moduleManager->getModule(name)};
-
+bool Framework::readModuleRCFile (const std::string& rcFilePath){
     std::queue<std::string> commandLines;
-    if(LAS::ShellHelper::readRCFile(moduleBuffer->getRCFilePath(), commandLines)){
+
+    if(LAS::ShellHelper::readRCFile(rcFilePath, commandLines)){
         for (/*Nothing*/; !commandLines.empty(); commandLines.pop()){
             shell->addToQueue(commandLines.front());
         }
     }
     return true;
-}
-void Framework::removeModule(std::unordered_map<std::string, ModulePtr>::const_iterator itr ){
-    const ModuleInfo& info { itr->second->getModuleInfo() };
-
-    log_warn(std::format("Removing Module [{}]", info.title));
-
-    displayManager->removeWindow(info.title);
-    moduleManager->removeModule(info.title);
-    shell->removeCommandGroup(info.shortTag);
 }
 
 

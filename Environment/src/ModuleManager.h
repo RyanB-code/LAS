@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Module.h"
+#include "Helpers.h"
 
 #include <LAS/HelperFunctions.h>
 #include <LAS/Logging.h>
@@ -10,12 +11,7 @@
 
 #include <string>
 #include <memory>
-#include <unordered_map>
-#include <vector>
 #include <dlfcn.h>
-#include <queue>
-
-#include <iostream>
 
 namespace LAS{
 
@@ -24,32 +20,37 @@ namespace LAS{
         explicit ModuleManager();
         ~ModuleManager();
 
-        bool addModule      (const ModulePtr& module);
-        bool removeModule   (std::string title);
-        bool containsModule (std::string title) const;
+        bool addModule      (ModulePtr& module);
+        void removeModule   (const std::string& title);
+        bool containsModule (const std::string& title) const { return modules.contains(title); }
+        
+        // Throws out_of_range if not found
+        Module& getModule   (const std::string& title) { return *modules.at(title); }
+        
+        const auto& getModuleList() const { return modules; }
+        const auto& getUpdateList() const { return updateFunctions; }
+        auto& getDrawList() { return drawFunctions; }
 
-        ModulePtr   getModule(std::string title) const;
-        ModulePtr   getModule(std::unordered_map<std::string, ModulePtr>::const_iterator itr) const;
+        void loadAllModules ();
+        bool loadModule     (const std::filesystem::path& file);
+        void clearModules();
 
-        std::string         getModuleLoadDirectory  () const;
-        std::string         getModuleFilesDirectory () const;
-        bool                setModuleLoadDirectory  (const std::string& directory);
-        bool                setModuleFilesDirectory (const std::string& directory);
+        void setupAllModules    (ImGuiContext& context);  
+        bool setupModule        (ImGuiContext& context, Module& module);
 
-        void loadAllModules  (StringVector& modulesNotLoaded); // Clears the StringVector first
-        bool loadModule      (std::string moduleFilesDirectory, const std::string& fileName);
+        std::string getModuleLoadDirectory  () const { return loadDirectory.string(); }
+        std::string getModuleFilesDirectory () const { return filesDirectory.string(); }
 
-        bool setupModule(ImGuiContext& context, const std::string& title, std::shared_ptr<bool> shown);
+        bool setModuleLoadDirectory  (const std::string& directory);
+        bool setModuleFilesDirectory (const std::string& directory);
 
-        void clearModules   ();
-
-        std::unordered_map<std::string, ModulePtr>::const_iterator cbegin() const;
-        std::unordered_map<std::string, ModulePtr>::const_iterator cend() const;
     private:
-        std::unordered_map<std::string, ModulePtr> modules{};
+        std::map<std::string, ModulePtr> modules { };
+        std::map<std::string, TaggedUpdateFunction> updateFunctions   { };
+        std::map<std::string, TaggedDrawFunction>   drawFunctions     { };
 
-        std::string moduleLoadDirectory;
-        std::string moduleFilesDirectory;
+        std::filesystem::path loadDirectory;
+        std::filesystem::path filesDirectory;
 
         static constexpr std::string moduleNameSuffix    {".lasm"};    // Every module must end with this to attempt to be added
     };

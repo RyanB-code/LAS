@@ -1,10 +1,11 @@
 #include "Display.h"
 
 using namespace LAS;
-using namespace Display;
 using namespace LAS::Logging;
 
-bool Display::ensureIniExists (const std::string& path){
+namespace LAS::Display {
+
+bool ensureIniExists (const std::string& path){
     if(std::filesystem::exists(path))
         return true;
 
@@ -16,7 +17,7 @@ bool Display::ensureIniExists (const std::string& path){
         return false;
 }
 
-bool Display::initGLFW(GLFWwindow** window, const std::string& title){
+bool initGLFW(GLFWwindow** window, const std::string& title){
     if(!glfwInit()){
         log_fatal("Could not initialize GLFW.");
         return false;
@@ -40,7 +41,7 @@ bool Display::initGLFW(GLFWwindow** window, const std::string& title){
 
     return true;
 }
-bool Display::initImgui(GLFWwindow** window, const std::string& iniFilePath){
+bool initImgui(GLFWwindow** window, const std::string& iniFilePath){
 
     if(!std::filesystem::exists(iniFilePath)){
         log_warn("Could not find ImGui INI file at [" + iniFilePath + "]");
@@ -69,7 +70,7 @@ bool Display::initImgui(GLFWwindow** window, const std::string& iniFilePath){
     return true;
     
 }
-std::string Display::makeKey(const std::string& text) {
+std::string makeKey(const std::string& text) {
     std::string key;
 
     for(const char& c : text)
@@ -87,33 +88,24 @@ void LogWindow::log(const Log& log) {
     Log logCopy {log.msg, log.severityTag, log.moduleTag, log.location, log.timestamp};
     logHistory.push_back(logCopy);
 }
-void LogWindow::setShown(std::shared_ptr<bool> set) {
-    shown = set;
-    return;
-}
 void LogWindow::draw() {
-    if(!ImGui::Begin(LOG_WINDOW_NAME, &*shown)){
-        ImGui::End();
-        return;
-    }
-
-    ImGui::BeginChild("Options", ImVec2(ImGui::GetWindowSize().x-20, 85), ImGuiChildFlags_Border);
     static bool autoScroll      { true };
-    ImGui::Checkbox("Show Time",            &settings.showTime); 
-    ImGui::SameLine();
-    ImGui::Checkbox("Show Severity Tag",    &settings.showSeverityTag);
-    ImGui::SameLine();
-    ImGui::Checkbox("Show Module Tag",      &settings.showModuleTag);
-    ImGui::SameLine();
-    ImGui::Checkbox("Show Message",         &settings.showMsg);
-    ImGui::SameLine();
-    ImGui::Checkbox("Show Code Location",   &settings.showLocation);
-    ImGui::SameLine();
-    ImGui::Checkbox("Auto Scroll",          &autoScroll);
 
-
-    ImGui::InputInt("Tag Text Box Size",     &settings.textBoxWidth_tag, 1, 5);
-    ImGui::InputInt("Message Text Box Size", &settings.textBoxWidth_msg, 1, 5);
+    if(ImGui::BeginChild("Options", ImVec2(ImGui::GetWindowSize().x-20, 85), ImGuiChildFlags_Border)){
+        ImGui::Checkbox("Show Time",            &settings.showTime); 
+        ImGui::SameLine();
+        ImGui::Checkbox("Show Severity Tag",    &settings.showSeverityTag);
+        ImGui::SameLine();
+        ImGui::Checkbox("Show Module Tag",      &settings.showModuleTag);
+        ImGui::SameLine();
+        ImGui::Checkbox("Show Message",         &settings.showMsg);
+        ImGui::SameLine();
+        ImGui::Checkbox("Show Code Location",   &settings.showLocation);
+        ImGui::SameLine();
+        ImGui::Checkbox("Auto Scroll",          &autoScroll);
+        ImGui::InputInt("Tag Text Box Size",     &settings.textBoxWidth_tag, 1, 5);
+        ImGui::InputInt("Message Text Box Size", &settings.textBoxWidth_msg, 1, 5);
+    }
     ImGui::EndChild(); // End Options Child
     
     // Ensure sizes are not too small
@@ -124,42 +116,41 @@ void LogWindow::draw() {
 
     // Log window portion
     ImGui::SeparatorText("Logs");
-    ImGui::BeginChild("Logs", ImVec2(0,0), ImGuiChildFlags_None, ImGuiWindowFlags_HorizontalScrollbar);
+    if(ImGui::BeginChild("Logs", ImVec2(0,0), ImGuiChildFlags_None, ImGuiWindowFlags_HorizontalScrollbar)){
 
-    for(const auto& log : logHistory){
-        using namespace LAS::Logging;
-        std::ostringstream os{};    // Buffer to store formatted log
+        for(const auto& log : logHistory){
+            using namespace LAS::Logging;
+            std::ostringstream os{};    // Buffer to store formatted log
 
-        if (settings.showTime)
-            os << std::format("[{}]  ", printTime(log.timestamp));
+            if (settings.showTime)
+                os << std::format("[{}]  ", printTime(log.timestamp));
 
-        if(settings.showSeverityTag)
-            os << std::format("[{:^{}}]  ", log.severityTag, settings.textBoxWidth_tag);
+            if(settings.showSeverityTag)
+                os << std::format("[{:^{}}]  ", log.severityTag, settings.textBoxWidth_tag);
 
-        if(settings.showModuleTag)
-            os << std::format("[{:^{}}]  ", log.moduleTag, settings.textBoxWidth_tag);  
+            if(settings.showModuleTag)
+                os << std::format("[{:^{}}]  ", log.moduleTag, settings.textBoxWidth_tag);  
 
-        if (settings.showMsg){
-            if(log.msg.size() > settings.textBoxWidth_msg)
-                os << std::format("{:{}}...  ", log.msg.substr(0, settings.textBoxWidth_msg-3), settings.textBoxWidth_msg-3);
-            else
-                os << std::format("{:<{}}  ", log.msg, settings.textBoxWidth_msg);
+            if (settings.showMsg){
+                if(log.msg.size() > settings.textBoxWidth_msg)
+                    os << std::format("{:{}}...  ", log.msg.substr(0, settings.textBoxWidth_msg-3), settings.textBoxWidth_msg-3);
+                else
+                    os << std::format("{:<{}}  ", log.msg, settings.textBoxWidth_msg);
+            }
+            if (settings.showLocation)
+                os << printLocation(log.location);
+
+            ImGui::TextUnformatted(os.str().c_str());
         }
-        if (settings.showLocation)
-            os << printLocation(log.location);
 
-        ImGui::TextUnformatted(os.str().c_str());
-    }
-
-    if(autoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
-            ImGui::SetScrollHereY(1.0f);
-    
-
+        if(autoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+                ImGui::SetScrollHereY(1.0f);
+    } 
     ImGui::EndChild();
-    ImGui::End();
 }
 
 
+}   // End LAS::Display namespace
 
 
 
@@ -169,10 +160,6 @@ void LogWindow::draw() {
 
 
 
-DisplayManager::DisplayManager()
-{
-
-}
 DisplayManager::~DisplayManager(){
     shutdown();
 }
@@ -194,7 +181,7 @@ bool DisplayManager::init(const std::string& imGuiIniPath){
 
     return true;    
 }
-bool DisplayManager::refresh(){
+bool DisplayManager::refresh(std::map<std::string, TaggedDrawFunction>& list){
 
     if(!glfwWindowShouldClose(window)){
         glfwPollEvents();                   // Poll for and process events
@@ -207,7 +194,7 @@ bool DisplayManager::refresh(){
         ImGui::DockSpaceOverViewport();     // Sets up docking for the entire window
 
 
-        drawWindows();  // MY RENDER CODE HERE
+        drawWindows(list);  // MY RENDER CODE HERE
 
 
         glClear(GL_COLOR_BUFFER_BIT);       // Does all the rendering
@@ -227,9 +214,6 @@ void DisplayManager::shutdown(){
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 }
-std::string DisplayManager::getIniPath() const{
-    return iniPath;
-}
 bool DisplayManager:: saveWindowConfig() const{
     if(iniPath.empty())
         return false;
@@ -237,55 +221,20 @@ bool DisplayManager:: saveWindowConfig() const{
     ImGui::SaveIniSettingsToDisk(iniPath.c_str());
     return true;
 }
-bool DisplayManager::addWindow(const std::string& title, const std::string& tag, std::function<void()> drawFunction){
+bool DisplayManager::addInternalWindow(
+        const std::string& title,
+        const std::string& tag, 
+        std::function<void()> draw 
+    )
+{
     std::string key { Display::makeKey(title) };
 
-    if(windowInformation.contains(key))
+    if(internalWindows.contains(key))
         return false;
 
-    return windowInformation.try_emplace(key, ModuleDraw{title, tag, std::make_shared<bool>(false), drawFunction}).second;
+    return internalWindows.try_emplace(title, TaggedDrawFunction{tag, draw} ).second;
 }
-bool DisplayManager::containsWindow(const std::string& title) const {
-    return windowInformation.contains(Display::makeKey(title));
-}
-bool DisplayManager::removeWindow(const std::string& title) {
-    if(windowInformation.contains(title)){
-        windowInformation.erase(title);
-        return !windowInformation.contains(title); // Return the inverse of contain() -> ie if modules still contains a member of the key (contains returns true), the return variable will be false since the erase did not work correctly
-    }
-        
-    return true;
-}
-std::shared_ptr<bool> DisplayManager::shown(const std::string& title){
-    std::string key {Display::makeKey(title)};
-
-    if(windowInformation.contains(key))
-        return windowInformation.at(key).shown;
-    else
-        throw std::runtime_error("Window information with that key does not exist");
-}
-void DisplayManager::closeAllWindows() const {
-    for(auto& [key, value] : windowInformation) {
-        *value.shown = false;
-    }
-}
-void DisplayManager::clearModuleWindows() {
-    for(auto itr { windowInformation.begin()}; itr != windowInformation.end(); ++itr) {
-        auto& info {itr->second};
-        if(info.title != LOG_WINDOW_NAME && info.title != SHELL_WINDOW_NAME)
-            windowInformation.erase(itr);
-    }
-}
-std::map<std::string, Display::ModuleDraw>::const_iterator DisplayManager::cbegin() const {
-    return windowInformation.cbegin();
-}
-std::map<std::string, Display::ModuleDraw>::const_iterator DisplayManager::cend() const {
-    return windowInformation.cend();
-}
-Display::ModuleDraw& DisplayManager::at(const std::string& title) {
-    return windowInformation.at(Display::makeKey(title));
-}
-void DisplayManager::drawWindows(){    
+void DisplayManager::drawWindows(std::map<std::string, TaggedDrawFunction>& list){    
     // Draw the menu options
     if(ImGui::BeginMainMenuBar()){
         if(ImGui::BeginMenu("Modules")){
@@ -299,38 +248,63 @@ void DisplayManager::drawWindows(){
         ImGui::EndMainMenuBar();
     }
 
-    for(auto& [key, value] : windowInformation){
+    for(auto& [title, items] : list){
         if(ImGui::BeginMainMenuBar()){
-            if(value.title == LOG_WINDOW_NAME || value.title == SHELL_WINDOW_NAME ) {
-                if(ImGui::BeginMenu("Utilities")){
-                    ImGui::MenuItem(value.title.c_str(), NULL, &*value.shown);
-                    ImGui::EndMenu();
-                }
-            }
-            else{
-                if(ImGui::BeginMenu("Modules")){
-                    ImGui::MenuItem(value.title.c_str(), NULL, &*value.shown);
-                    ImGui::EndMenu();
-                }
+            if(ImGui::BeginMenu("Modules")){
+                ImGui::MenuItem(title.c_str(), NULL, &items.shown);
+                ImGui::EndMenu();
             }   
             
             ImGui::EndMainMenuBar();
         }
 
-        Logging::setModuleTag(value.tag);
-        if(*value.shown){
+        Logging::setModuleTag(items.tag);
+        if(items.shown){
             // ---------------------
             // The commented out code here if for timing how long each Module takes to render
             // -------------------
             //using namespace std::chrono;
             //auto before { steady_clock::now() };
-            value.drawFunction();
+
+            if(ImGui::Begin(title.c_str(), &items.shown)){
+                items.function();
+            }
+            ImGui::End();
+
             //auto after { steady_clock::now() };
             //std::cout << std::format("{} draw: {}\n", key, duration_cast<milliseconds>(after - before).count());
         }
         Logging::setModuleTag("LAS");
     }
-}
+
+
+
+    for(auto& [title, items] : internalWindows){
+        if(ImGui::BeginMainMenuBar()){
+            if(ImGui::BeginMenu("Utilities")){
+                ImGui::MenuItem(title.c_str(), NULL, &items.shown);
+                ImGui::EndMenu();
+            }   
+            
+            ImGui::EndMainMenuBar();
+        }
+
+        Logging::setModuleTag(items.tag);
+        if(items.shown){
+            // ---------------------
+            // The commented out code here if for timing how long each Module takes to render
+            // -------------------
+            //using namespace std::chrono;
+            //auto before { steady_clock::now() };
+            if(ImGui::Begin(title.c_str(), &items.shown)){
+                items.function();
+            }
+            ImGui::End();
+            //auto after { steady_clock::now() };
+            //std::cout << std::format("{} draw: {}\n", key, duration_cast<milliseconds>(after - before).count());
+        }
+        Logging::setModuleTag("LAS");
+    }}
 
 
 

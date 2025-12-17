@@ -33,9 +33,6 @@ bool Module::setRCFilePath(const std::string& path){
 const ModuleInfo& Module::getModuleInfo() const{
     return moduleInfo;
 }
-ModuleUpdate Module::getModuleUpdate() const {
-    return ModuleUpdate { moduleInfo.shortTag, moduleInfo.updateFunction };
-}
 std::string Module::getDirectory() const{
     return directory;
 }

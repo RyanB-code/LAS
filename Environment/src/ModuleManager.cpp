@@ -10,70 +10,60 @@ ModuleManager::ModuleManager() {
 ModuleManager::~ModuleManager(){
 
 }
-bool ModuleManager::addModule(const ModulePtr& module){
+bool ModuleManager::addModule(ModulePtr& module){
     const ModuleInfo& info {module->getModuleInfo()};
 
-    // Check if modules contains a module of the same title before adding
-    if(modules.contains(info.title)){
+    if(modules.contains(info.title))
+        return false;
+
+    if(!modules.try_emplace(info.title, std::move(module)).second)
+        return false;
+
+    TaggedUpdateFunction    update   { info.shortTag, info.updateFunction };
+    TaggedDrawFunction      draw     { info.shortTag, info.drawFunction };
+
+    if(!updateFunctions.try_emplace(info.title, update).second){
+        modules.erase(info.title);
         return false;
     }
-    else{
-        modules.try_emplace(info.title, module);
-        return modules.contains(info.title);        // verify module has been added successfully by checking and returning
-    }
-}
-bool ModuleManager::removeModule(std::string title){
-    if(modules.contains(title)){
-        modules.erase(title);               // cleanup() is automatically called so do not need to specifically call it
-        return !modules.contains(title);    // Return the inverse of contain() -> ie if modules still contains a member of the key (contains returns true), the return variable will be false since the erase did not work correctly
-    }
-    else{
-        // Return true if the element already doesn't exist
-        return true;
-    }
-}
-ModulePtr ModuleManager::getModule(std::string title) const{
-    if(modules.contains(title)){
-        // No out_of_range exception should be thrown since I checked using contains()
-        return modules.at(title);
-    }
-    else
-        return nullptr;
-}
-bool ModuleManager::containsModule(std::string title) const{
-    return modules.contains(title);
-}
-void ModuleManager::loadAllModules(StringVector& modulesNotLoaded){
-    modulesNotLoaded.erase(modulesNotLoaded.begin(), modulesNotLoaded.end());
 
-    const   std::filesystem::path   qualifiedDirectory  {LAS::TextManip::ensureSlash(moduleLoadDirectory)};   // Path with slashes
-
-    if(!std::filesystem::exists(qualifiedDirectory)){
-        throw std::filesystem::filesystem_error("Directory for modules does not exist", qualifiedDirectory, std::error_code());
+    if(!drawFunctions.try_emplace(info.title, draw).second){
+        modules.erase(info.title);
+        updateFunctions.erase(info.title);
+        return false;
     }
 
-    // Iterate over directory and attempt to load each file
-	for(auto const& file : std::filesystem::directory_iterator(qualifiedDirectory)){
-        if(!loadModule(moduleFilesDirectory, file.path()))
-            modulesNotLoaded.push_back(file.path());
+    return true;
+}
+void ModuleManager::removeModule(const std::string& title){
+    modules.erase(title);           // Module's cleanup() called on object destruction
+    updateFunctions.erase(title);
+    drawFunctions.erase(title);
+}
+
+void ModuleManager::loadAllModules(){
+    if(!std::filesystem::exists(loadDirectory))
+        throw std::filesystem::filesystem_error("Directory to load Modules does not exist", loadDirectory, std::error_code());
+
+	for(auto const& file : std::filesystem::directory_iterator(loadDirectory)){
+        if(!loadModule(file))
+            log_warn(std::format("Failed to load Module from file [{}]", file.path().string() ));
 	}
-
-    return;
 }
-bool ModuleManager::loadModule  (std::string parentDirectory, const std::string& fileName){
+bool ModuleManager::loadModule(const std::filesystem::path& file){
+    const std::string& fileName { file.string() };
 
-    // Reject if not named correctly
     if(!fileName.ends_with(moduleNameSuffix)){
-        log_info("The file [" + fileName + "] was ignored for module loading. Improper name format.");
+        log_warn("The file [" + fileName + "] was ignored for module loading. Improper name format.");
         return false;
     }
     
-    ModulePtr moduleBuffer;
+    ModulePtr moduleBuffer { };
     try{
         moduleBuffer = LAS::Modules::bindFiletoModule(fileName);
     }
     catch(std::exception& e){
-        log_warn(std::string{e.what()} + " from file [" + fileName + ".");
+        log_warn(std::format("{} from file [{}]", e.what(), fileName));
         return false;
     }
 
@@ -81,7 +71,7 @@ bool ModuleManager::loadModule  (std::string parentDirectory, const std::string&
 
     // This writes library information to the buffer
     if(!moduleBuffer->loadInfo()){
-        log_error("Module::loadInfo() returned false from Module [" + info.title + "]. Loading procedure terminated");
+        log_error("Module::loadInfo() failed from Module [" + info.title + "]. Loading procedure terminated");
         return false;
     }
 
@@ -113,9 +103,12 @@ bool ModuleManager::loadModule  (std::string parentDirectory, const std::string&
                         "Environment SDK is version  " + LAS::SDK::getVersion());
             break;
         case 7:
-            fatalMsg    << "Fatal version mismatch. Environment SDK is " << LAS::SDK::getVersion() 
-                        << ". Module [" << info.title 
-                        << "] SDK version is " << versionToStr(info.sdkVersion);
+            fatalMsg << std::format(
+                    "Fatal version mismatch. Environment SDK is {}. Module [{}] made with SDK {}",
+                    LAS::SDK::getVersion(),
+                    info.title,
+                    versionToStr(info.sdkVersion)
+                );
             log_error( fatalMsg.str());
             return false;
             break;
@@ -127,47 +120,35 @@ bool ModuleManager::loadModule  (std::string parentDirectory, const std::string&
 
     log_info("Checks passed for Module [" + info.title + "] version " + versionToStr(info.moduleVersion));
  
-    if(!addModule(moduleBuffer)){
+    if(!addModule( moduleBuffer )){
         log_error("Could not add module [" + info.title + "]");
         return false;
     } 
 
     return true;
 }
-std::string ModuleManager::getModuleLoadDirectory() const{
-    return moduleLoadDirectory;
+void ModuleManager::clearModules() {
+    modules.clear();
+    updateFunctions.clear();
+    drawFunctions.clear();
 }
-bool ModuleManager::setModuleLoadDirectory(const std::string& directory){
-    std::string qualifiedDirectory = LAS::TextManip::ensureSlash(directory);              // Ensure slash at the end
+void ModuleManager::setupAllModules(ImGuiContext& context){
+    for(const auto& [title, module] : modules){
+        if(!module)
+            continue;
 
-    if(!std::filesystem::exists(qualifiedDirectory))
-        return false;
-    
-    moduleLoadDirectory = qualifiedDirectory;
-    return true;
-}
-std::string ModuleManager::getModuleFilesDirectory() const{
-    return moduleFilesDirectory;
-}
-bool ModuleManager::setModuleFilesDirectory(const std::string& directory){
-    std::string qualifiedDirectory = LAS::TextManip::ensureSlash(directory);              // Ensure slash at the end
+        if(!setupModule(context, *module))
+            log_warn(std::format("Failed to setup Module [{}]'", module->getModuleInfo().title));
+    }
 
-    if(!std::filesystem::exists(qualifiedDirectory))
-        return false;
-    
-    moduleFilesDirectory = qualifiedDirectory;
-    return true;
+    return;
 }
-bool ModuleManager::setupModule(ImGuiContext& context, const std::string& title, std::shared_ptr<bool> shown){
-    // Pass environment info only if all files could be created
-    Module& module { *getModule(title) };
+bool ModuleManager::setupModule(ImGuiContext& context, Module& module){
     const ModuleInfo& info { module.getModuleInfo() };
 
     // Setup module files 
-    std::string formattedTitle  { LAS::TextManip::ensureAlNumNoSpaces(info.title) };
-    std::string parentDirectory { LAS::TextManip::ensureSlash(moduleFilesDirectory) };
-
-    std::string rcPathTitle { formattedTitle };
+    const std::string formattedTitle  { LAS::TextManip::ensureAlNumNoSpaces(info.title) };
+    std::string rcPathTitle     { formattedTitle };
 
     // Makes rcPath all lower case
     for(auto& c : rcPathTitle){
@@ -175,23 +156,34 @@ bool ModuleManager::setupModule(ImGuiContext& context, const std::string& title,
             c = std::tolower(c);
     }
 
-    std::string filesDirectory    {LAS::TextManip::ensureSlash(parentDirectory) + LAS::TextManip::ensureSlash(formattedTitle)};
-    std::string rcFilePath        {filesDirectory + '.' + rcPathTitle + "-rc"};
+    std::filesystem::path moduleDirectory { filesDirectory /  LAS::TextManip::ensureSlash(formattedTitle) };
+    std::filesystem::path rcFilePath      { filesDirectory / std::string { '.' + rcPathTitle + "-rc"} };
 
-    // Check directories can be made
+
     if(!LAS::ensureDirectory(filesDirectory)){
-        log_error("Could not find or create directory [" + filesDirectory + "] for Module [" + info.title + "]");
+        log_error(
+                std::format(
+                    "Could not find or create directory [{}] for Module [{}]",
+                    filesDirectory.string(),
+                    info.title
+                )
+            );
         return false;
     }
     if(!LAS::ensureFile(rcFilePath)){
-        log_error("Could not find or create file [" + rcFilePath + "] for Module [" + info.title + "]");
+        log_error(
+                std::format(
+                    "Could not find or create file [{}] for Module [{}]",
+                    rcFilePath.string(),
+                    info.title
+                )
+            );
         return false;
     }
 
 
-    EnvironmentInfo envInfo {filesDirectory, rcFilePath, context, shown};
+    EnvironmentInfo envInfo {moduleDirectory, rcFilePath, context};
     
-    // Ensure logging is updated when control is handed to module. And updated again when control returned
     Logging::setModuleTag(info.shortTag);
     bool initFailed { module.init(envInfo) };
     Logging::setModuleTag("LAS");
@@ -204,20 +196,29 @@ bool ModuleManager::setupModule(ImGuiContext& context, const std::string& title,
     log_info("Setup complete for Module [" + info.title + "]");
     return true;
 }
+bool ModuleManager::setModuleLoadDirectory(const std::string& directory){
+    std::string qualifiedDirectory = LAS::TextManip::ensureSlash(directory);
 
-
-void ModuleManager::clearModules() {
-    modules.clear();
+    if(!std::filesystem::exists(qualifiedDirectory))
+        return false;
+    
+    loadDirectory = std::filesystem::path { qualifiedDirectory };
+    return true;
 }
-std::unordered_map<std::string, ModulePtr>::const_iterator ModuleManager::cbegin() const{
-    return modules.cbegin();
-}
-std::unordered_map<std::string, ModulePtr>::const_iterator ModuleManager::cend() const {
-    return modules.cend();
+bool ModuleManager::setModuleFilesDirectory(const std::string& directory){
+    std::string qualifiedDirectory = LAS::TextManip::ensureSlash(directory);
+
+    if(!std::filesystem::exists(qualifiedDirectory))
+        return false;
+    
+    filesDirectory = std::filesystem::path { qualifiedDirectory };
+    return true;
 }
 
 
-// MARK: LASCore Namespace 
+
+
+
 namespace LAS::Modules{
 
     ModulePtr bindFiletoModule(const std::string& path){
@@ -240,7 +241,7 @@ namespace LAS::Modules{
             throw std::runtime_error{"Failed to find necessary function signatures"};     // Do not continue if library could not be opened
 
 
-        return std::make_shared<Module>(loadModuleInfo, initModule, cleanup);
+        return std::make_unique<Module>(loadModuleInfo, initModule, cleanup);
     }
     int verifyModuleInformation(const ModulePtr& module) {
         if(!module)

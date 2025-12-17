@@ -5,19 +5,14 @@
 #include "Loggers.h"
 #include "Shell.h"
 #include "CommandsInternal.h"
-
+#include "Config.h"
 
 #include <LAS/Commands.h>
 #include <LAS/Logging.h>
 #include <LAS/HelperFunctions.h>
 
-#include <iostream>
-#include <functional>
-#include <unordered_map>
 #include <string>
-#include <queue>
 #include <chrono>
-#include <exception>
 #include <thread>
 
 namespace LAS{
@@ -70,30 +65,21 @@ namespace LAS{
         std::shared_ptr<DisplayManager>     displayManager;
         std::shared_ptr<Shell>              shell;
         std::shared_ptr<Display::LogWindow> logWindow { }; // Needed to store logs
-                                                           
-        std::array<ModuleUpdate, MAX_MODULES> updateFunctions;
-        int nextIndex { 0 };
-
-        bool addUpdateFunction(ModuleUpdate);
-        std::array<ModuleUpdate, MAX_MODULES>::const_iterator modifiedEnd();
-
 
         std::pair<bool, int> setupLoggers();
 
         bool setupShell             (const std::string& rcPath, const std::string& commandHistoryPath);
         bool setupModuleManager     (const std::string& moduleLoadDir, const std::string& moduleFilesDir);
+        void setupInternalWindows   ();
         bool setupDisplay           (const std::string& iniFilePath);
-        bool setupInternalWindows   ();
         void setupCommands          (); // Instantiate commands here                            
 
-        bool loadAllModules         (const std::string& moduleLibDirectory, const std::string& moduleFilesDirectory);
+        bool loadAllModules         ();
         void loadAllModuleFunctions ();
         void loadAllModuleCommands  ();                                 
         void setupAllModules        ();
                                         
         void readAllModuleRCFiles   ();
         bool readModuleRCFile       (const std::string& name);
-
-        void removeModule           (std::unordered_map<std::string, ModulePtr>::const_iterator itr); // Goes through all managers and deletes information
     };
 }

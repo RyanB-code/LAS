@@ -4,6 +4,7 @@
 #include <source_location>
 #include <filesystem>
 #include <fstream>
+#include <vector>
 
 using StringVector = std::vector<std::string>;
 

@@ -1,18 +1,15 @@
 #pragma once
 
-#include "Display.h"
-#include "ModuleManager.h"
-
+#include <imgui/imgui_internal.h>
 #include <imgui/imgui.h>
 #include <LAS/Commands.h>
 #include <LAS/HelperFunctions.h>
 #include <LAS/Window.h>
 
 #include <string>
-#include <map>
 #include <queue>
 #include <memory>
-#include <vector>
+#include <iostream>
 #include <unordered_map>
 
 
@@ -38,7 +35,6 @@ namespace LAS{
         ~Shell();
 
         void draw();   // For drawing the window
-        void setShown (std::shared_ptr<bool> set);
     
         // Commands
         bool addCommandGroup    (const std::string& name);
@@ -87,8 +83,6 @@ namespace LAS{
 
         std::string rcPath              { };
         std::string commandHistoryPath  { };
-        
-        std::shared_ptr<bool> shown;
     };
 
 

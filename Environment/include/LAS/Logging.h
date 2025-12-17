@@ -5,7 +5,7 @@
 #include <format>
 #include <map>
 #include <source_location>
-
+#include <memory>
 
 namespace LAS::Logging {
 

@@ -2,8 +2,6 @@
 
 #include "Display.h"
 #include "ModuleManager.h"
-#include "Module.h"
-#include "Loggers.h"
 #include "Shell.h"
 #include "Config.h"
 

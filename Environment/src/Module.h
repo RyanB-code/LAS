@@ -15,7 +15,7 @@ using namespace LAS::Logging;
 namespace LAS{
 
     class Module;
-    using ModulePtr = std::shared_ptr<Module>;
+    using ModulePtr = std::unique_ptr<Module>;
 
     namespace ModuleFunctions{
         typedef bool(*LoadModuleInfo)       (ModuleInfo&);      
@@ -23,24 +23,19 @@ namespace LAS{
         typedef void(*VoidNoParams)         (); 
     }
 
-    struct ModuleUpdate {
-        std::string moduleTag;
-        std::function<void()>  updateFunction;
-    };
-
     class Module{
     public:
-        explicit Module(    LAS::ModuleFunctions::LoadModuleInfo   setLoadModuleInfo,
-                            LAS::ModuleFunctions::InitModule       setModuleInit,
-                            LAS::ModuleFunctions::VoidNoParams     setCleanup
-                        );
+        explicit Module(    
+                LAS::ModuleFunctions::LoadModuleInfo   setLoadModuleInfo,
+                LAS::ModuleFunctions::InitModule       setModuleInit,
+                LAS::ModuleFunctions::VoidNoParams     setCleanup
+            );
         ~Module();
 
         bool setDirectory    (std::string directory);
         bool setRCFilePath   (const std::string& path);
 
         const ModuleInfo&   getModuleInfo()     const;
-        ModuleUpdate        getModuleUpdate()   const;
         std::string         getDirectory()      const;
         std::string         getRCFilePath()     const;
 

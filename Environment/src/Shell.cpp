@@ -30,12 +30,6 @@ Shell::~Shell(){
 }
 
 void Shell::draw(){
-
-    if(!ImGui::Begin(Display::SHELL_WINDOW_NAME, &*shown)){
-        ImGui::End();
-        return;
-    }
-
     ImVec2 windowSize           {ImGui::GetWindowSize()};
     static bool autoScroll      {true};
     static bool scrollToBottom  {false};
@@ -54,8 +48,9 @@ void Shell::draw(){
         if(showDemo)
             ImGui::ShowDemoWindow();
 
-        ImGui::EndChild();
     }
+    ImGui::EndChild();
+
     ImGui::SeparatorText("Console");
 
     const float footerHeightToReserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
@@ -155,12 +150,6 @@ void Shell::draw(){
 
     if(reclaimTextBoxFocus)
         ImGui::SetKeyboardFocusHere(-1); // Auto focus previous widget
-
-    ImGui::End();
-}
-void Shell::setShown(std::shared_ptr<bool> set) {
-    shown = set;
-    return;
 }
 bool Shell::addCommandGroup(const std::string& name){
     if(commands.contains(name))

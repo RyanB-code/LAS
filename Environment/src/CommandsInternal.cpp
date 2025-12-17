@@ -362,50 +362,16 @@ std::pair<int, std::ostringstream> ModuleControl::execute(const StringVector& ar
     }
 
     if(reload){
-        displayManager->closeAllWindows();
-        displayManager->clearModuleWindows();
         moduleManager->clearModules();
-
-        // Load Modules
-        StringVector notLoaded{};
-        moduleManager->loadAllModules(notLoaded);
-
-        // Load Windows
-        int windowsNotLoaded{0};
-        for(auto itr { moduleManager->cbegin() }; itr != moduleManager->cend(); ++itr){
-            const ModuleInfo& info { itr->second->getModuleInfo() };
-            if(!displayManager->addWindow(info.title, info.shortTag, info.drawFunction))
-                ++windowsNotLoaded;
-        }
-
-        // Log Modules loaded
-        std::ostringstream msg;
-        if(!notLoaded.empty()){
-            msg << "There were [" << notLoaded.size() << "] modules that could not be loaded.\nLocations: ";
-            for(const auto& s : notLoaded){
-                msg << "[" << s << "], ";
-            }
-            msg << '\n';
-        }
-        else
-            msg << "All modules were successfully loaded\n";
-
-        // Log Windows loaded
-        if(windowsNotLoaded > 0){
-            std::ostringstream msg;
-            msg << "There were [" << windowsNotLoaded << "] windows that could not be loaded from modules\n";
-        }
-        else
-            msg << "All windows successfully loaded from all modules\n";
-
-        return pair(0, msg.str());
+        moduleManager->loadAllModules(); 
+        return pairNormal();
     }
 
     if(reloadByName){
         if(!moduleManager->containsModule(args[1]))
             return pairErrorWithMessage("Could not find module \"" + args[1] + "\"\n");
 
-        std::string moduleRCFilePath {moduleManager->getModule(args[1])->getRCFilePath()};
+        std::string moduleRCFilePath {moduleManager->getModule(args[1]).getRCFilePath()};
         std::queue<std::string> lines;
 
         LAS::ShellHelper::readRCFile(moduleRCFilePath, lines);          // Read RC file 
@@ -416,8 +382,8 @@ std::pair<int, std::ostringstream> ModuleControl::execute(const StringVector& ar
 
     if(listModules){
         std::ostringstream os;
-        for(auto itr { moduleManager->cbegin() }; itr != moduleManager->cend(); ++itr){
-            os << itr->second->getModuleInfo().title << "\n";
+        for(const auto& [title, modulePtr] : moduleManager->getModuleList()){
+            os << modulePtr->getModuleInfo().title << "\n";
         }
         return pair(0, os.str());
     }
@@ -462,11 +428,7 @@ std::pair<int, std::ostringstream> Reload::execute(const StringVector& args){
 // MARK: Display Control
 DisplayControl::DisplayControl(std::shared_ptr<DisplayManager> setDisplayManager ) 
     :   Command         { "displayctl", "Interact with the display controller\n"
-                                "save-config          \tSaves the window configuration\n"
-                                "show-all-window-info \tShows all window information\n"
-                                "<title> <command>\n"
-                                "\t\topen   \tOpens the window\n"
-                                "\t\tclose  \tCloses the window\n"
+                          "save-config          \tSaves the window configuration\n"
                         },
         displayManager  { setDisplayManager }
 {
@@ -483,48 +445,6 @@ std::pair<int, std::ostringstream> DisplayControl::execute(const StringVector& a
             return pairNormal();
         else
             return pairErrorWithMessage("Could not save window configuration\n");
-    }
-    else if(args[0] == "show-all-window-info"){
-        constexpr uint8_t idWidth   { 4 };
-        constexpr uint8_t nameWidth { 30 };
-        constexpr uint8_t openWidth { 7 };
-
-        uint64_t 	tableWidth 	{ idWidth + nameWidth + openWidth };
-
-        std::ostringstream msg;
-        msg << std::format("{:<{}}", "Name",	nameWidth);
-        msg << std::format("{:<{}}", "Status",	openWidth);
-        msg << '\n' << std::format("{:-<{}}", '-', tableWidth) << "\n";
-
-        for(auto itr {displayManager->cbegin()}; itr != displayManager->cend(); ++itr){
-            msg << std::format("{:<{}}", itr->second.title, nameWidth);
-
-            std::string shownString;
-            bool open {displayManager->shown(itr->second.title)};
-            open ? shownString = "open" : shownString = "closed";
-            msg << std::format("{:<{}}", shownString, openWidth);
-            msg << '\n';
-        }        
-        return pair(0, msg.str());
-    }
-
-
-    if(args.size() == 2){
-        if(!displayManager->containsWindow(args[0]))
-            return pairErrorWithMessage("No window was found with ID " + args[0]);
-
-        bool shownStatus { false };
-        if(args[1] == "open")
-            shownStatus = true;
-        else if(args[1] == "close")
-            shownStatus = false;
-        else
-            return pairInvalidArgument(args[1]);
-
-        bool& open {*displayManager->shown(args[0])};
-        open = shownStatus;
-        
-        return pairNormal();
     }
 
     return pairErrorWithMessage("Ill formed command\n");
