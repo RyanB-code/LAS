@@ -43,8 +43,10 @@ std::vector<std::shared_ptr<Command>>& Module::getCommands(){
     return moduleInfo.commands;
 }
 void Module::cleanup(){
+    Logging::setModuleTag(moduleInfo.shortTag); 
     if(cleanupPtr)
         cleanupPtr();
+    Logging::setModuleTag("LAS"); 
 }
 bool Module::loadInfo(){
     if(!loadModuleInfoPtr(moduleInfo))
