@@ -9,6 +9,7 @@
 #include <map>
 
 #include <imgui/imgui.h>
+#include <imgui/imgui_internal.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 
@@ -53,7 +54,7 @@ namespace LAS{
         ~DisplayManager();
 
         bool init       (const std::string& imGuiIniPath);
-        bool refresh    (std::map<std::string, TaggedDrawFunction>& list);
+        bool refresh    (std::map<std::string, TaggedDrawFunction>& list); // Throws anything from drawWindows()
         void shutdown();
 
         const auto& getIniPath () const { return iniPath; }
@@ -73,6 +74,7 @@ namespace LAS{
 
         std::map<std::string, TaggedDrawFunction> internalWindows;
 
+        // Throws title of module that an undhandled exception occurred in
         void drawWindows(std::map<std::string, TaggedDrawFunction>& list);
     };
 

@@ -124,11 +124,9 @@ void Framework::run(){
                     }
                 }
                 catch(std::exception& e){
-                    log_fatal(std::format("Unhandled exception from Module '{}' caught in LAS. What: {}", items.tag, e.what() ));  
+                    log_fatal(std::format("Unhandled exception from Module '{}' caught in LAS. What: {}", title, e.what() ));  
                     Logging::setModuleTag(COMMAND_GROUP_NAME);
-                    log_warn(std::format("Shutting down Module '{}'...", items.tag));
-
-                    
+                    removeModule(title); 
                 }
             }
             Logging::setModuleTag(COMMAND_GROUP_NAME);
@@ -138,7 +136,13 @@ void Framework::run(){
         // New frame rendering
         if(frameAccumulator >= FRAME_INTERVAL){
             frameAccumulator -= FRAME_INTERVAL;
-            exitCalled = displayManager->refresh(moduleManager->getDrawList()); // If returns true, that means an glfwShouldWindowClose() was called
+
+            try{
+                exitCalled = displayManager->refresh(moduleManager->getDrawList()); // If returns true, that means an glfwShouldWindowClose() was called
+            }
+            catch(const std::string& moduleTitle){
+                removeModule(moduleTitle);
+            }
         }
 
         // Wakeup thread every X ms
@@ -332,6 +336,15 @@ void Framework::loadAllModuleCommands(){
 void Framework::setupAllModules() {
     log_info("Setting up all Modules...");
     moduleManager->setupAllModules( *ImGui::GetCurrentContext() );
+}
+void Framework::removeModule(const std::string& title){
+    log_warn(std::format("Shutting down Module '{}'...", title));
+
+    shell->removeCommandGroup(moduleManager->getModule(title).getModuleInfo().shortTag);
+    moduleManager->removeModule(title);
+
+    log_warn("Module shutdown complete");
+
 }
 void Framework::readAllModuleRCFiles(){
     for(const auto& [title, modulePtr] : moduleManager->getModuleList() )

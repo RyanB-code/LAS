@@ -79,7 +79,10 @@ namespace LAS{
         void loadAllModuleCommands  ();                                 
         void setupAllModules        ();
                                         
+        void removeModule           (const std::string& title);
+
         void readAllModuleRCFiles   ();
         bool readModuleRCFile       (const std::string& name);
+
     };
 }

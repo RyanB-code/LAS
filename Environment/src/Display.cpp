@@ -183,29 +183,36 @@ bool DisplayManager::init(const std::string& imGuiIniPath){
 }
 bool DisplayManager::refresh(std::map<std::string, TaggedDrawFunction>& list){
 
-    if(!glfwWindowShouldClose(window)){
-        glfwPollEvents();                   // Poll for and process events
-
-        // Starts the Imgui frame
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-
-        ImGui::DockSpaceOverViewport();     // Sets up docking for the entire window
+    if(glfwWindowShouldClose(window))
+        return true;
 
 
-        drawWindows(list);  // MY RENDER CODE HERE
+    glfwPollEvents();                   // Poll for and process events
 
+    // Starts the Imgui frame
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
 
-        glClear(GL_COLOR_BUFFER_BIT);       // Does all the rendering
+    ImGui::DockSpaceOverViewport();     // Sets up docking for the entire window
 
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-        glfwSwapBuffers(window);            // Swaps front and back buffers
+    // MY RENDER CODE HERE
+    try{
+        drawWindows(list);  
     }
-    else
-        return true;    // If the window should close, return true
+    catch(const std::string& title){
+        ImGui::EndFrame();  // Early exit. Will be cleared when new frame starts
+        log_warn("Exception caught when drawing Module Windows. Clearing ImGui frame data");
+        throw title;
+    }
+    
+    
+    glClear(GL_COLOR_BUFFER_BIT);       // Does all the rendering
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    glfwSwapBuffers(window);            // Swaps front and back buffers
 
     return false;
 }
@@ -266,10 +273,25 @@ void DisplayManager::drawWindows(std::map<std::string, TaggedDrawFunction>& list
             //using namespace std::chrono;
             //auto before { steady_clock::now() };
 
-            if(ImGui::Begin(title.c_str(), &items.shown)){
-                items.function();
+            try{
+                if(ImGui::Begin(title.c_str(), &items.shown)){
+                    items.function();
+                }
+                ImGui::End();
             }
-            ImGui::End();
+            catch(const std::exception& e){
+                log_fatal(std::format("Unhandled exception from Module '{}' caught in LAS. What: {}", title, e.what() ));  
+                Logging::setModuleTag("LAS");
+
+
+                // Exit out of child windows to satisfy ImGui
+                while(ImGui::GetCurrentWindow()->ParentWindow){
+                    ImGui::EndChild(); 
+                }
+                //ImGui::End();
+
+                throw title; // Throw the name up to be closed later 
+            }
 
             //auto after { steady_clock::now() };
             //std::cout << std::format("{} draw: {}\n", key, duration_cast<milliseconds>(after - before).count());
