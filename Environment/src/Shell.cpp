@@ -157,13 +157,8 @@ bool Shell::addCommandGroup(const std::string& name){
   
     return commands.try_emplace(name, std::unordered_map<std::string, std::shared_ptr<Command>>{}).second;
 }
-bool Shell::removeCommandGroup (const std::string& name){
-    if(commands.contains(name)){
-        commands.erase(name);
-        return true;
-    }
-    else
-        return false;
+void Shell::removeCommandGroup (const std::string& name){
+    commands.erase(name);
 }
 const std::unordered_map<std::string, std::shared_ptr<Command>>& Shell::getGroup (const std::string& name) const{
     if(!commands.contains(name))

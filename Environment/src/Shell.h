@@ -38,7 +38,7 @@ namespace LAS{
     
         // Commands
         bool addCommandGroup    (const std::string& name);
-        bool removeCommandGroup (const std::string& name);
+        void removeCommandGroup (const std::string& name);
         const std::unordered_map<std::string, std::shared_ptr<Command>>& getGroup (const std::string& name) const;        // Throws out of range if not found
 
         bool addCommand             (const std::string& groupName,  std::shared_ptr<Command> command);                         // Adds command to list of known commands
