@@ -133,7 +133,6 @@ void LogWindow::draw() {
         ImGui::Checkbox("Show Code Location",   &settings.showLocation);
         ImGui::SameLine();
         ImGui::Checkbox("Auto Scroll",          &autoScroll);
-
         ImGui::InputInt("Tag Text Box Size",     &settings.textBoxWidth_tag, 1, 5);
         ImGui::InputInt("Message Text Box Size", &settings.textBoxWidth_msg, 1, 5);
     }
