@@ -14,18 +14,35 @@
 using namespace LAS::Logging;
 
 // For testing command functionality
-namespace LAS::Commands{
+namespace LAS::Commands{ 
 
     class Manual : public Command {
     public:
         Manual(std::shared_ptr<Shell> shell);
-        ~Manual();
+        ~Manual() = default;
 
-        std::pair<int, std::ostringstream> execute(const StringVector&) override;
+        ReturnStatus execute(const StringVector&) override;
     private:
-        std::shared_ptr<Shell> shell;
+        std::weak_ptr<Shell> weakShell;
     };
 
+    class ModuleControl : public Command{
+        public:
+            ModuleControl(
+                    std::shared_ptr<DisplayManager>, 
+                    std::shared_ptr<ModuleManager>, 
+                    std::shared_ptr<Shell>
+                );
+            ~ModuleControl() = default;
+
+            ReturnStatus execute(const StringVector&) override;
+        private:
+            std::weak_ptr<DisplayManager> weakDM;
+            std::weak_ptr<ModuleManager>  weakMM;
+            std::weak_ptr<Shell>          weakShell;
+    };
+
+    /*
     class Set : public Command {
     public:
         Set(std::shared_ptr<DisplayManager>, std::shared_ptr<ModuleManager>, std::shared_ptr<Shell>);
@@ -56,17 +73,6 @@ namespace LAS::Commands{
         std::pair<int, std::ostringstream> execute(const StringVector&) override;
     };
 
-    class ModuleControl : public Command{
-    public:
-        ModuleControl   (std::shared_ptr<DisplayManager>, std::shared_ptr<ModuleManager>, std::shared_ptr<Shell>);
-        ~ModuleControl();
-
-        std::pair<int, std::ostringstream> execute(const StringVector&) override;
-    private:
-          std::shared_ptr<DisplayManager> displayManager;
-        std::shared_ptr<ModuleManager>  moduleManager;
-        std::shared_ptr<Shell>          shell;
-    };
 
     class Information : public Command{
     public:
@@ -94,4 +100,5 @@ namespace LAS::Commands{
     private:
         std::shared_ptr<DisplayManager> displayManager;
     };  
+    */
 }

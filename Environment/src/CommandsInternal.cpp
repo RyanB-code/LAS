@@ -10,20 +10,145 @@ namespace LAS::Commands{
 
 Manual::Manual(std::shared_ptr<Shell> setShell)
     :   Command {"man", "Show manual pages"},
-        shell   {setShell}
+        weakShell   {setShell}
 {
 
 }
-Manual::~Manual(){
+ReturnStatus Manual::execute(const StringVector&){
+    ReturnStatus status { 0 };
+
+    std::shared_ptr<Shell> locked { weakShell.lock() };
+
+    if(!locked){
+        status.code = -1;
+        status.msg << "Failed to lock LAS::Shell obejct";
+        return status;
+    };
+
+    locked->getAllGroupsManuals(status.msg);
+    return status;
+}
+
+ModuleControl::ModuleControl(
+        std::shared_ptr<DisplayManager> setDM, 
+        std::shared_ptr<ModuleManager> setMM, 
+        std::shared_ptr<Shell> setShell 
+    ) :   
+        Command {"modulectl",   "Interact with the module controller\n"
+                                "<action> <command> [optional]\n"
+                                "set <arg>\t\t\tApplies changes\n" 
+                                "\t\tmodule-load-directory [option] <directory>\tChange directory where modules are loaded from\n\t\t\tOptional: -c creates directory specified\n"
+                                "list-modules\t\tLists all modules by name\n"
+                                "reload-all  \t\tReloads all modules from file\n"
+                                "reload <name> \tRe-runs a module's RC file\n"
+            },
+        weakDM      {setDM},
+        weakMM      {setMM},
+        weakShell   {setShell}
+{
 
 }
-std::pair<int, std::ostringstream> Manual::execute(const StringVector&){
-    std::ostringstream os;
-    shell->getAllGroupsManuals(os);
+ReturnStatus ModuleControl::execute(const StringVector& args){
+    // 0 = verb, 1 = what, 2 = option/dir, 3 = directory
+    
+    ReturnStatus status { };
 
-    return pair(0, os.str());
+    bool setDirectory       { false };
+    bool createDirectory    { false };
+    bool reload             { false };  
+    bool listModules        { false };
+    bool reloadByName       { false };
+
+    // Parse and handle arguments
+    if(args.empty()){
+        status.code = -1;
+        status.msg << "This command requires at least one argument";
+        return status;
+    }
+    else if(args[0] == "set"){  
+        if(args[1] == "module-load-directory")
+            setDirectory = true;
+    }
+    else if (args[0] == "reload-all")
+        reload = true;
+    else if (args[0] == "reload" && args.size() > 1)
+        reloadByName = true;
+    else if (args[0] == "list-modules")
+        listModules = true;
+    else{
+        return CommandHelper::returnInvalidArg(args[0]);
+    }
+
+    return status;
+    /*
+
+    // Conditional actions
+    if(setDirectory){
+        // Check for optional
+        std::string arg2 {args[2]};
+        if(arg2.starts_with('-')){
+            if(arg2.contains('c'))
+                createDirectory = true;
+            if(arg2.contains('r'))
+                reload = true;
+        }
+        
+        if(createDirectory && args.size() >= 4){
+            if(!std::filesystem::exists(args[3])){
+                LAS::TextManip::ensureSlash(args[3]);
+
+                // Attempt to create
+                if(!std::filesystem::create_directory(args[3]))
+                   return pairErrorWithMessage("Could not create directory [" + args[3] + "]\nProcess aborted\n");
+            }
+
+            // Set directory
+            if(!moduleManager->setModuleLoadDirectory(args[3]))
+                return pairErrorWithMessage("Failed to set module directory to \"" + args[3] + "\"\nProcess aborted\n");
+        }
+        else{
+            // No optional found
+            if(!moduleManager->setModuleLoadDirectory(args[3]))
+                return pairErrorWithMessage("Failed to set module directory to \"" + args[3] + "\"\n");
+        }
+    }
+
+    if(reload){
+        moduleManager->clearModules();
+        moduleManager->loadAllModules(); 
+        return pairNormal();
+    }
+
+    if(reloadByName){
+        if(!moduleManager->containsModule(args[1]))
+            return pairErrorWithMessage("Could not find module \"" + args[1] + "\"\n");
+
+        std::string moduleRCFilePath {moduleManager->getModule(args[1]).getRCFilePath()};
+        std::queue<std::string> lines;
+
+        LAS::ShellHelper::readRCFile(moduleRCFilePath, lines);          // Read RC file 
+        for (/*Nothing 
+
+               REPLACE HEREE
+
+               /; !lines.empty(); lines.pop())                  // Add to command queue
+            shell->addToQueue(lines.front());
+        return pairNormal();        
+    }
+
+    if(listModules){
+        std::ostringstream os;
+        for(const auto& [title, modulePtr] : moduleManager->getModuleList()){
+            os << modulePtr->getModuleInfo().title << "\n";
+        }
+        return pair(0, os.str());
+    }
+
+    return pairErrorWithMessage("Ill formed command\n");
+    */
 }
-// MARK: Set
+
+/*
 Set::Set(   std::shared_ptr<DisplayManager> setDM, std::shared_ptr<ModuleManager>  setMM, std::shared_ptr<Shell> setShell 
         ) 
         :   Command {"set",     "<setting> <value>\n"
@@ -285,111 +410,7 @@ std::pair<int, std::ostringstream> Echo::execute(const StringVector& args) {
     return pair(0, text.str());
 }
 
-// MARK: Module Control
-ModuleControl::ModuleControl(   std::shared_ptr<DisplayManager>   setDisplayManager, std::shared_ptr<ModuleManager> setModuleManager, std::shared_ptr<Shell> setShell )
-    :   Command {"modulectl",   "Interact with the module controller\n"
-                                "<action> <command> [optional]\n"
-                                "set <arg>\t\t\tApplies changes\n" 
-                                "\t\tmodule-load-directory [option] <directory>\tChange directory where modules are loaded from\n\t\t\tOptional: -c creates directory specified\n"
-                                "list-modules\t\tLists all modules by name\n"
-                                "reload-all  \t\tReloads all modules from file\n"
-                                "reload <name> \tRe-runs a module's RC file\n"
-                },
-                                displayManager  {setDisplayManager},
-                                moduleManager   {setModuleManager},
-                                shell           {setShell}
-{
 
-}
-ModuleControl::~ModuleControl(){
-
-}
-std::pair<int, std::ostringstream> ModuleControl::execute(const StringVector& args){
-    // 0 = verb, 1 = what, 2 = option/dir, 3 = directory
-    
-    bool setDirectory       { false };
-    bool createDirectory    { false };
-    bool reload             { false };  
-    bool listModules        { false };
-    bool reloadByName       { false };
-
-    // Parse and handle arguments
-    if(args.empty())
-        return pairErrorWithMessage("This command requires at least one argument\n");
-    else if(args[0] == "set"){  
-        if(args[1] == "module-load-directory")
-            setDirectory = true;
-    }
-    else if (args[0] == "reload-all")
-        reload = true;
-    else if (args[0] == "reload" && args.size() > 1)
-        reloadByName = true;
-    else if (args[0] == "list-modules")
-        listModules = true;
-    else
-        return pairInvalidArgument(args[0]);
-
-
-    // Conditional actions
-    if(setDirectory){
-        // Check for optional
-        std::string arg2 {args[2]};
-        if(arg2.starts_with('-')){
-            if(arg2.contains('c'))
-                createDirectory = true;
-            if(arg2.contains('r'))
-                reload = true;
-        }
-        
-        if(createDirectory && args.size() >= 4){
-            if(!std::filesystem::exists(args[3])){
-                LAS::TextManip::ensureSlash(args[3]);
-
-                // Attempt to create
-                if(!std::filesystem::create_directory(args[3]))
-                   return pairErrorWithMessage("Could not create directory [" + args[3] + "]\nProcess aborted\n");
-            }
-
-            // Set directory
-            if(!moduleManager->setModuleLoadDirectory(args[3]))
-                return pairErrorWithMessage("Failed to set module directory to \"" + args[3] + "\"\nProcess aborted\n");
-        }
-        else{
-            // No optional found
-            if(!moduleManager->setModuleLoadDirectory(args[3]))
-                return pairErrorWithMessage("Failed to set module directory to \"" + args[3] + "\"\n");
-        }
-    }
-
-    if(reload){
-        moduleManager->clearModules();
-        moduleManager->loadAllModules(); 
-        return pairNormal();
-    }
-
-    if(reloadByName){
-        if(!moduleManager->containsModule(args[1]))
-            return pairErrorWithMessage("Could not find module \"" + args[1] + "\"\n");
-
-        std::string moduleRCFilePath {moduleManager->getModule(args[1]).getRCFilePath()};
-        std::queue<std::string> lines;
-
-        LAS::ShellHelper::readRCFile(moduleRCFilePath, lines);          // Read RC file 
-        for (/*Nothing*/; !lines.empty(); lines.pop())                  // Add to command queue
-            shell->addToQueue(lines.front());
-        return pairNormal();        
-    }
-
-    if(listModules){
-        std::ostringstream os;
-        for(const auto& [title, modulePtr] : moduleManager->getModuleList()){
-            os << modulePtr->getModuleInfo().title << "\n";
-        }
-        return pair(0, os.str());
-    }
-
-    return pairErrorWithMessage("Ill formed command\n");
-}
 // MARK: Information
 Information::Information() : Command {"info", "Displays build information.\n"}
 {
@@ -450,6 +471,6 @@ std::pair<int, std::ostringstream> DisplayControl::execute(const StringVector& a
     return pairErrorWithMessage("Ill formed command\n");
 
 }
-
+*/
 
 } // end of LAS::Commands

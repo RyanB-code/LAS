@@ -237,11 +237,23 @@ void Framework::setupCommands(){
     using namespace LAS::Commands;
 
     // Instantiate commands
+    Manual          manual      {shell};
+    ModuleControl   modulectl   {displayManager, moduleManager, shell };
+
+    if(!shell->addCommand(COMMAND_GROUP_NAME, std::make_shared<Manual>(manual))){
+        std::ostringstream msg;
+        msg << "Command [" << manual.getKey() << "] could not be added.\n";
+        log_error(msg.str());
+    }
+    if(!shell->addCommand(COMMAND_GROUP_NAME, std::make_shared<ModuleControl>(modulectl))){
+        std::ostringstream msg;
+        msg << "Command [" << modulectl.getKey() << "] could not be added.\n";
+        log_error(msg.str());
+    }
+    /*
     Set                         set         {displayManager, moduleManager, shell};
-    Manual                      manual      {shell};
     Print                       print       {displayManager, moduleManager};
     Echo                        echo        { };
-    ModuleControl               modulectl   {displayManager, moduleManager, shell };
     LAS::Commands::Information  info        { };
     Reload                      reload      {shell};
     DisplayControl              displayctl  {displayManager};
@@ -253,11 +265,6 @@ void Framework::setupCommands(){
         msg << "Command [" << set.getKey() << "] could not be added.\n";
         log_error(msg.str());
     }
-    if(!shell->addCommand(COMMAND_GROUP_NAME, std::make_shared<Manual>(manual))){
-        std::ostringstream msg;
-        msg << "Command [" << manual.getKey() << "] could not be added.\n";
-        log_error(msg.str());
-    }
     if(!shell->addCommand(COMMAND_GROUP_NAME, std::make_shared<Print>(print))){
         std::ostringstream msg;
         msg << "Command [" << print.getKey() << "] could not be added.\n";
@@ -266,11 +273,6 @@ void Framework::setupCommands(){
     if(!shell->addCommand(COMMAND_GROUP_NAME, std::make_shared<Echo>(echo))){
         std::ostringstream msg;
         msg << "Command [" << echo.getKey() << "] could not be added.\n";
-        log_error(msg.str());
-    }
-    if(!shell->addCommand(COMMAND_GROUP_NAME, std::make_shared<ModuleControl>(modulectl))){
-        std::ostringstream msg;
-        msg << "Command [" << modulectl.getKey() << "] could not be added.\n";
         log_error(msg.str());
     }
     if(!shell->addCommand(COMMAND_GROUP_NAME, std::make_shared<LAS::Commands::Information>(info))){
@@ -288,6 +290,7 @@ void Framework::setupCommands(){
         msg << "Command [" << displayctl.getKey() << "] could not be added.\n";
         log_error(msg.str());
     }
+    */
 }
 bool Framework::loadAllModules() {
     try{

@@ -287,7 +287,7 @@ bool Shell::handleCommandQueue(bool writeToHistory){
 
                 // Verify command exists
                 if(group.contains(commandString))
-                    consoleTextBuffer.push(group.at(commandString)->execute(arguments).second.str());   // Execute command and pass to every output
+                    consoleTextBuffer.push(group.at(commandString)->execute(arguments).msg.str());   // Execute command and pass to every output
                 else
                     consoleTextBuffer.push("Command \"" + commandString + "\" not found in group \"" + firstArg + "\".\n");
             }
