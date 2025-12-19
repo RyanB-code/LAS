@@ -14,10 +14,10 @@ namespace LAS::Logging {
         bool showSeverityTag        { true };
         bool showModuleTag          { true };
         bool showMsg                { true };
-        bool showLocation           { true };
+        bool showLocation           { false };
 
         int textBoxWidth_tag    { 5 };   
-        int textBoxWidth_msg   { 30 };
+        int textBoxWidth_msg    { 64 };
     };
     
     struct Log {
