@@ -1,11 +1,11 @@
 #pragma once
 
+#include <LAS/HelperFunctions.h>
+
 #include <functional>
 #include <string>
 #include <imgui/imgui.h>
 #include <cstring>
-
-#include <iostream> // testing
 
 namespace LAS {
 
@@ -27,7 +27,7 @@ namespace LAS {
         TextBuffer();
         ~TextBuffer() = default;
 
-        void push(const std::string& text);
+        void push(std::string);
         void clear();
 
         void writeToScreen() const;

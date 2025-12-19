@@ -7,13 +7,11 @@ TextBuffer::TextBuffer() {
     nextLine = firstLine;
 
     memset(textBuffer, 0, sizeof(textBuffer));
-
-    std::cout << "First Line: " << static_cast<void*>(memBlockFirstLine) << "\n";
-    std::cout << "[0][0]:     " << static_cast<void*>(&textBuffer[0][0]) << "\n";
-
 }
-void TextBuffer::push(const std::string& text) {
+void TextBuffer::push(std::string text) {
     int lineSize { sizeof(textBuffer[0]) };
+
+    text = LAS::TextManip::ensureNewline(text);
 
     // Copy up to total allowed size
     std::strncpy(nextLine, text.c_str(), lineSize - 1);
@@ -41,7 +39,7 @@ void TextBuffer::writeToScreen() const {
     while(nextPrintLine != firstLine) {
 
         if(*lineToPrint != 0)
-            ImGui::Text(lineToPrint);
+            ImGui::Text("%s", lineToPrint);
 
         incrementLine(&lineToPrint);
         incrementLine(&nextPrintLine);
