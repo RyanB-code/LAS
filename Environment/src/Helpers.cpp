@@ -3,13 +3,14 @@
 namespace LAS {
 
 TextBuffer::TextBuffer() {
-    memBlockStart = &textBuffer[0][0];
-    memBlockEnd = &textBuffer[MAX_LINES -1 ][MAX_CHAR_LINE];
-
-    firstLine = memBlockStart;
+    firstLine = memBlockFirstLine;
     nextLine = firstLine;
 
     memset(textBuffer, 0, sizeof(textBuffer));
+
+    std::cout << "First Line: " << static_cast<void*>(memBlockFirstLine) << "\n";
+    std::cout << "[0][0]:     " << static_cast<void*>(&textBuffer[0][0]) << "\n";
+
 }
 void TextBuffer::push(const std::string& text) {
     int lineSize { sizeof(textBuffer[0]) };
@@ -18,16 +19,16 @@ void TextBuffer::push(const std::string& text) {
     std::strncpy(nextLine, text.c_str(), lineSize - 1);
     nextLine[lineSize - 1] = '\0';
 
-    incLine(&nextLine);
+    incrementLine(&nextLine);
 
     if(nextLine == firstLine){
-        incLine(&firstLine);
+        incrementLine(&firstLine);
     }
 }
 
 void TextBuffer::clear(){
     memset(textBuffer, 0, sizeof(textBuffer));
-    firstLine = memBlockStart;
+    firstLine = memBlockFirstLine;
     nextLine = firstLine;
 }
 void TextBuffer::writeToScreen() const {
@@ -35,24 +36,24 @@ void TextBuffer::writeToScreen() const {
     char* lineToPrint   { firstLine };
     char* nextPrintLine { lineToPrint };
 
-    incLine(&nextPrintLine);
+    incrementLine(&nextPrintLine);
 
     while(nextPrintLine != firstLine) {
 
         if(*lineToPrint != 0)
             ImGui::Text(lineToPrint);
 
-        incLine(&lineToPrint);
-        incLine(&nextPrintLine);
+        incrementLine(&lineToPrint);
+        incrementLine(&nextPrintLine);
     }
 }
-void TextBuffer::incLine(char** line) const{
+void TextBuffer::incrementLine(char** line) const{
     int lineSize { sizeof(textBuffer[0]) };
 
     *line += lineSize;
 
-    if(*line >= memBlockEnd)
-       *line = memBlockStart;
+    if(*line >= memBlockLastLine)
+       *line = memBlockFirstLine;
 }
 
 }   // End LAS

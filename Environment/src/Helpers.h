@@ -5,6 +5,8 @@
 #include <imgui/imgui.h>
 #include <cstring>
 
+#include <iostream> // testing
+
 namespace LAS {
 
     struct TaggedUpdateFunction {
@@ -18,6 +20,9 @@ namespace LAS {
     };
 
     class TextBuffer {
+    private:
+        static constexpr int MAX_CHAR_LINE  { 256 };
+        static constexpr int MAX_LINES      { 64 };
     public:
         TextBuffer();
         ~TextBuffer() = default;
@@ -29,18 +34,15 @@ namespace LAS {
 
         int getMaxCharPerLine() const { return MAX_CHAR_LINE - 1;  }
     private:
-        static constexpr int MAX_CHAR_LINE  { 256 };
-        static constexpr int MAX_LINES      { 64 };
-
         char textBuffer [MAX_LINES][MAX_CHAR_LINE];
         
-        char* memBlockStart { nullptr };
-        char* memBlockEnd   { nullptr };
+        char* memBlockFirstLine { &textBuffer[0][0] };
+        char* memBlockLastLine  { &textBuffer[MAX_LINES -1 ][MAX_CHAR_LINE] };
 
         char* firstLine { nullptr };
         char* nextLine  { nullptr };
 
-        void incLine(char** line) const;
+        void incrementLine(char** line) const;
     };
 }   // End LAS
 
