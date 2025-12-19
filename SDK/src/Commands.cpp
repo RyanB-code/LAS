@@ -2,7 +2,7 @@
 
 
 namespace LAS{
-    Command::Command(std::string setKey , std::string setDescription)
+    Command::Command(const std::string& setKey, const std::string& setDescription)
     :   key         { setKey },
         description {setDescription }
     {
@@ -20,31 +20,13 @@ namespace LAS{
     }
     namespace CommandHelper{
 
-        std::pair<int, std::ostringstream> pair(int value, const std::string& msg){
-            std::pair<int, std::ostringstream> returnBuf;
-            returnBuf.first = value;
-            returnBuf.second << LAS::TextManip::ensureNewline(msg);
-            return returnBuf;
-        }
-        std::pair<int, std::ostringstream> pairNormal(){
-            std::pair<int, std::ostringstream> returnBuf;
-            returnBuf.first = 0;
-            returnBuf.second << "";
-            return returnBuf;
-        }
-        std::pair<int, std::ostringstream> pairInvalidArgument(const std::string& arg){
-            std::pair<int, std::ostringstream> returnBuf;
-            returnBuf.first = -1;
-            returnBuf.second << "Invalid argument \"" << arg << "\"\n";
-
-            return returnBuf;
-        }
-        std::pair<int, std::ostringstream> pairErrorWithMessage(const std::string& msg){
-            std::pair<int, std::ostringstream> returnBuf;
-            returnBuf.first = -1;
-            returnBuf.second << LAS::TextManip::ensureNewline(msg);
-            return returnBuf;
-        }
+        
+        ReturnStatus returnInvalidArg (const std::string& arg){
+            ReturnStatus status { };
+            status.code = -1;
+            status.msg << "Invalid argument \"" << arg << "\"\n";
+            return status;
+        } 
 
         bool stringValueTrue    (std::string s){
             for(auto& c : s)

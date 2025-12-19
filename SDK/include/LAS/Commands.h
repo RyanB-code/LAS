@@ -1,31 +1,29 @@
 #pragma once
 
-#include "HelperFunctions.h"
-
-#include <string>
 #include <vector>
 #include <sstream>
-#include <cstring>
 
 namespace LAS{
+    
+    struct ReturnStatus {
+        int code { 0 };
+        std::ostringstream msg { };
+    };
     class Command {
     public:
-        explicit Command (std::string setKey, std::string setDescription);
+        explicit Command (const std::string& setKey, const std::string& setDescription);
         virtual ~Command ();
 
         std::string getKey          () const;
         std::string getDescription  () const;
         
-        virtual std::pair<int, std::ostringstream> execute (const std::vector<std::string>& args) = 0;
+        virtual ReturnStatus execute (const std::vector<std::string>& args) = 0;
     private:
         std::string key, description;
     };
 
     namespace CommandHelper{
-        std::pair<int, std::ostringstream> pair                     (int returnCode, const std::string& msg);
-        std::pair<int, std::ostringstream> pairNormal               ();
-        std::pair<int, std::ostringstream> pairErrorWithMessage     (const std::string& msg);
-        std::pair<int, std::ostringstream> pairInvalidArgument      (const std::string& arg);
+        ReturnStatus returnInvalidArg (const std::string& arg);
 
         bool stringValueTrue    (std::string s);
         bool stringValueFalse   (std::string s);
