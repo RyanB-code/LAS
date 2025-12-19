@@ -3,32 +3,6 @@
 
 using namespace LAS;
 
-ShellTextBuffer::ShellTextBuffer() {
-
-}
-ShellTextBuffer::~ShellTextBuffer() {
-
-}
-void ShellTextBuffer::write(const std::string& text) {
-    textBuffer << text;
-    return;
-}
-void ShellTextBuffer::clearConsole(){
-    textBuffer.str("");
-}
-const std::ostringstream& ShellTextBuffer::getText() const {
-    return textBuffer;
-}
-
-
-
-Shell::Shell() {
-
-}
-Shell::~Shell(){
-
-}
-
 void Shell::draw(){
     ImVec2 windowSize           {ImGui::GetWindowSize()};
     static bool autoScroll      {true};
@@ -37,7 +11,7 @@ void Shell::draw(){
 
     if(ImGui::BeginChild("Options", ImVec2(windowSize.x-20, 40), ImGuiChildFlags_Border)){
         if(ImGui::Button("Clear", ImVec2{50,20}))
-            consoleTextBuffer.clearConsole();
+            consoleTextBuffer.clear();
 
         ImGui::SameLine();
         ImGui::Checkbox("Auto Scroll", &autoScroll);
@@ -47,7 +21,6 @@ void Shell::draw(){
         ImGui::Checkbox("Show Demo Window", &showDemo);
         if(showDemo)
             ImGui::ShowDemoWindow();
-
     }
     ImGui::EndChild();
 
@@ -56,7 +29,7 @@ void Shell::draw(){
     const float footerHeightToReserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
     if (ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footerHeightToReserve), ImGuiChildFlags_None, ImGuiWindowFlags_HorizontalScrollbar)) {
 
-        ImGui::TextUnformatted(consoleTextBuffer.getText().str().c_str());
+        consoleTextBuffer.writeToScreen();
 
         if (scrollToBottom || (autoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY()))
             ImGui::SetScrollHereY(1.0f);
@@ -73,11 +46,7 @@ void Shell::draw(){
     static bool     fetchHistory            {false}; 
 
     if(ImGui::IsWindowFocused()){
-        if (ImGui::IsKeyPressed(ImGuiKey_LeftCtrl) && ImGui::IsKeyPressed(ImGuiKey_L))
-            consoleTextBuffer.clearConsole();
-        if (ImGui::IsKeyPressed(ImGuiKey_RightCtrl) && ImGui::IsKeyPressed(ImGuiKey_L))
-            consoleTextBuffer.clearConsole();
-        if (ImGui::IsKeyPressed(ImGuiKey_UpArrow)){
+       if (ImGui::IsKeyPressed(ImGuiKey_UpArrow)){
             if(offsetFromEnd == 0)
                 inputBeforeHistoryScroll = inputBuf;
 
@@ -86,7 +55,7 @@ void Shell::draw(){
 
             fetchHistory = true;
         }
-        if (ImGui::IsKeyPressed(ImGuiKey_DownArrow)){
+        if(ImGui::IsKeyPressed(ImGuiKey_DownArrow)){
             if(offsetFromEnd > 0)
                 --offsetFromEnd;
             
@@ -132,10 +101,10 @@ void Shell::draw(){
             addToQueue(strBuf);                             // Push to command queue
 
             // Add to textHistory
-            consoleTextBuffer.write("$ " + strBuf + '\n');
+            consoleTextBuffer.push("$ " + strBuf + '\n');
         }
         if(strBuf.empty())
-            consoleTextBuffer.write("\n");                            // Hit enter to indent if they user wants without sending to command handler
+            consoleTextBuffer.push("\n");                            // Hit enter to indent if they user wants without sending to command handler
 
         inputBeforeHistoryScroll    = "";                   // Resets saved inputBuf for history
         scrollToBottom              = true;
@@ -281,10 +250,10 @@ bool Shell::handleCommandQueue(bool writeToHistory){
                 auto alias {ShellHelper::createAlias(rawInput.substr(6, rawInput.size()))};
                 
                 if(!addAlias(alias.first, alias.second))
-                    consoleTextBuffer.write("Could not add alias \"" + alias.first + "\".\nAn alias for that key may already exist.\n");
+                    consoleTextBuffer.push("Could not add alias \"" + alias.first + "\".\nAn alias for that key may already exist.\n");
             }
             catch(std::invalid_argument& e){
-                consoleTextBuffer.write(std::string{e.what()} + "\nAlias is not in correct format.\n");
+                consoleTextBuffer.push(std::string{e.what()} + "\nAlias is not in correct format.\n");
             }
         }
 
@@ -302,7 +271,7 @@ bool Shell::handleCommandQueue(bool writeToHistory){
 
             // Ensure at least 2 arguments
             if(arguments.size() < 2){
-                consoleTextBuffer.write("Invalid number of arguments.\n");
+                consoleTextBuffer.push("Invalid number of arguments.\n");
                 commandQueue.pop();
                 break;
             }
@@ -318,12 +287,12 @@ bool Shell::handleCommandQueue(bool writeToHistory){
 
                 // Verify command exists
                 if(group.contains(commandString))
-                    consoleTextBuffer.write(group.at(commandString)->execute(arguments).second.str());   // Execute command and pass to every output
+                    consoleTextBuffer.push(group.at(commandString)->execute(arguments).second.str());   // Execute command and pass to every output
                 else
-                    consoleTextBuffer.write("Command \"" + commandString + "\" not found in group \"" + firstArg + "\".\n");
+                    consoleTextBuffer.push("Command \"" + commandString + "\" not found in group \"" + firstArg + "\".\n");
             }
             catch(std::out_of_range& e){
-                consoleTextBuffer.write("Could not find command group \"" + firstArg + "\".\n");
+                consoleTextBuffer.push("Could not find command group \"" + firstArg + "\".\n");
             }
         } // End of if(!aliasCreated)
     }

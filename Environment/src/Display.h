@@ -1,12 +1,12 @@
 #pragma once
-#include "Helpers.h"
 
+#include "Helpers.h"
 
 #include <LAS/Information.h>
 #include <LAS/Logging.h>
 #include <GLFW/glfw3.h>
-
 #include <map>
+
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
@@ -43,7 +43,7 @@ namespace LAS{
             int getLogOutputID() const;
 
         private:
-            std::vector<Logging::Log> logHistory;
+            TextBuffer textBuffer { };
         };
 
     }

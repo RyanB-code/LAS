@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Helpers.h"
+
 #include <imgui/imgui_internal.h>
 #include <imgui/imgui.h>
 #include <LAS/Commands.h>
@@ -9,30 +11,15 @@
 #include <string>
 #include <queue>
 #include <memory>
-#include <iostream>
 #include <unordered_map>
+#include <iostream> 
 
-
-namespace LAS{
-
-    class ShellTextBuffer {
-    public:
-        ShellTextBuffer();
-        ~ShellTextBuffer();
-
-        void write(const std::string& text);
-        void clearConsole    ();
-
-        const std::ostringstream& getText() const;
-
-    private:
-        std::ostringstream textBuffer;
-    };
+namespace LAS{ 
 
     class Shell {
     public:
-        Shell();
-        ~Shell();
+        Shell()     = default;
+        ~Shell()    = default;
 
         void draw();   // For drawing the window
     
@@ -77,9 +64,9 @@ namespace LAS{
         std::unordered_map  <std::string, std::unordered_map<std::string, std::shared_ptr<LAS::Command>>>  commands{ };    // Holds commands by group
         std::unordered_map  <std::string, std::string>                                  aliases { };
 
-        std::queue          <std::string>   commandQueue    { };
-        StringVector                        commandHistory  { };
-        ShellTextBuffer                     consoleTextBuffer;            // Holds the text buffer for the console window
+        std::queue<std::string> commandQueue    { };
+        StringVector            commandHistory  { };
+        TextBuffer              consoleTextBuffer;            // Holds the text buffer for the console window
 
         std::string rcPath              { };
         std::string commandHistoryPath  { };

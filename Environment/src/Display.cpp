@@ -85,8 +85,38 @@ LogWindow::LogWindow() : LogOutput{ } {
 
 }
 void LogWindow::log(const Log& log) {
-    Log logCopy {log.msg, log.severityTag, log.moduleTag, log.location, log.timestamp};
-    logHistory.push_back(logCopy);
+    using namespace LAS::Logging;
+    std::ostringstream formattedLog{};    // Buffer to store formatted log
+
+    if (settings.showTime)
+        formattedLog << std::format("[{}]  ", printTime(log.timestamp));
+
+    if(settings.showSeverityTag)
+        formattedLog << std::format("[{:^{}}]  ", log.severityTag, settings.textBoxWidth_tag);
+
+    if(settings.showModuleTag)
+        formattedLog << std::format("[{:^{}}]  ", log.moduleTag, settings.textBoxWidth_tag);  
+
+    int msgOffset { 0 };
+    if (settings.showMsg){
+        if(log.msg.size() > settings.textBoxWidth_msg){
+            msgOffset = formattedLog.str().size();
+            formattedLog << std::format("{:{}}...  ", log.msg.substr(0, settings.textBoxWidth_msg-3), settings.textBoxWidth_msg-3);
+        }
+        else
+            formattedLog << log.msg << "  ";
+    }
+    if(settings.showLocation)
+        formattedLog << printLocation(log.location);
+
+    textBuffer.push(formattedLog.str());
+    
+    if(formattedLog.str().size() > textBuffer.getMaxCharPerLine()){
+        formattedLog.str("");
+        formattedLog << std::format("{: ^{}}", "", msgOffset);
+        formattedLog << "See log file for full details.";
+        textBuffer.push(formattedLog.str()); 
+    }
 }
 void LogWindow::draw() {
     static bool autoScroll      { true };
@@ -103,6 +133,7 @@ void LogWindow::draw() {
         ImGui::Checkbox("Show Code Location",   &settings.showLocation);
         ImGui::SameLine();
         ImGui::Checkbox("Auto Scroll",          &autoScroll);
+
         ImGui::InputInt("Tag Text Box Size",     &settings.textBoxWidth_tag, 1, 5);
         ImGui::InputInt("Message Text Box Size", &settings.textBoxWidth_msg, 1, 5);
     }
@@ -118,30 +149,7 @@ void LogWindow::draw() {
     ImGui::SeparatorText("Logs");
     if(ImGui::BeginChild("Logs", ImVec2(0,0), ImGuiChildFlags_None, ImGuiWindowFlags_HorizontalScrollbar)){
 
-        for(const auto& log : logHistory){
-            using namespace LAS::Logging;
-            std::ostringstream os{};    // Buffer to store formatted log
-
-            if (settings.showTime)
-                os << std::format("[{}]  ", printTime(log.timestamp));
-
-            if(settings.showSeverityTag)
-                os << std::format("[{:^{}}]  ", log.severityTag, settings.textBoxWidth_tag);
-
-            if(settings.showModuleTag)
-                os << std::format("[{:^{}}]  ", log.moduleTag, settings.textBoxWidth_tag);  
-
-            if (settings.showMsg){
-                if(log.msg.size() > settings.textBoxWidth_msg)
-                    os << std::format("{:{}}...  ", log.msg.substr(0, settings.textBoxWidth_msg-3), settings.textBoxWidth_msg-3);
-                else
-                    os << std::format("{:<{}}  ", log.msg, settings.textBoxWidth_msg);
-            }
-            if (settings.showLocation)
-                os << printLocation(log.location);
-
-            ImGui::TextUnformatted(os.str().c_str());
-        }
+        textBuffer.writeToScreen();
 
         if(autoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
                 ImGui::SetScrollHereY(1.0f);
