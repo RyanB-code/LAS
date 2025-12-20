@@ -8,20 +8,41 @@ TextBuffer::TextBuffer() {
 
     memset(textBuffer, 0, sizeof(textBuffer));
 }
-void TextBuffer::push(std::string text) {
-    int lineSize { sizeof(textBuffer[0]) };
+void TextBuffer::push(const std::string& input) {
+    static const char* delimiters = "\n";
 
-    text = LAS::TextManip::ensureNewline(text);
+    size_t inputLength { input.size() + 1 };
 
-    // Copy up to total allowed size
-    std::strncpy(nextLine, text.c_str(), lineSize - 1);
-    nextLine[lineSize - 1] = '\0';
+    char* inputBuffer = new char[inputLength];                  // De-allocate at end
 
-    incrementLine(&nextLine);
+    std::strncpy(inputBuffer, input.c_str(), inputLength);
+    inputBuffer[inputLength - 1] = '\0';
 
-    if(nextLine == firstLine){
-        incrementLine(&firstLine);
+    char* token = std::strtok(inputBuffer, delimiters);
+    do{
+        std::strncpy(nextLine, token, MAX_CHAR_LINE - 1);
+        nextLine[MAX_CHAR_LINE - 1] = '\0';
+
+        incrementLine(&nextLine);
+
+        if(nextLine == firstLine){
+            incrementLine(&firstLine);
+        }
+        
+        token = std::strtok(nullptr, delimiters); 
     }
+    while(token);
+    delete[] inputBuffer;                                       // De-allocation of inputBuffer
+
+    // Display the buffer
+    /*
+    for(int i { 0 }; i < MAX_LINES; ++i){
+        std::cout << i << ":\t" << textBuffer[i] << '\n';
+        
+        if(textBuffer[i][0] == '\0')
+            std::cout << '\n';
+    }
+    */
 }
 
 void TextBuffer::clear(){

@@ -27,7 +27,7 @@ namespace LAS {
         TextBuffer();
         ~TextBuffer() = default;
 
-        void push(std::string);
+        void push(const std::string&);
         void clear();
 
         void writeToScreen() const;
