@@ -301,7 +301,7 @@ void DisplayManager::drawWindows(std::map<std::string, TaggedDrawFunction>& list
             }
 
             //auto after { steady_clock::now() };
-            //std::cout << std::format("{} draw: {}\n", key, duration_cast<milliseconds>(after - before).count());
+            //log_debug(std::format("{} draw: {}", title, duration_cast<milliseconds>(after - before).count()));
         }
         Logging::setModuleTag("LAS");
     }
@@ -330,7 +330,7 @@ void DisplayManager::drawWindows(std::map<std::string, TaggedDrawFunction>& list
             }
             ImGui::End();
             //auto after { steady_clock::now() };
-            //std::cout << std::format("{} draw: {}\n", key, duration_cast<milliseconds>(after - before).count());
+            //log_debug(std::format("{} draw: {}", title, duration_cast<milliseconds>(after - before).count()));
         }
         Logging::setModuleTag("LAS");
     }}
