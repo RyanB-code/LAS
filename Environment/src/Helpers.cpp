@@ -29,7 +29,7 @@ void TextBuffer::push(const std::string& input) {
             incrementLine(&firstLine);
         }
         
-        token = std::strtok(nullptr, delimiters); 
+        token = std::strtok(nullptr, delimiters);   // Picks up where the last input left off
     }
     while(token);
     delete[] inputBuffer;                                       // De-allocation of inputBuffer
