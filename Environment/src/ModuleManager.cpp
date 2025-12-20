@@ -157,7 +157,7 @@ bool ModuleManager::setupModule(ImGuiContext& context, Module& module){
     }
 
     std::filesystem::path moduleDirectory { filesDirectory /  LAS::TextManip::ensureSlash(formattedTitle) };
-    std::filesystem::path rcFilePath      { filesDirectory / std::string { '.' + rcPathTitle + "-rc"} };
+    std::filesystem::path rcFilePath      { moduleDirectory / std::string { '.' + rcPathTitle + "-rc"} };
 
 
     if(!LAS::ensureDirectory(filesDirectory)){
