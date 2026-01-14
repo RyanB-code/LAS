@@ -36,9 +36,13 @@ bool ModuleManager::addModule(ModulePtr& module){
     return true;
 }
 void ModuleManager::removeModule(const std::string& title){
+    log_warn(std::format("Removing Module [{}]...", title));
+
     modules.erase(title);           // Module's cleanup() called on object destruction
     updateFunctions.erase(title);
     drawFunctions.erase(title);
+
+    log_info(std::format("Module [{}] was removed", title));
 }
 
 void ModuleManager::loadAllModules(){
@@ -133,12 +137,20 @@ void ModuleManager::clearModules() {
     drawFunctions.clear();
 }
 void ModuleManager::setupAllModules(ImGuiContext& context){
+    std::vector<std::string> toRemove { };
+
     for(const auto& [title, module] : modules){
         if(!module)
             continue;
 
-        if(!setupModule(context, *module))
-            log_warn(std::format("Failed to setup Module [{}]'", module->getModuleInfo().title));
+        if(!setupModule(context, *module)){
+            log_warn(std::format("Failed to setup Module [{}]", module->getModuleInfo().title));
+            toRemove.emplace_back(title);
+        }
+    }
+
+    for(const auto& title : toRemove){
+       removeModule(title); 
     }
 
     return;

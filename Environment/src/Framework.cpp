@@ -311,8 +311,8 @@ void Framework::loadAllModuleCommands(){
         const ModuleInfo& info { module.getModuleInfo() };
 
         if(!shell->addCommandGroup(info.shortTag)){
+            log_error("Failed to load commands for Module [" + info.title +"]");
             moduleManager->removeModule(title);
-            log_error("Failed to load commands for Module [" + info.title +"]. Module removed.");
             ++couldntLoad;
             continue;
         }   
@@ -341,13 +341,8 @@ void Framework::setupAllModules() {
     moduleManager->setupAllModules( *ImGui::GetCurrentContext() );
 }
 void Framework::removeModule(const std::string& title){
-    log_warn(std::format("Shutting down Module '{}'...", title));
-
     shell->removeCommandGroup(moduleManager->getModule(title).getModuleInfo().shortTag);
     moduleManager->removeModule(title);
-
-    log_warn("Module shutdown complete");
-
 }
 void Framework::readAllModuleRCFiles(){
     for(const auto& [title, modulePtr] : moduleManager->getModuleList() )
