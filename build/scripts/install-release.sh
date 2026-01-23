@@ -5,4 +5,5 @@
 
 
 sudo cp bin/Environment/Release/*.exe   /usr/local/bin
-sudo cp bin/SDK/Release/*so.[0-9]       /usr/local/lib/LAS
+sudo mkdir /usr/local/lib/LAS/
+sudo cp bin/SDK/Release/*so.[0-9]       /usr/local/lib/LAS/
