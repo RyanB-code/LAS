@@ -172,11 +172,11 @@ bool ModuleManager::setupModule(ImGuiContext& context, Module& module){
     std::filesystem::path rcFilePath      { moduleDirectory / std::string { '.' + rcPathTitle + "-rc"} };
 
 
-    if(!LAS::ensureDirectory(filesDirectory)){
+    if(!LAS::ensureDirectory(moduleDirectory)){
         log_error(
                 std::format(
                     "Could not find or create directory [{}] for Module [{}]",
-                    filesDirectory.string(),
+                    moduleDirectory.string(),
                     info.title
                 )
             );
